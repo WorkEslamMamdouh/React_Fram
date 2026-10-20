@@ -1,0 +1,241 @@
+[
+  {
+    "ContainingType": "ERP.Controllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/auth/login",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Username",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Password",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "BulkInsert",
+    "RelativePath": "api/ManageDataSQL/bulk-insert",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.BulkInsertRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "BulkUpdate",
+    "RelativePath": "api/ManageDataSQL/bulk-update",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.BulkUpdateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "Delete",
+    "RelativePath": "api/ManageDataSQL/delete",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.DeleteRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "DeleteMasterDetail",
+    "RelativePath": "api/ManageDataSQL/DeleteMasterDetail",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.ModelDeleteMasterDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "GetDataFromSql",
+    "RelativePath": "api/ManageDataSQL/GetDataFromSql",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Entity",
+        "Type": "System.Collections.Generic.List\u00601[[GateWay.App.TableModel, ERP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "Insert",
+    "RelativePath": "api/ManageDataSQL/Insert",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.InsertRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "InsertList",
+    "RelativePath": "api/ManageDataSQL/insert-list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.InsertListRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "InsertMasterDetail",
+    "RelativePath": "api/ManageDataSQL/InsertMasterDetail",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.ModelInsertMasterDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "Query",
+    "RelativePath": "api/ManageDataSQL/Query",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "tables",
+        "Type": "System.Collections.Generic.List\u00601[[GateWay.App.TableModel, ERP, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "Update",
+    "RelativePath": "api/ManageDataSQL/Update",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.UpdateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "UpdateList",
+    "RelativePath": "api/ManageDataSQL/update-list",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.UpdateListRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ManageDataSQLController",
+    "Method": "UpdateMasterDetail",
+    "RelativePath": "api/ManageDataSQL/UpdateMasterDetail",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GateWay.App.ModelUpdateMasterDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ERP.Controllers.SharedController",
+    "Method": "PushNotification",
+    "RelativePath": "api/Shared/PushNotification",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Token",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Title",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Body",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

@@ -1,0 +1,385 @@
+ body {
+    display: block;
+    margin: 0px;
+}
+
+ 
+      .input-group {
+            margin-bottom: 28px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #1a2a4f;
+        }
+
+ .input-group input {
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 30px;
+
+  box-sizing: border-box; /* 🔥 مهم جدًا */
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* زر تبديل اللغة - دائري مع كرة أرضية */
+.lang-btn-wrapper {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 1000;
+}
+
+.lang-globe {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(45, 62, 110, 0.1);
+}
+
+.lang-globe i {
+    font-size: 24px;
+    color: #2d3e6e;
+    transition: all 0.3s;
+}
+
+.lang-globe:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 35px rgba(45, 62, 110, 0.25);
+}
+
+.lang-globe:hover i {
+    transform: rotate(360deg);
+}
+
+
+
+
+/* ========== ويب سايت فخم ========== */
+.website {
+    min-height: 100vh;
+}
+
+/* Navbar احترافي */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 2px 30px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.logo h1 {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.5px;
+}
+
+.logo p {
+    font-size: 12px;
+    color: #6c7a91;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.login-btn-nav {
+    background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+    color: white;
+    border: none;
+    padding: 14px 38px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Cairo', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.login-btn-nav:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(45, 62, 110, 0.3);
+}
+
+/* Hero Section فاخر */
+.hero-section {
+    background: linear-gradient(135deg, #f5f7fc 0%, #ffffff 100%);
+    padding: 100px 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(45, 62, 110, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: moveGrid 20s linear infinite;
+}
+
+@keyframes moveGrid {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(40px, 40px);
+    }
+}
+
+.hero-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-text h1 {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #1a2a4f, #4a6fa5);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 25px;
+}
+
+.hero-text p {
+    color: #5a687c;
+    font-size: 18px;
+    line-height: 1.7;
+    margin-bottom: 35px;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 50px;
+    margin-top: 40px;
+}
+
+.stat h3 {
+    font-size: 38px;
+    font-weight: 800;
+    color: #2d3e6e;
+}
+
+.stat p {
+    font-size: 14px;
+    color: #8a99b0;
+    font-weight: 600;
+}
+
+.hero-card {
+    background: white;
+    border-radius: 40px;
+    padding: 50px;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s;
+}
+
+.hero-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 40px 70px rgba(45, 62, 110, 0.15);
+}
+
+.hero-card-icon {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #2d3e6e15, #4a6fa515);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+}
+
+.hero-card-icon i {
+    font-size: 50px;
+    color: #2d3e6e;
+}
+
+/* باقات الاشتراك */
+.pricing-section {
+    padding: 100px 40px;
+    background: white;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 48px;
+    font-weight: 800;
+    color: #1a2a4f;
+    margin-bottom: 15px;
+}
+
+.section-subtitle {
+    text-align: center;
+    color: #7a879c;
+    font-size: 18px;
+    margin-bottom: 60px;
+}
+
+.pricing-grid {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+}
+
+.pricing-card {
+    background: #ffffff;
+    border-radius: 40px;
+    padding: 45px 35px;
+    transition: all 0.4s;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(45, 62, 110, 0.08);
+    position: relative;
+}
+
+.pricing-card:hover {
+    transform: translateY(-15px);
+    box-shadow: 0 35px 60px rgba(45, 62, 110, 0.12);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(135deg, #ffffff, #f8faff);
+    border: 2px solid #4a6fa5;
+}
+
+.popular-badge {
+    position: absolute;
+    top: -12px;
+    right: 30px;
+    background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+    color: white;
+    padding: 6px 20px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pricing-card i {
+    font-size: 55px;
+    color: #2d3e6e;
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    color: #1a2a4f;
+}
+
+.card-price {
+    font-size: 48px;
+    font-weight: 800;
+    color: #2d3e6e;
+    margin: 25px 0;
+}
+
+.card-price span {
+    font-size: 16px;
+    color: #8a99b0;
+    font-weight: 500;
+}
+
+.features-list {
+    list-style: none;
+    margin: 30px 0;
+}
+
+.features-list li {
+    padding: 14px 0;
+    border-bottom: 1px solid #eef2f8;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    color: #4a5a72;
+}
+
+.features-list li i {
+    font-size: 18px;
+    color: #4a6fa5;
+    margin: 0;
+}
+
+.btn-pricing {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Cairo', sans-serif;
+}
+
+/* Footer */
+.footer {
+    background: #1a2a4f;
+    color: white;
+    padding: 70px 40px 40px;
+}
+
+.footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 50px;
+}
+
+.footer h3,
+.footer h4 {
+    margin-bottom: 20px;
+    font-weight: 700;
+}

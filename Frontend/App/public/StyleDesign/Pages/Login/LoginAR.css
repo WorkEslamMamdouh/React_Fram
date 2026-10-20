@@ -1,0 +1,103 @@
+ 
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+        /* ========== شاشة تسجيل الدخول ========== */
+        .login-screen {
+            min-height: 100vh;
+            background: linear-gradient(-135deg, #1a2a4f 0%, #2d3e6e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 50px;
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+        }
+
+        .login-header {
+            background: linear-gradient(-135deg, #2d3e6e, #4a6fa5);
+            padding: 45px 35px;
+            text-align: center;
+        }
+
+        .login-header h2 {
+            color: white;
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .login-form {
+            padding: 45px 40px;
+        }
+
+  
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(-135deg, #2d3e6e, #4a6fa5);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 2px solid #2d3e6e;
+            color: #2d3e6e;
+            margin-top: 15px;
+        }
+
+
+
+        
+
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .hero-text h1 {
+                font-size: 42px;
+            }
+            .section-title {
+                font-size: 36px;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-container {
+                padding: 15px 20px;
+            }
+            .company-card {
+                padding: 35px 25px;
+            }
+            .lang-btn-wrapper {
+                top: 15px;
+                left: 15px;
+            }
+            .lang-globe {
+                width: 42px;
+                height: 42px;
+            }
+            .login-btn-nav {
+                padding: 10px 25px;
+                font-size: 14px;
+            }
+        }
+
+
+
+

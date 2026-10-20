@@ -1,0 +1,845 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ERP",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/auth/login": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "name": "Username",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Password",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/GetDataFromSql": {
+      "post": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TableModel"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TableModel"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TableModel"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/Query": {
+      "post": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TableModel"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TableModel"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TableModel"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/Insert": {
+      "post": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/insert-list": {
+      "post": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertListRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertListRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/Update": {
+      "put": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/update-list": {
+      "put": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateListRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateListRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/delete": {
+      "delete": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/bulk-insert": {
+      "post": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkInsertRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkInsertRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkInsertRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/bulk-update": {
+      "put": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/InsertMasterDetail": {
+      "post": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelInsertMasterDetail"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelInsertMasterDetail"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelInsertMasterDetail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/UpdateMasterDetail": {
+      "put": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelUpdateMasterDetail"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelUpdateMasterDetail"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelUpdateMasterDetail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ManageDataSQL/DeleteMasterDetail": {
+      "delete": {
+        "tags": [
+          "ManageDataSQL"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelDeleteMasterDetail"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelDeleteMasterDetail"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelDeleteMasterDetail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Shared/PushNotification": {
+      "get": {
+        "tags": [
+          "Shared"
+        ],
+        "parameters": [
+          {
+            "name": "Token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Title",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Body",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BulkInsertRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataList": {
+            "type": "array",
+            "items": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BulkUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataList": {
+            "type": "array",
+            "items": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeleteMasterModel": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeleteRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "deleteAllRelated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DetailWrapper": {
+        "type": "object",
+        "properties": {
+          "bulkInsertRequest": {
+            "$ref": "#/components/schemas/BulkInsertRequest"
+          },
+          "delete_Details": {
+            "$ref": "#/components/schemas/DeleteRequest"
+          },
+          "detailForeignKeyColumn": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InsertListRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataList": {
+            "type": "array",
+            "items": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InsertRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": { }
+        },
+        "additionalProperties": false
+      },
+      "ModelDeleteMasterDetail": {
+        "type": "object",
+        "properties": {
+          "compCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "branchCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "keyTrType": {
+            "type": "string",
+            "nullable": true
+          },
+          "masterKeyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "runProcessTrans": {
+            "type": "boolean"
+          },
+          "master": {
+            "$ref": "#/components/schemas/DeleteMasterModel"
+          },
+          "detail_1": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_2": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_3": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_4": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_5": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModelInsertMasterDetail": {
+        "type": "object",
+        "properties": {
+          "compCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "branchCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "keyTrType": {
+            "type": "string",
+            "nullable": true
+          },
+          "masterKeyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "runProcessTrans": {
+            "type": "boolean"
+          },
+          "master": {
+            "$ref": "#/components/schemas/InsertRequest"
+          },
+          "detail_1": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_2": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_3": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_4": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_5": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModelUpdateMasterDetail": {
+        "type": "object",
+        "properties": {
+          "compCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "branchCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "keyTrType": {
+            "type": "string",
+            "nullable": true
+          },
+          "masterKeyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "runProcessTrans": {
+            "type": "boolean"
+          },
+          "master": {
+            "$ref": "#/components/schemas/UpdateRequest"
+          },
+          "detail_1": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_2": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_3": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_4": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          },
+          "detail_5": {
+            "$ref": "#/components/schemas/DetailWrapper"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TableModel": {
+        "type": "object",
+        "properties": {
+          "nameTable": {
+            "type": "string",
+            "nullable": true
+          },
+          "condition": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderByID": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderType": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPage": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "top": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isProc": {
+            "type": "boolean"
+          },
+          "isExec": {
+            "type": "boolean"
+          },
+          "cacheFlag": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "searchValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "nullable": true
+          },
+          "selectedColumns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "excludeColumns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "searchInColumns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "returnTotalCount": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateListRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataList": {
+            "type": "array",
+            "items": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateRequest": {
+        "type": "object",
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": { }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Enter: Bearer {token}",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

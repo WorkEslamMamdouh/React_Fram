@@ -1,0 +1,8 @@
+npm cache clean --force
+
+rmdir /s /q .next
+
+npm config set cache D:\npm-cache --global
+
+
+npm run dev -- --no-turbo

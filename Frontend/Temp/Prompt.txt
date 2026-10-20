@@ -1,0 +1,75 @@
+## 🎯 يا ChatGPT، أنا عايزك تظبطلي شاشة [اسم الصفحة]
+
+### 📁 الـ Structure المطلوب:
+- ملفين منفصلين: `[PageName].ts` (logic) و `[PageName]Page.tsx` (UI)
+- استخدام `"use client"` في بداية الملفين
+- استخدام `useTranslate()` للترجمات
+- استخدام `useSys()` للـ global state
+- الـ stylesheet يمرر من `InitalizeComponent`
+
+### 🎨 التصميم المطلوب:
+- نفس ألوان الـ Website (Blue & Indigo)
+- خلفية: `from-slate-50 via-white to-blue-50`
+- كارت: `bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl`
+- أزرار أساسية: `from-blue-600 to-indigo-600`
+- أزرار ثانوية: `bg-white border-2 border-gray-300 hover:border-blue-600`
+- تأثيرات: blobs animated + aurora effect
+- تصميم متجاوب (responsive) لجميع الأجهزة
+
+### 📄 الكود الحالي للـ Logic File:
+[ paste your [PageName].ts code here ]
+
+### 📄 الكود الحالي للـ UI File:
+[ paste your [PageName]Page.tsx code here ]
+
+### ✅ المطلوب:
+1. حافظ على نفس الـ Functions والـ State والـ Refs
+2. حافظ على نفس الـ API Calls والـ Events
+3. غير الـ UI بس ليصبح بنفس تصميم Login و Website
+4. استخدم نفس الألوان والتأثيرات
+5. خليها responsive على الموبايل والتابلت والديسكتوب
+6. أضف أي تحسينات في UI/UX إذا لزم الأمر
+7. أضف الترجمات الجديدة في ملف JSON
+
+### 🚀 أخرجلي:
+1. ملف `[PageName].ts` كامل (logic)
+2. ملف `[PageName]Page.tsx` كامل (UI)
+3. مفاتيح الترجمة الجديدة بصيغة JSON (بدون علامات تنصيص على المفاتيح)
+
+---
+
+### 📋 مثال لصيغة JSON المطلوبة:
+```json
+{
+  en: {
+    keyName: "English Text",
+    anotherKey: "Another English Text"
+  },
+  ar: {
+    keyName: "النص العربي",
+    anotherKey: "نص عربي آخر"
+  }
+}
+
+************************
+
+ 
+
+## 📋 مثال للاستخدام العملي:
+
+```markdown
+## 🎯 يا ChatGPT، أنا عايزك تظبطلي شاشة Dashboard
+
+### 📄 الكود الحالي للـ Logic File:
+[ أنا هحط هنا كود Dashboard.ts ]
+
+### 📄 الكود الحالي للـ UI File:
+[ أنا هحط هنا كود DashboardPage.tsx ]
+
+### ✅ المطلوب:
+نفس تصميم Login و Website مع الحفاظ على كل الفنكشنز
+
+### 🚀 أخرجلي:
+1. ملف Dashboard.ts كامل (logic)
+2. ملف DashboardPage.tsx كامل (UI)
+3. مفاتيح الترجمة الجديدة بصيغة JSON

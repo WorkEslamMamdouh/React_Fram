@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nexus ERP | الحل المتكامل لإدارة المؤسسات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background: #f5f7fc;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* لودر احترافي */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loader {
+            width: 70px;
+            height: 70px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #2d3e6e;
+            border-right-color: #4a6fa5;
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            margin-top: 20px;
+            color: #2d3e6e;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        /* زر تبديل اللغة - دائري مع كرة أرضية */
+        .lang-btn-wrapper {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 1000;
+        }
+
+        .lang-globe {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(45,62,110,0.1);
+        }
+
+        .lang-globe i {
+            font-size: 24px;
+            color: #2d3e6e;
+            transition: all 0.3s;
+        }
+
+        .lang-globe:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 35px rgba(45,62,110,0.25);
+        }
+
+        .lang-globe:hover i {
+            transform: rotate(360deg);
+        }
+
+        /* ========== ويب سايت فخم ========== */
+        .website {
+            min-height: 100vh;
+        }
+
+        /* Navbar احترافي */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 30px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 18px 40px;
+            display: flex;
+ justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo p {
+            font-size: 12px;
+            color: #6c7a91;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .login-btn-nav {
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            color: white;
+            border: none;
+            padding: 14px 38px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .login-btn-nav:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(45,62,110,0.3);
+        }
+
+        /* Hero Section فاخر */
+        .hero-section {
+            background: linear-gradient(135deg, #f5f7fc 0%, #ffffff 100%);
+            padding: 100px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(45,62,110,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: moveGrid 20s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            0% { transform: translate(0,0); }
+            100% { transform: translate(40px,40px); }
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #1a2a4f, #4a6fa5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 25px;
+        }
+
+        .hero-text p {
+            color: #5a687c;
+            font-size: 18px;
+            line-height: 1.7;
+            margin-bottom: 35px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 50px;
+            margin-top: 40px;
+        }
+
+        .stat h3 {
+            font-size: 38px;
+            font-weight: 800;
+            color: #2d3e6e;
+        }
+
+        .stat p {
+            font-size: 14px;
+            color: #8a99b0;
+            font-weight: 600;
+        }
+
+        .hero-card {
+            background: white;
+            border-radius: 40px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+            transition: all 0.4s;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 40px 70px rgba(45,62,110,0.15);
+        }
+
+        .hero-card-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #2d3e6e15, #4a6fa515);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+        }
+
+        .hero-card-icon i {
+            font-size: 50px;
+            color: #2d3e6e;
+        }
+
+        /* باقات الاشتراك */
+        .pricing-section {
+            padding: 100px 40px;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 800;
+            color: #1a2a4f;
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #7a879c;
+            font-size: 18px;
+            margin-bottom: 60px;
+        }
+
+        .pricing-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .pricing-card {
+            background: #ffffff;
+            border-radius: 40px;
+            padding: 45px 35px;
+            transition: all 0.4s;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+            border: 1px solid rgba(45,62,110,0.08);
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 35px 60px rgba(45,62,110,0.12);
+        }
+
+        .pricing-card.popular {
+            background: linear-gradient(135deg, #ffffff, #f8faff);
+            border: 2px solid #4a6fa5;
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            right: 30px;
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .pricing-card i {
+            font-size: 55px;
+            color: #2d3e6e;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: #1a2a4f;
+        }
+
+        .card-price {
+            font-size: 48px;
+            font-weight: 800;
+            color: #2d3e6e;
+            margin: 25px 0;
+        }
+
+        .card-price span {
+            font-size: 16px;
+            color: #8a99b0;
+            font-weight: 500;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .features-list li {
+            padding: 14px 0;
+            border-bottom: 1px solid #eef2f8;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            color: #4a5a72;
+        }
+
+        .features-list li i {
+            font-size: 18px;
+            color: #4a6fa5;
+            margin: 0;
+        }
+
+        .btn-pricing {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a2a4f;
+            color: white;
+            padding: 70px 40px 40px;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+        }
+
+        .footer h3, .footer h4 {
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        /* ========== شاشة تسجيل الدخول ========== */
+        .login-screen {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a4f 0%, #2d3e6e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 50px;
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            padding: 45px 35px;
+            text-align: center;
+        }
+
+        .login-header h2 {
+            color: white;
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .login-form {
+            padding: 45px 40px;
+        }
+
+        .input-group {
+            margin-bottom: 28px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #1a2a4f;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 2px solid #2d3e6e;
+            color: #2d3e6e;
+            margin-top: 15px;
+        }
+
+        /* ========== شاشة الشركة ========== */
+        .company-screen {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f4fc, #e8edf8);
+            padding: 50px 20px;
+        }
+
+        .company-container {
+            max-width: 750px;
+            margin: 0 auto;
+        }
+
+        .company-card {
+            background: white;
+            border-radius: 55px;
+            padding: 55px 50px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #1a2a4f;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            background: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 18px;
+            margin-top: 35px;
+        }
+
+        .btn-confirm {
+            flex: 1;
+            padding: 16px;
+            background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-back-login {
+            flex: 1;
+            padding: 16px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .hero-text h1 {
+                font-size: 42px;
+            }
+            .section-title {
+                font-size: 36px;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-container {
+                padding: 15px 20px;
+            }
+            .company-card {
+                padding: 35px 25px;
+            }
+            .lang-btn-wrapper {
+                top: 15px;
+                right: 15px;
+            }
+            .lang-globe {
+                width: 42px;
+                height: 42px;
+            }
+            .login-btn-nav {
+                padding: 10px 25px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loader-overlay" id="loader">
+    <div class="loader"></div>
+    <div class="loader-text" id="loaderText">جاري التحميل</div>
+</div>
+
+<!-- زر تبديل اللغة - كرة أرضية -->
+<div class="lang-btn-wrapper">
+    <div class="lang-globe" onclick="toggleLanguage()" id="globeBtn">
+        <i class="fas fa-globe-asia"></i>
+    </div>
+</div>
+
+<!-- ========== ويب سايت ========== -->
+<div id="websiteScreen" class="website">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>NEXUS ERP</h1>
+                <p id="slogan">الحل المتكامل لإدارة المؤسسات</p>
+            </div>
+            <button class="login-btn-nav" onclick="showLoginScreen()" id="navLoginBtn">تسجيل الدخول <i class="fas fa-arrow-left"></i></button>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 id="heroTitle">نظام ERP متكامل<br>لإدارة أعمالك بذكاء</h1>
+                <p id="heroDesc">حلول ذكية لإدارة الموارد، المبيعات، المخزون، والموارد البشرية في منصة واحدة متكاملة.</p>
+                <div class="hero-stats">
+                    <div class="stat"><h3>5000+</h3><p id="stat1">عميل</p></div>
+                    <div class="stat"><h3>98%</h3><p id="stat2">رضا العملاء</p></div>
+                    <div class="stat"><h3>24/7</h3><p id="stat3">دعم فني</p></div>
+                </div>
+            </div>
+            <div class="hero-card">
+                <div class="hero-card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 id="companyHighlight">شركة التقنية المتقدمة</h3>
+                <p id="companyHighlightDesc">رائدة في حلول ERP منذ 2010</p>
+                <div style="margin-top: 25px;">
+                    <i class="fas fa-check-circle" style="color: #4a6fa5;"></i>
+                    <span style="margin: 0 8px;" id="trustBadge">موثوق من قبل 5000+ شركة</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- باقات الاشتراك -->
+    <div class="pricing-section">
+        <h2 class="section-title" id="pricingTitle">باقات الاشتراك</h2>
+        <p class="section-subtitle" id="pricingSubtitle">اختر الباقة المناسبة لعملك</p>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <i class="fas fa-rocket"></i>
+                <h3 class="card-title" id="basicName">الباقة الأساسية</h3>
+                <div class="card-price">$49 <span id="basicPeriod">/شهر</span></div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check-circle"></i> <span id="basic1">حتى 5 مستخدمين</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="basic2">إدارة المبيعات</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="basic3">إدارة المخزون</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="basic4">دعم فني 12/7</span></li>
+                </ul>
+                <button class="btn-pricing" onclick="showLoginScreen()" id="basicBtn">اختيار الباقة</button>
+            </div>
+            <div class="pricing-card popular">
+                <div class="popular-badge" id="popularBadge">الأكثر شيوعاً</div>
+                <i class="fas fa-gem"></i>
+                <h3 class="card-title" id="proName">الباقة الاحترافية</h3>
+                <div class="card-price">$99 <span id="proPeriod">/شهر</span></div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check-circle"></i> <span id="pro1">حتى 20 مستخدمين</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="pro2">كل مميزات الأساسية</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="pro3">الموارد البشرية</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="pro4">تقارير متقدمة</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="pro5">دعم فني 24/7</span></li>
+                </ul>
+                <button class="btn-pricing" onclick="showLoginScreen()" id="proBtn">اختيار الباقة</button>
+            </div>
+            <div class="pricing-card">
+                <i class="fas fa-crown"></i>
+                <h3 class="card-title" id="enterpriseName">الباقة المؤسسية</h3>
+                <div class="card-price">$199 <span id="enterprisePeriod">/شهر</span></div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check-circle"></i> <span id="ent1">مستخدمين غير محدود</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="ent2">كل مميزات الاحترافية</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="ent3">تخصيص كامل للنظام</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="ent4">مدير حساب مخصص</span></li>
+                    <li><i class="fas fa-check-circle"></i> <span id="ent5">تكامل مع أنظمة خارجية</span></li>
+                </ul>
+                <button class="btn-pricing" onclick="showLoginScreen()" id="enterpriseBtn">اختيار الباقة</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-content">
+            <div>
+                <h3>NEXUS ERP</h3>
+                <p id="footerDesc">نظام متكامل لإدارة المؤسسات</p>
+            </div>
+            <div>
+                <h4 id="contactTitle">تواصل معنا</h4>
+                <p><i class="fas fa-envelope"></i> info@nexuserp.com<br><i class="fas fa-phone"></i> +966 123 456 789</p>
+            </div>
+            <div>
+                <h4 id="followTitle">تابعنا</h4>
+                <p><i class="fab fa-linkedin"></i> <i class="fab fa-twitter"></i> <i class="fab fa-facebook"></i></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== شاشة تسجيل الدخول ========== -->
+<div id="loginScreen" class="login-screen hidden">
+    <div class="login-card">
+        <div class="login-header">
+            <h2 id="loginTitle">تسجيل الدخول</h2>
+            <p id="loginSub">مرحباً بعودتك</p>
+        </div>
+        <div class="login-form">
+            <div id="loginMsg" class="message" style="display: none;"></div>
+            <div class="input-group">
+                <label id="emailLabel">البريد الإلكتروني</label>
+                <input type="email" id="loginEmail" placeholder="admin@company.com">
+            </div>
+            <div class="input-group">
+                <label id="passwordLabel">كلمة المرور</label>
+                <input type="password" id="loginPassword" placeholder="••••••••">
+            </div>
+            <button class="btn-login" onclick="handleLogin()" id="loginBtn">دخول</button>
+            <div style="margin-top: 18px; text-align: center;">
+                <a href="#" onclick="showRegister()" id="registerLink" style="color: #2d3e6e;">إنشاء حساب جديد</a>
+            </div>
+            <button class="btn-login btn-back" onclick="showWebsite()" id="backToWebsiteBtn"><i class="fas fa-arrow-right"></i> العودة إلى الموقع</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== شاشة التسجيل ========== -->
+<div id="registerScreen" class="login-screen hidden">
+    <div class="login-card">
+        <div class="login-header">
+            <h2 id="regTitle">إنشاء حساب</h2>
+            <p id="regSub">سجل الآن للاستمتاع بالخدمات</p>
+        </div>
+        <div class="login-form">
+            <div id="regMsg" class="message" style="display: none;"></div>
+            <div class="input-group">
+                <label id="regNameLabel">الاسم الكامل</label>
+                <input type="text" id="regName">
+            </div>
+            <div class="input-group">
+                <label id="regEmailLabel">البريد الإلكتروني</label>
+                <input type="email" id="regEmail">
+            </div>
+            <div class="input-group">
+                <label id="regPasswordLabel">كلمة المرور</label>
+                <input type="password" id="regPassword">
+            </div>
+            <button class="btn-login" onclick="handleRegister()" id="registerBtn">إنشاء حساب</button>
+            <button class="btn-login btn-back" onclick="showLoginScreen()" id="backToLoginBtn"><i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== شاشة الشركة ========== -->
+<div id="companyScreen" class="company-screen hidden">
+    <div class="company-container">
+        <div class="company-card">
+            <h2 id="companyWelcome" style="font-size: 32px;">مرحباً بك</h2>
+            <p id="companyInstruction" style="margin-bottom: 35px;">يرجى اختيار بيانات مؤسستك</p>
+
+            <div class="form-group">
+                <label id="companyLabel"><i class="fas fa-building"></i> الشركة</label>
+                <select id="companySelect" onchange="loadBranches()">
+                    <option value="">-- اختر الشركة --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label id="branchLabel"><i class="fas fa-code-branch"></i> الفرع</label>
+                <select id="branchSelect" disabled>
+                    <option value="">-- اختر الفرع --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label id="yearLabel"><i class="fas fa-calendar-alt"></i> السنة المالية</label>
+                <select id="yearSelect">
+                    <option value="">-- اختر السنة --</option>
+                </select>
+            </div>
+
+            <div class="selected-summary" id="selectedSummary" style="margin: 20px 0;"></div>
+
+            <div class="btn-group">
+                <button class="btn-back-login" onclick="backToLoginFromCompany()" id="backToLoginCompanyBtn"><i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول</button>
+                <button class="btn-confirm" onclick="confirmCompanySelection()" id="confirmCompanyBtn">تأكيد وبدء العمل ✓</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentLang = 'ar';
+    let users = JSON.parse(localStorage.getItem('erp_users')) || [];
+    let selectedUser = null;
+
+    const companiesData = {
+        companies: [
+            { id: 1, name_ar: "شركة التقنية المتقدمة", name_en: "Advanced Tech Company", 
+              branches: [{id:1, name_ar:"الفرع الرئيسي - الرياض", name_en:"Main Branch - Riyadh"},{id:2, name_ar:"فرع جدة", name_en:"Jeddah Branch"},{id:3, name_ar:"فرع الدمام", name_en:"Dammam Branch"}] },
+            { id: 2, name_ar: "مجموعة الأعمال الذكية", name_en: "Smart Business Group", 
+              branches: [{id:1, name_ar:"المركز الرئيسي - دبي", name_en:"Main Center - Dubai"},{id:2, name_ar:"فرع أبوظبي", name_en:"Abu Dhabi Branch"}] },
+            { id: 3, name_ar: "الشركة العالمية للحلول", name_en: "Global Solutions Company", 
+              branches: [{id:1, name_ar:"الفرع الرئيسي - القاهرة", name_en:"Main Branch - Cairo"}] }
+        ],
+        years: [2023, 2024, 2025]
+    };
+
+    function showLoader(text) {
+        document.getElementById('loaderText').innerHTML = text + ' <i class="fas fa-spinner fa-pulse"></i>';
+        document.getElementById('loader').style.display = 'flex';
+    }
+
+    function hideLoader() {
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    function showWebsite() {
+        showLoader('جاري تحميل الموقع');
+        setTimeout(() => {
+            document.getElementById('websiteScreen').classList.remove('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('companyScreen').classList.add('hidden');
+            hideLoader();
+        }, 500);
+    }
+
+    function showLoginScreen() {
+        showLoader('جاري تحميل شاشة تسجيل الدخول');
+        setTimeout(() => {
+            document.getElementById('websiteScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('companyScreen').classList.add('hidden');
+            hideLoader();
+        }, 500);
+    }
+
+    function showRegister() {
+        showLoader('جاري تحميل شاشة التسجيل');
+        setTimeout(() => {
+            document.getElementById('websiteScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('registerScreen').classList.remove('hidden');
+            document.getElementById('companyScreen').classList.add('hidden');
+            hideLoader();
+        }, 500);
+    }
+
+    function handleRegister() {
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const msgDiv = document.getElementById('regMsg');
+
+        if (!name || !email || !password) {
+            msgDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (currentLang === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
+            msgDiv.className = 'message error';
+            msgDiv.style.display = 'block';
+            setTimeout(() => msgDiv.style.display = 'none', 3000);
+            return;
+        }
+
+        if (users.find(u => u.email === email)) {
+            msgDiv.innerHTML = '<i class="fas fa-times-circle"></i> ' + (currentLang === 'ar' ? 'البريد موجود مسبقاً' : 'Email already exists');
+            msgDiv.className = 'message error';
+            msgDiv.style.display = 'block';
+            return;
+        }
+
+        users.push({ name, email, password });
+        localStorage.setItem('erp_users', JSON.stringify(users));
+        
+        msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + (currentLang === 'ar' ? 'تم إنشاء الحساب بنجاح!' : 'Account created!');
+        msgDiv.className = 'message success';
+        msgDiv.style.display = 'block';
+        
+        setTimeout(() => showLoginScreen(), 1500);
+    }
+
+    function handleLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const msgDiv = document.getElementById('loginMsg');
+
+        const user = users.find(u => u.email === email && u.password === password);
+        
+        if (user) {
+            selectedUser = user;
+            msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + (currentLang === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
+            msgDiv.className = 'message success';
+            msgDiv.style.display = 'block';
+            
+            setTimeout(() => showCompanyScreen(), 1000);
+        } else {
+            msgDiv.innerHTML = '<i class="fas fa-times-circle"></i> ' + (currentLang === 'ar' ? 'بيانات غير صحيحة' : 'Invalid credentials');
+            msgDiv.className = 'message error';
+            msgDiv.style.display = 'block';
+            setTimeout(() => msgDiv.style.display = 'none', 3000);
+        }
+    }
+
+    function showCompanyScreen() {
+        showLoader('جاري تحميل بيانات المؤسسة');
+        setTimeout(() => {
+            document.getElementById('websiteScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('companyScreen').classList.remove('hidden');
+            
+            document.getElementById('companyWelcome').innerHTML = (currentLang === 'ar' ? 'مرحباً، ' : 'Welcome, ') + selectedUser.name + ' <i class="fas fa-smile-wink"></i>';
+            
+            const companySelect = document.getElementById('companySelect');
+            companySelect.innerHTML = '<option value="">-- ' + (currentLang === 'ar' ? 'اختر الشركة' : 'Select Company') + ' --</option>';
+            companiesData.companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company.id;
+                option.innerHTML = (currentLang === 'ar' ? company.name_ar : company.name_en);
+                companySelect.appendChild(option);
+            });
+            
+            const yearSelect = document.getElementById('yearSelect');
+            const currentYear = new Date().getFullYear();
+            yearSelect.innerHTML = '<option value="">-- ' + (currentLang === 'ar' ? 'اختر السنة' : 'Select Year') + ' --</option>';
+            companiesData.years.forEach(year => {
+                if (year <= currentYear) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                }
+            });
+            
+            hideLoader();
+        }, 500);
+    }
+
+    function loadBranches() {
+        const companyId = parseInt(document.getElementById('companySelect').value);
+        const branchSelect = document.getElementById('branchSelect');
+        
+        if (!companyId) {
+            branchSelect.innerHTML = '<option value="">-- ' + (currentLang === 'ar' ? 'اختر الفرع' : 'Select Branch') + ' --</option>';
+            branchSelect.disabled = true;
+            return;
+        }
+        
+        const company = companiesData.companies.find(c => c.id === companyId);
+        
+        if (company && company.branches.length === 1) {
+            branchSelect.innerHTML = '';
+            company.branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.id;
+                option.innerHTML = currentLang === 'ar' ? branch.name_ar : branch.name_en;
+                option.selected = true;
+                branchSelect.appendChild(option);
+            });
+            branchSelect.disabled = false;
+        } else if (company) {
+            branchSelect.innerHTML = '<option value="">-- ' + (currentLang === 'ar' ? 'اختر الفرع' : 'Select Branch') + ' --</option>';
+            company.branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.id;
+                option.innerHTML = currentLang === 'ar' ? branch.name_ar : branch.name_en;
+                branchSelect.appendChild(option);
+            });
+            branchSelect.disabled = false;
+        }
+    }
+
+    function confirmCompanySelection() {
+        const companyId = document.getElementById('companySelect').value;
+        const branchId = document.getElementById('branchSelect').value;
+        const year = document.getElementById('yearSelect').value;
+        
+        if (!companyId || !branchId || !year) {
+            alert(currentLang === 'ar' ? 'يرجى اختيار جميع البيانات' : 'Please select all data');
+            return;
+        }
+        
+        const company = companiesData.companies.find(c => c.id == companyId);
+        const branch = company.branches.find(b => b.id == branchId);
+        
+        const summaryDiv = document.getElementById('selectedSummary');
+        summaryDiv.innerHTML = `
+            <div style="background: linear-gradient(135deg, #e8f0fe, #f0f4fc); border-radius: 30px; padding: 25px; text-align: center;">
+                <i class="fas fa-check-circle" style="font-size: 45px; color: #2d3e6e;"></i>
+                <h3 style="margin: 15px 0;">${currentLang === 'ar' ? 'تم اختيار المعلومات التالية' : 'Selected Information'}</h3>
+                <p><strong>${currentLang === 'ar' ? 'الشركة:' : 'Company:'}</strong> ${currentLang === 'ar' ? company.name_ar : company.name_en}</p>
+                <p><strong>${currentLang === 'ar' ? 'الفرع:' : 'Branch:'}</strong> ${currentLang === 'ar' ? branch.name_ar : branch.name_en}</p>
+                <p><strong>${currentLang === 'ar' ? 'السنة:' : 'Year:'}</strong> ${year}</p>
+                <p style="color: #2d3e6e; margin-top: 15px;"><i class="fas fa-spinner fa-pulse"></i> ${currentLang === 'ar' ? 'جاري تحويلك إلى لوحة التحكم...' : 'Redirecting to dashboard...'}</p>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            alert(currentLang === 'ar' ? '✨ تم تسجيل الدخول بنجاح إلى نظام Nexus ERP' : '✨ Successfully logged into Nexus ERP System');
+        }, 1000);
+    }
+
+    function backToLoginFromCompany() {
+        showLoginScreen();
+    }
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        const globe = document.getElementById('globeBtn');
+        
+        if (currentLang === 'en') {
+            document.body.style.direction = 'ltr';
+            document.body.classList.add('ltr');
+            globe.innerHTML = '<i class="fas fa-globe-americas"></i>';
+        } else {
+            document.body.style.direction = 'rtl';
+            document.body.classList.remove('ltr');
+            globe.innerHTML = '<i class="fas fa-globe-asia"></i>';
+        }
+        
+        updateAllTexts();
+    }
+
+    function updateAllTexts() {
+        const isAr = currentLang === 'ar';
+        
+        // ويب سايت
+        document.getElementById('slogan').textContent = isAr ? 'الحل المتكامل لإدارة المؤسسات' : 'Integrated Enterprise Management';
+        document.getElementById('navLoginBtn').innerHTML = isAr ? 'تسجيل الدخول <i class="fas fa-arrow-left"></i>' : '<i class="fas fa-arrow-right"></i> Login';
+        document.getElementById('heroTitle').innerHTML = isAr ? 'نظام ERP متكامل<br>لإدارة أعمالك بذكاء' : 'Smart ERP System<br>For Your Business';
+        document.getElementById('heroDesc').textContent = isAr ? 'حلول ذكية لإدارة الموارد، المبيعات، المخزون، والموارد البشرية في منصة واحدة متكاملة.' : 'Smart solutions for resources, sales, inventory, and HR in one integrated platform.';
+        document.getElementById('stat1').textContent = isAr ? 'عميل' : 'Clients';
+        document.getElementById('stat2').textContent = isAr ? 'رضا العملاء' : 'Satisfaction';
+        document.getElementById('stat3').textContent = isAr ? 'دعم فني' : 'Support';
+        document.getElementById('companyHighlight').textContent = isAr ? 'شركة التقنية المتقدمة' : 'Advanced Tech Company';
+        document.getElementById('companyHighlightDesc').textContent = isAr ? 'رائدة في حلول ERP منذ 2010' : 'ERP Leader since 2010';
+        document.getElementById('trustBadge').textContent = isAr ? 'موثوق من قبل 5000+ شركة' : 'Trusted by 5000+ companies';
+        
+        // باقات
+        document.getElementById('pricingTitle').textContent = isAr ? 'باقات الاشتراك' : 'Pricing Plans';
+        document.getElementById('pricingSubtitle').textContent = isAr ? 'اختر الباقة المناسبة لعملك' : 'Choose the perfect plan for your business';
+        document.getElementById('basicName').textContent = isAr ? 'الباقة الأساسية' : 'Basic Plan';
+        document.getElementById('basicPeriod').textContent = isAr ? '/شهر' : '/month';
+        document.getElementById('basic1').textContent = isAr ? 'حتى 5 مستخدمين' : 'Up to 5 users';
+        document.getElementById('basic2').textContent = isAr ? 'إدارة المبيعات' : 'Sales Management';
+        document.getElementById('basic3').textContent = isAr ? 'إدارة المخزون' : 'Inventory Management';
+        document.getElementById('basic4').textContent = isAr ? 'دعم فني 12/7' : '12/7 Support';
+        document.getElementById('basicBtn').textContent = isAr ? 'اختيار الباقة' : 'Select Plan';
+        
+        document.getElementById('proName').textContent = isAr ? 'الباقة الاحترافية' : 'Professional Plan';
+        document.getElementById('proPeriod').textContent = isAr ? '/شهر' : '/month';
+        document.getElementById('popularBadge').textContent = isAr ? 'الأكثر شيوعاً' : 'Most Popular';
+        document.getElementById('pro1').textContent = isAr ? 'حتى 20 مستخدمين' : 'Up to 20 users';
+        document.getElementById('pro2').textContent = isAr ? 'كل مميزات الأساسية' : 'All Basic features';
+        document.getElementById('pro3').textContent = isAr ? 'الموارد البشرية' : 'HR Management';
+        document.getElementById('pro4').textContent = isAr ? 'تقارير متقدمة' : 'Advanced Reports';
+        document.getElementById('pro5').textContent = isAr ? 'دعم فني 24/7' : '24/7 Support';
+        document.getElementById('proBtn').textContent = isAr ? 'اختيار الباقة' : 'Select Plan';
+        
+        document.getElementById('enterpriseName').textContent = isAr ? 'الباقة المؤسسية' : 'Enterprise Plan';
+        document.getElementById('enterprisePeriod').textContent = isAr ? '/شهر' : '/month';
+        document.getElementById('ent1').textContent = isAr ? 'مستخدمين غير محدود' : 'Unlimited users';
+        document.getElementById('ent2').textContent = isAr ? 'كل مميزات الاحترافية' : 'All Professional features';
+        document.getElementById('ent3').textContent = isAr ? 'تخصيص كامل للنظام' : 'Full customization';
+        document.getElementById('ent4').textContent = isAr ? 'مدير حساب مخصص' : 'Dedicated account manager';
+        document.getElementById('ent5').textContent = isAr ? 'تكامل مع أنظمة خارجية' : 'External integrations';
+        document.getElementById('enterpriseBtn').textContent = isAr ? 'اختيار الباقة' : 'Select Plan';
+        
+        // فوتر
+        document.getElementById('footerDesc').textContent = isAr ? 'نظام متكامل لإدارة المؤسسات' : 'Integrated Enterprise Management';
+        document.getElementById('contactTitle').textContent = isAr ? 'تواصل معنا' : 'Contact Us';
+        document.getElementById('followTitle').textContent = isAr ? 'تابعنا' : 'Follow Us';
+        
+        // تسجيل دخول
+        document.getElementById('loginTitle').textContent = isAr ? 'تسجيل الدخول' : 'Login';
+        document.getElementById('loginSub').textContent = isAr ? 'مرحباً بعودتك' : 'Welcome back';
+        document.getElementById('emailLabel').innerHTML = isAr ? '<i class="fas fa-envelope"></i> البريد الإلكتروني' : '<i class="fas fa-envelope"></i> Email';
+        document.getElementById('passwordLabel').innerHTML = isAr ? '<i class="fas fa-lock"></i> كلمة المرور' : '<i class="fas fa-lock"></i> Password';
+        document.getElementById('loginBtn').innerHTML = isAr ? 'دخول <i class="fas fa-arrow-left"></i>' : '<i class="fas fa-arrow-right"></i> Login';
+        document.getElementById('registerLink').innerHTML = isAr ? '<i class="fas fa-user-plus"></i> إنشاء حساب جديد' : '<i class="fas fa-user-plus"></i> Create new account';
+        document.getElementById('backToWebsiteBtn').innerHTML = isAr ? '<i class="fas fa-arrow-right"></i> العودة إلى الموقع' : '<i class="fas fa-arrow-left"></i> Back to website';
+        
+        // تسجيل
+        document.getElementById('regTitle').textContent = isAr ? 'إنشاء حساب' : 'Create Account';
+        document.getElementById('regSub').textContent = isAr ? 'سجل الآن للاستمتاع بالخدمات' : 'Sign up now';
+        document.getElementById('regNameLabel').innerHTML = isAr ? '<i class="fas fa-user"></i> الاسم الكامل' : '<i class="fas fa-user"></i> Full Name';
+        document.getElementById('regEmailLabel').innerHTML = isAr ? '<i class="fas fa-envelope"></i> البريد الإلكتروني' : '<i class="fas fa-envelope"></i> Email';
+        document.getElementById('regPasswordLabel').innerHTML = isAr ? '<i class="fas fa-lock"></i> كلمة المرور' : '<i class="fas fa-lock"></i> Password';
+        document.getElementById('registerBtn').innerHTML = isAr ? 'إنشاء حساب <i class="fas fa-arrow-left"></i>' : '<i class="fas fa-arrow-right"></i> Create Account';
+        document.getElementById('backToLoginBtn').innerHTML = isAr ? '<i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول' : '<i class="fas fa-arrow-left"></i> Back to login';
+        
+        // شركة
+        if (selectedUser) {
+            document.getElementById('companyWelcome').innerHTML = (isAr ? 'مرحباً، ' : 'Welcome, ') + selectedUser.name + ' <i class="fas fa-smile-wink"></i>';
+        }
+        document.getElementById('companyInstruction').textContent = isAr ? 'يرجى اختيار بيانات مؤسستك' : 'Please select your organization data';
+        document.getElementById('companyLabel').innerHTML = isAr ? '<i class="fas fa-building"></i> الشركة' : '<i class="fas fa-building"></i> Company';
+        document.getElementById('branchLabel').innerHTML = isAr ? '<i class="fas fa-code-branch"></i> الفرع' : '<i class="fas fa-code-branch"></i> Branch';
+        document.getElementById('yearLabel').innerHTML = isAr ? '<i class="fas fa-calendar-alt"></i> السنة المالية' : '<i class="fas fa-calendar-alt"></i> Fiscal Year';
+        document.getElementById('backToLoginCompanyBtn').innerHTML = isAr ? '<i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول' : '<i class="fas fa-arrow-left"></i> Back to login';
+        document.getElementById('confirmCompanyBtn').innerHTML = isAr ? 'تأكيد وبدء العمل ✓' : 'Confirm & Start ✓';
+    }
+
+    if (users.length === 0) {
+        users.push({ name: 'Admin User', email: 'admin@erp.com', password: '123456' });
+        localStorage.setItem('erp_users', JSON.stringify(users));
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.csproj.AssemblyReference.cache
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.GeneratedMSBuildEditorConfig.editorconfig
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.AssemblyInfoInputs.cache
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.AssemblyInfo.cs
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.csproj.CoreCompileInputs.cache
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.MvcApplicationPartsAssemblyInfo.cs
+D:\_Work\React\backend\obj\Debug\net6.0\ERP.MvcApplicationPartsAssemblyInfo.cache
