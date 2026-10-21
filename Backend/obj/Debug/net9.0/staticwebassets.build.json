@@ -1,1 +1,12 @@
-{"Version":1,"Hash":"XBJBvywg7HOuRznvkyPfYdh/AmXJnDtHFYjGE3+uKyM=","Source":"ERP","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "7tX/sF9CAEZiz661Y3dCysmtxS/+MNhTrDENMLcE/eE=",
+  "Source": "ERP",
+  "BasePath": "_content/ERP",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

@@ -6,7 +6,7 @@ export const Search_Users = (_condition: string = ""): SearchModalConfig => {
     title: "Search Users",
     tableName: "Sys_Users",
     keyColumn: "UserID",
-    condition: _condition,
+    condition: _condition ,
     columns: [
       { field: "UserID", title: "UserID", width: 80 ,IsVisible : false },
       { field: "USER_NAME", title: "USER_NAME", width: 200  },

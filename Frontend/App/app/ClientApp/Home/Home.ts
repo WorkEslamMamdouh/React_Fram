@@ -72,7 +72,11 @@ function InitializeEvents() {
 
 
 
+    function test() {    
 
+
+        alert(100)
+    }
 
 
 
@@ -99,8 +103,8 @@ const elements = {
 return {
 ...state,
 ...actions,
-...elements
-
+...elements,
+test
 };
 
 };

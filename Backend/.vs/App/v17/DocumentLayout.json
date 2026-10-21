@@ -1,53 +1,53 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\_Work\\Framework_React\\Backend_Ver2\\",
+  "WorkspaceRootPath": "E:\\ExternalWork\\React_Fram\\Backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\managedatasqlcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\managedatasqlcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\managedatasqlcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\services\\sqlserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\services\\sqlserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\services\\sqlserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\security\\filters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\security\\filters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\security\\filters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\model\\sharedmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\model\\sharedmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\model\\sharedmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\sharedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\sharedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\sharedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\security\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\security\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\security\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\model\\baseresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\model\\baseresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\model\\baseresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\controllers\\gateway\\security\\cryptohelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\controllers\\gateway\\security\\cryptohelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\security\\cryptohelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|d:\\_work\\framework_react\\backend_ver2\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|e:\\externalwork\\react_fram\\backend\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
@@ -64,9 +64,9 @@
               "$type": "Document",
               "DocumentIndex": 5,
               "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\AuthController.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\AuthController.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\AuthController.cs",
               "RelativeToolTip": "Controllers\\AuthController.cs",
               "ViewState": "AgIAACIAAAAAAAAAAAAlwDkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -77,11 +77,11 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "ManageDataSQLController.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\ManageDataSQLController.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\ManageDataSQLController.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\ManageDataSQLController.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\ManageDataSQLController.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\ManageDataSQLController.cs",
               "RelativeToolTip": "Controllers\\GateWay\\ManageDataSQLController.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAArwCMAAAAbAAAAAAAAAA==",
+              "ViewState": "AgIAABIAAAAAAAAAAAArwB4AAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-16T14:41:52.202Z",
               "IsPinned": true,
@@ -91,9 +91,9 @@
               "$type": "Document",
               "DocumentIndex": 6,
               "Title": "SharedModel.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Model\\SharedModel.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Model\\SharedModel.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Model\\SharedModel.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Model\\SharedModel.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Model\\SharedModel.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Model\\SharedModel.cs",
               "ViewState": "AgIAABsAAAAAAAAAAAAswCYAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -104,27 +104,42 @@
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "SQLServer.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Services\\SQLServer.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Services\\SQLServer.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Services\\SQLServer.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Services\\SQLServer.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Services\\SQLServer.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Services\\SQLServer.cs",
               "ViewState": "AgIAACMDAAAAAAAAAADgvzwDAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-17T20:59:02.574Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{cf577b8c-4134-11d2-83e5-00c04f9902c1}"
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
               "Title": "Filters.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Security\\Filters.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Security\\Filters.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Security\\Filters.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Security\\Filters.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Security\\Filters.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Security\\Filters.cs",
               "ViewState": "AgIAAC0AAAAAAAAAAAAEwEQAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -134,9 +149,9 @@
               "$type": "Document",
               "DocumentIndex": 8,
               "Title": "JwtService.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Security\\JwtService.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Security\\JwtService.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Security\\JwtService.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Security\\JwtService.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Security\\JwtService.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Security\\JwtService.cs",
               "ViewState": "AgIAACoAAAAAAAAAAAArwEgAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -146,9 +161,9 @@
               "$type": "Document",
               "DocumentIndex": 10,
               "Title": "CryptoHelper.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Security\\CryptoHelper.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Security\\CryptoHelper.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Security\\CryptoHelper.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Security\\CryptoHelper.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Security\\CryptoHelper.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Security\\CryptoHelper.cs",
               "ViewState": "AgIAAAUAAAAAAAAAAAD4vx0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -158,22 +173,21 @@
               "$type": "Document",
               "DocumentIndex": 2,
               "Title": "appsettings.json",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\appsettings.json",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\appsettings.json",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\appsettings.json",
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-04-19T19:32:40.623Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-19T19:32:40.623Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
               "Title": "Program.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Program.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Program.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Program.cs",
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAL4AAAAAAAAAAAAUwNEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -183,9 +197,9 @@
               "$type": "Document",
               "DocumentIndex": 7,
               "Title": "SharedController.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\SharedController.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\SharedController.cs",
               "RelativeDocumentMoniker": "Controllers\\SharedController.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\SharedController.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\SharedController.cs",
               "RelativeToolTip": "Controllers\\SharedController.cs",
               "ViewState": "AgIAACIAAAAAAAAAAAAwwEAAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -195,9 +209,9 @@
               "$type": "Document",
               "DocumentIndex": 11,
               "Title": "launchSettings.json",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Properties\\launchSettings.json",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "Properties\\launchSettings.json",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Properties\\launchSettings.json",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Properties\\launchSettings.json",
               "RelativeToolTip": "Properties\\launchSettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
@@ -207,9 +221,9 @@
               "$type": "Document",
               "DocumentIndex": 9,
               "Title": "BaseResponse.cs",
-              "DocumentMoniker": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Model\\BaseResponse.cs",
+              "DocumentMoniker": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Model\\BaseResponse.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Model\\BaseResponse.cs",
-              "ToolTip": "D:\\_Work\\Framework_React\\Backend_Ver2\\Controllers\\GateWay\\Model\\BaseResponse.cs",
+              "ToolTip": "E:\\ExternalWork\\React_Fram\\Backend\\Controllers\\GateWay\\Model\\BaseResponse.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Model\\BaseResponse.cs",
               "ViewState": "AgIAAAIAAAAAAAAAAAAkwA4AAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
