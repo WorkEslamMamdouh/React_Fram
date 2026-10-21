@@ -9,9 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.1.1",
+    "@ant-design/icons": "^6.3.4",
     "@fortawesome/fontawesome-free": "^7.2.0",
-    "antd": "^6.3.5",
+    "antd": "^6.6.7",
     "apexcharts": "^5.10.6",
     "axios": "^1.14.0",
     "lodash": "^4.18.1",

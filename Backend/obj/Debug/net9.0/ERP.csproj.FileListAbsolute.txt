@@ -782,3 +782,4 @@ C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\refint\ERP.dll
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\ERP.pdb
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\ERP.genruntimeconfig.cache
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\ref\ERP.dll
+C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\ERP.sourcelink.json

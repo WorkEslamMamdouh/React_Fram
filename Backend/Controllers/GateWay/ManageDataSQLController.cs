@@ -19,7 +19,7 @@ namespace GateWay.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     [ServiceFilter(typeof(AutoDecryptFilter))]
     public class ManageDataSQLController : ControllerBase
     {
