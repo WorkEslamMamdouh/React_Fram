@@ -1344,7 +1344,8 @@ export default function DynamicGrid({
       }
     } catch (error) {
       console.error("Save failed:", error);
-      Sys.ShowMessage("❌ Failed to save record", "❌ فشل حفظ السجل", "error");
+      const msg = Sys.GetErrorMessage(error);
+      Sys.ShowMessage("❌ Failed to save record: " + msg, "❌ فشل حفظ السجل: " + msg, "error");
     }
   };
 
@@ -1369,7 +1370,8 @@ export default function DynamicGrid({
       }
     } catch (error) {
       console.error("Delete failed:", error);
-      Sys.ShowMessage("❌ Failed to delete record", "❌ فشل حذف السجل", "error");
+      const msg = Sys.GetErrorMessage(error);
+      Sys.ShowMessage("❌ Failed to delete record: " + msg, "❌ فشل حذف السجل: " + msg, "error");
     }
   };
 

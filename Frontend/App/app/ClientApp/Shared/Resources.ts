@@ -148,7 +148,11 @@ export const useTranslate = () => {
     tp_help4Title: "Search inside the form",
     tp_help4Body: "When adding or editing you will find a (User - test) field with a 🔍 button that opens the same search window.",
     tp_help5Title: "Double click",
-    tp_help5Body: "Double click a row, or press (Details) in its actions, to show its data in a card above the table."
+    tp_help5Body: "Double click a row, or press (Details) in its actions, to show its data in a card above the table.",
+    // ===== CashTypes =====
+    ct_title: "Financial Types",
+    ct_subtitle: "Cash box payment types and their charge percentage",
+    ct_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -288,6 +292,10 @@ export const useTranslate = () => {
     tp_help4Title: "البحث جوه الفورم",
     tp_help4Body: "لما تضيف أو تعدل هتلاقي حقل (مستخدم - تجربة) جنبه زرار 🔍 بيفتح نفس نافذة البحث.",
     tp_help5Title: "دبل كليك",
-    tp_help5Body: "دبل كليك على أي صف، أو زرار (تفاصيل) في الإجراءات بتاعته، بيعرض بياناته في كارت فوق الجدول."
+    tp_help5Body: "دبل كليك على أي صف، أو زرار (تفاصيل) في الإجراءات بتاعته، بيعرض بياناته في كارت فوق الجدول.",
+    // ===== CashTypes =====
+    ct_title: "أنواع الماليات",
+    ct_subtitle: "أنواع الدفع في الخزنة ونسبة الرسوم لكل نوع",
+    ct_refresh: "تحديث"
   }
 };

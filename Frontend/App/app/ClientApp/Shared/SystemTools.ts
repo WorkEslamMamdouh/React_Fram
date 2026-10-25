@@ -52,6 +52,19 @@ const addTokenToHeaders = (config: any) => {
 // API CORE
 // =======================
 
+/**
+ * يطلع رسالة الخطأ الحقيقية من رد الخادم
+ * (الخادم بيرجّع BaseResponse كنص JSON جواه ErrorMessage)
+ */
+export const GetErrorMessage = (error: any): string => {
+  if (typeof error === "string") return error;
+  let data = error?.response?.data;
+  if (typeof data === "string") {
+    try { data = JSON.parse(data); } catch { return data || error?.message || "Server Error"; }
+  }
+  return data?.ErrorMessage || data?.message || data?.title || error?.ErrorMessage || error?.message || "Server Error";
+};
+
 async function PostApi<T>(
   controller: string,
   action: string,
@@ -67,7 +80,7 @@ async function PostApi<T>(
     if (error?.response?.status === 401) {
       handleUnauthorized();
     }
-    throw error?.response?.data?.message || "Server Error";
+    throw GetErrorMessage(error);
   }
 }
 
@@ -86,7 +99,7 @@ async function GetApi<T>(
     if (error?.response?.status === 401) {
       handleUnauthorized();
     }
-    throw error?.response?.data?.message || "Server Error";
+    throw GetErrorMessage(error);
   }
 }
 
@@ -171,9 +184,17 @@ export async function CallApi<T extends BaseResponse<any>>(
       options.onSuccess?.(res);
       return res;
 
-    } catch (err) {
-      options.onError?.(err);
-      throw err;
+    } catch (err: any) {
+      // ✅ نحوّل أي خطأ لنفس شكل BaseResponse عشان رسالة الخادم الحقيقية توصل للشاشة
+      if (err?.response?.status === 401) handleUnauthorized();
+      const errRes: any = {
+        IsSuccess: false,
+        StatusCode: err?.response?.status ?? 0,
+        ErrorMessage: GetErrorMessage(err),
+        Response: null,
+      };
+      options.onError?.(errRes);
+      throw errRes;
 
     } finally {
       loader?.hide?.();
@@ -329,6 +350,7 @@ export async function CallApiEncrypted<T extends BaseResponse<any>>(
 export const Sys = {
   // API
   CallApi,
+  GetErrorMessage,
   CallApiEncrypted,
   
   // Token Management

@@ -58,6 +58,7 @@ useEffect(() => {
     Admin: AdminLayout,
     Home: HomeLayout,
     TestPage: HomeLayout,
+    CashTypes: HomeLayout,
     Dashboard: HomeLayout,
     Salse: HomeLayout,
     Pur: HomeLayout,
