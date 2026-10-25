@@ -152,7 +152,13 @@ export const useTranslate = () => {
     // ===== CashTypes =====
     ct_title: "Financial Types",
     ct_subtitle: "Cash box payment types and their charge percentage",
-    ct_refresh: "Refresh"
+    ct_refresh: "Refresh",
+    // ===== FinancialType =====
+    ft_title: "Financial Account Types",
+    ft_subtitle: "Receipt and payment types used in financial transactions",
+    ft_refresh: "Refresh",
+    ft_receipt: "Receipt",
+    ft_payment: "Payment"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -296,6 +302,12 @@ export const useTranslate = () => {
     // ===== CashTypes =====
     ct_title: "أنواع الماليات",
     ct_subtitle: "أنواع الدفع في الخزنة ونسبة الرسوم لكل نوع",
-    ct_refresh: "تحديث"
+    ct_refresh: "تحديث",
+    // ===== FinancialType =====
+    ft_title: "أنواع الحسابات المالية",
+    ft_subtitle: "أنواع القبض والصرف اللي بتستخدم في الحركات المالية",
+    ft_refresh: "تحديث",
+    ft_receipt: "قبض",
+    ft_payment: "صرف"
   }
 };

@@ -59,6 +59,7 @@ useEffect(() => {
     Home: HomeLayout,
     TestPage: HomeLayout,
     CashTypes: HomeLayout,
+    FinancialType: HomeLayout,
     Dashboard: HomeLayout,
     Salse: HomeLayout,
     Pur: HomeLayout,

@@ -695,7 +695,7 @@ const InputControl: React.FC<{
     return (
       <select
         className={`${baseClass} ${themeClass} ${errorClass} ${disabledClass}`}
-        value={value || ""}
+        value={value ?? ""}  // ✅ ?? بدل || عشان القيمة 0 تظهر صح
         onChange={(e) => onChange(e.target.value)}
         disabled={getDisabledState()}
       >
