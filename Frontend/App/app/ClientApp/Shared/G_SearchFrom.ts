@@ -66,3 +66,68 @@ export const Search_Users = (_condition: string = ""): SearchModalConfig => {
 //     </>
 //   );
 // }
+
+// ===== CashTypes — اتعملت من برنامج CreatePageReact =====
+export const CashTypes = (_condition: string = ""): SearchModalConfig => {
+  return {
+    title: "CashTypes",
+    tableName: "D_A_CashTypes",
+    keyColumn: "CashTypeID",
+    condition: _condition,
+    columns: [
+      { field: "CashTypeID", title: "Cash Type ID", width: 80 },
+      { field: "Description", title: "Description", width: 200 },
+      { field: "ChargePrc", title: "Charge Prc", width: 200 },
+      { field: "CashAccCode", title: "Cash Acc Code", width: 200 },
+    ],
+    searchColumns: ["Description", "ChargePrc", "CashAccCode"],
+    returnField: "CashTypeID",
+    displayField: "Description",
+    pageSize: 20,
+    orderBy: "CashTypeID",
+    orderType: "DESC"
+  };
+};
+
+// ===== FinancialType — اتعملت من برنامج CreatePageReact =====
+export const FinancialType = (_condition: string = ""): SearchModalConfig => {
+  return {
+    title: "FinancialType",
+    tableName: "D_A_FinancialType",
+    keyColumn: "FinancialTypeID",
+    condition: _condition,
+    columns: [
+      { field: "FinancialTypeID", title: "Financial Type ID", width: 80 },
+      { field: "DescAr", title: "Desc Ar", width: 200 },
+      { field: "DescEn", title: "Desc En", width: 200 },
+    ],
+    searchColumns: ["DescAr", "DescEn"],
+    returnField: "FinancialTypeID",
+    displayField: "DescAr",
+    pageSize: 20,
+    orderBy: "FinancialTypeID",
+    orderType: "DESC"
+  };
+};
+
+// ===== ACCOUNT — اتعملت من برنامج CreatePageReact =====
+export const ACCOUNT = (_condition: string = ""): SearchModalConfig => {
+  return {
+    title: "ACCOUNT",
+    tableName: "A_ACCOUNT",
+    keyColumn: "AccountID",
+    condition: _condition,
+    columns: [
+      { field: "AccountID", title: "Account ID", width: 80 },
+      { field: "ACC_CODE", title: "ACC CODE", width: 200 },
+      { field: "ACC_DESCA", title: "ACC DESCA", width: 200 },
+      { field: "ACC_DESCL", title: "ACC DESCL", width: 200 },
+    ],
+    searchColumns: ["ACC_CODE", "ACC_DESCA", "ACC_DESCL"],
+    returnField: "AccountID",
+    displayField: "ACC_CODE",
+    pageSize: 20,
+    orderBy: "AccountID",
+    orderType: "DESC"
+  };
+};

@@ -92,8 +92,8 @@ function FinTrans_ExpensesPage(p: Props) {
           keyColumn={p.grid.KeyColumn}
           columns={columns}
           condition={p.grid.Condition}
-          orderBy={p.grid.KeyColumn}
-          orderType="DESC"
+          orderBy={p.grid.OrderBy}
+          orderType={p.grid.OrderType}
           pageSize={p.grid.PageSize}
           compCode={p.grid.CompCode}
           branchCode={p.grid.BranchCode}

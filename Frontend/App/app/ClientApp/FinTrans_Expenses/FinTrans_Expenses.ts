@@ -2,16 +2,17 @@
 
 // =====================================================================================
 //  📄 FinTrans_Expenses.ts   ←  ملف المنطق (البيزنس) — شاشة المصروفات
-//  اتعمل أوتوماتيك من برنامج CreatePageReact
+//  اتعمل أوتوماتيك من برنامج CreatePageReact — تقدر تفتحه في البرنامج وتعدّله
 // -------------------------------------------------------------------------------------
 //  الجدول : I_TR_FinancialTransactions
-//  الحفظ  : مع G_ProcessTrans  (@TrType = '1')
+//  الحفظ  : مع G_ProcessTrans  (@TrType = 'Fin_Expenses')
 // =====================================================================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSys } from "../Shared/SystemUsing";
 import { DynamicGridColumn } from "../Shared/Components/Import/ModelGrid";
 import { FilterFieldConfig, ActiveFilter } from "../Shared/Components/Import/AdvancedFilter";
+import { ACCOUNT, CashTypes, FinancialType } from "../Shared/G_SearchFrom";
 
 // =======================
 // #region ثوابت الشاشة
@@ -75,6 +76,7 @@ export function FinTrans_Expenses() {
   // =======================
   //  ⚠️ الأعمدة والفلاتر جوه useMemo عشان الجدول ميعيدش التحميل على طول
 
+  // الشرط اللي بيتعرض بيه الجدول
   const Condition = `CompCode = ${CompCode} AND BranchCode = ${BranchCode}`;
 
   const Columns = useMemo<DynamicGridColumn[]>(
@@ -102,7 +104,7 @@ export function FinTrans_Expenses() {
       },
       {
         field: "RefNo",
-        title: t("Ref No", "Ref No"),
+        title: t("Ref No", "رقم المرجع"),
         width: 220,
         IsSave: true,
         SortFieldInEditAndAdd: 2,
@@ -154,17 +156,6 @@ export function FinTrans_Expenses() {
         SortFieldInEditAndAdd: 4,
       },
       {
-        field: "TrType",
-        title: t("Type", "النوع"),
-        type: "number",
-        inputType: "number",
-        DefaultValue: 0,
-        width: 120,
-        IsSave: true,
-        IsSearchColumn: false,
-        SortFieldInEditAndAdd: 5,
-      },
-      {
         field: "IsCash",
         title: t("Is Cash", "Is Cash"),
         type: "checkbox",
@@ -172,24 +163,33 @@ export function FinTrans_Expenses() {
         width: 100,
         IsSave: true,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 6,
+        SortFieldInEditAndAdd: 5,
       },
       {
         field: "FinancialTypeID",
-        title: t("Financial Type ID", "Financial Type ID"),
-        type: "number",
-        inputType: "number",
+        title: t("Financial Type ID", "Financial Type"),
+        inputType: "search",
+        searchModal: FinancialType(),
+        placeholder: t("Press 🔍 to pick", "دوس 🔍 للاختيار"),
         DefaultValue: 0,
         width: 120,
         IsSave: true,
         IsSearchColumn: false,
+        SortFieldInEditAndAdd: 6,
+      },
+      {
+        field: "BeneficiaryName",
+        title: t("Beneficiary Name", "المستفيد"),
+        width: 220,
+        IsSave: true,
         SortFieldInEditAndAdd: 7,
       },
       {
         field: "CashTypeID",
-        title: t("Cash Type ID", "Cash Type ID"),
-        type: "number",
-        inputType: "number",
+        title: t("Cash Type", "Cash Type"),
+        inputType: "search",
+        searchModal: CashTypes(),
+        placeholder: t("Press 🔍 to pick", "دوس 🔍 للاختيار"),
         DefaultValue: 0,
         width: 120,
         IsSave: true,
@@ -197,25 +197,11 @@ export function FinTrans_Expenses() {
         SortFieldInEditAndAdd: 8,
       },
       {
-        field: "AccountCode",
-        title: t("Account Code", "Account Code"),
+        field: "Reason",
+        title: t("Reason", "السبب"),
         width: 220,
         IsSave: true,
         SortFieldInEditAndAdd: 9,
-      },
-      {
-        field: "BeneficiaryName",
-        title: t("Beneficiary Name", "Beneficiary Name"),
-        width: 220,
-        IsSave: true,
-        SortFieldInEditAndAdd: 10,
-      },
-      {
-        field: "Reason",
-        title: t("Reason", "Reason"),
-        width: 220,
-        IsSave: true,
-        SortFieldInEditAndAdd: 11,
       },
       {
         field: "Amount",
@@ -227,7 +213,29 @@ export function FinTrans_Expenses() {
         width: 120,
         IsSave: true,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 12,
+        SortFieldInEditAndAdd: 10,
+      },
+      {
+        field: "AccountCode",
+        title: t("Account Code", "Account Code"),
+        inputType: "search",
+        searchModal: ACCOUNT(),
+        placeholder: t("Press 🔍 to pick", "دوس 🔍 للاختيار"),
+        width: 220,
+        IsSave: true,
+        SortFieldInEditAndAdd: 11,
+      },
+      {
+        field: "TrType",
+        title: t("Type", "النوع"),
+        type: "checkbox",
+        DefaultValue: true,
+        width: 120,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
+        IsSearchColumn: false,
       },
       {
         field: "ChargePrc",
@@ -237,9 +245,11 @@ export function FinTrans_Expenses() {
         step: 0.01,
         DefaultValue: 0,
         width: 120,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 13,
       },
       {
         field: "DueAmount",
@@ -249,9 +259,11 @@ export function FinTrans_Expenses() {
         step: 0.01,
         DefaultValue: 0,
         width: 120,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 14,
       },
       {
         field: "LoanPayAmount",
@@ -261,9 +273,11 @@ export function FinTrans_Expenses() {
         step: 0.01,
         DefaultValue: 0,
         width: 120,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 15,
       },
       {
         field: "CustodyPayAmount",
@@ -273,27 +287,34 @@ export function FinTrans_Expenses() {
         step: 0.01,
         DefaultValue: 0,
         width: 120,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 16,
       },
       {
         field: "Status",
         title: t("Status", "الحالة"),
         type: "number",
         inputType: "number",
-        DefaultValue: 0,
+        DefaultValue: 1,
         width: 120,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 17,
       },
       {
         field: "Remarks",
         title: t("Remarks", "ملاحظات"),
         width: 220,
-        IsSave: true,
-        SortFieldInEditAndAdd: 18,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
+        IsSearchColumn: false,
       },
       {
         field: "IDUserCreate",
@@ -302,9 +323,11 @@ export function FinTrans_Expenses() {
         inputType: "number",
         DefaultValue: 0,
         width: 120,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 19,
       },
       {
         field: "CreatedAt",
@@ -312,16 +335,21 @@ export function FinTrans_Expenses() {
         type: "date",
         inputType: "date",
         width: 220,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 20,
       },
       {
         field: "CreatedBy",
         title: t("Created by", "أنشئ بواسطة"),
         width: 220,
-        IsSave: true,
-        SortFieldInEditAndAdd: 21,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
+        IsSearchColumn: false,
       },
       {
         field: "UpdatedAt",
@@ -329,23 +357,31 @@ export function FinTrans_Expenses() {
         type: "date",
         inputType: "date",
         width: 220,
-        IsSave: true,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
         IsSearchColumn: false,
-        SortFieldInEditAndAdd: 22,
       },
       {
         field: "UpdatedBy",
         title: t("Updated by", "عدّل بواسطة"),
         width: 220,
-        IsSave: true,
-        SortFieldInEditAndAdd: 23,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
+        IsSearchColumn: false,
       },
       {
         field: "IDPeriod",
         title: t("IDPeriod", "IDPeriod"),
         width: 220,
-        IsSave: true,
-        SortFieldInEditAndAdd: 24,
+        editable: false,
+        insertable: false,
+        IsSave: false,              // للعرض بس
+        IsVisibleDisplayInGrid: false,
+        IsSearchColumn: false,
       },
     ],
     [IsLangEN, CompCode, BranchCode, UserID, FinYear]
@@ -355,29 +391,16 @@ export function FinTrans_Expenses() {
     () => [
       { field: "TransactionID", label: t("ID", "الرقم"), type: "number", sortOrder: 1 },
       { field: "TrNo", label: t("Trans No", "رقم الحركة"), type: "number", sortOrder: 2 },
-      { field: "RefNo", label: t("Ref No", "Ref No"), type: "text", sortOrder: 3 },
+      { field: "RefNo", label: t("Ref No", "رقم المرجع"), type: "text", sortOrder: 3 },
       { field: "TransactionDate", label: t("Transaction Date", "Transaction Date"), type: "dateRange", sortOrder: 4 },
       { field: "IsActive", label: t("Active", "فعال"), type: "select", options: [{ value: "1", label: t("Yes", "نعم") }, { value: "0", label: t("No", "لا") }], sortOrder: 5 },
-      { field: "TrType", label: t("Type", "النوع"), type: "number", sortOrder: 6 },
-      { field: "IsCash", label: t("Is Cash", "Is Cash"), type: "select", options: [{ value: "1", label: t("Yes", "نعم") }, { value: "0", label: t("No", "لا") }], sortOrder: 7 },
-      { field: "FinancialTypeID", label: t("Financial Type ID", "Financial Type ID"), type: "number", sortOrder: 8 },
-      { field: "CashTypeID", label: t("Cash Type ID", "Cash Type ID"), type: "number", sortOrder: 9 },
-      { field: "AccountCode", label: t("Account Code", "Account Code"), type: "text", sortOrder: 10 },
-      { field: "BeneficiaryName", label: t("Beneficiary Name", "Beneficiary Name"), type: "text", sortOrder: 11 },
-      { field: "Reason", label: t("Reason", "Reason"), type: "text", sortOrder: 12 },
-      { field: "Amount", label: t("Amount", "المبلغ"), type: "number", sortOrder: 13 },
-      { field: "ChargePrc", label: t("Charge Prc", "Charge Prc"), type: "number", sortOrder: 14 },
-      { field: "DueAmount", label: t("Due Amount", "Due Amount"), type: "number", sortOrder: 15 },
-      { field: "LoanPayAmount", label: t("Loan Pay Amount", "Loan Pay Amount"), type: "number", sortOrder: 16 },
-      { field: "CustodyPayAmount", label: t("Custody Pay Amount", "Custody Pay Amount"), type: "number", sortOrder: 17 },
-      { field: "Status", label: t("Status", "الحالة"), type: "number", sortOrder: 18 },
-      { field: "Remarks", label: t("Remarks", "ملاحظات"), type: "text", sortOrder: 19 },
-      { field: "IDUserCreate", label: t("IDUser Create", "IDUser Create"), type: "number", sortOrder: 20 },
-      { field: "CreatedAt", label: t("Created at", "تاريخ الإنشاء"), type: "dateRange", sortOrder: 21 },
-      { field: "CreatedBy", label: t("Created by", "أنشئ بواسطة"), type: "text", sortOrder: 22 },
-      { field: "UpdatedAt", label: t("Updated at", "تاريخ التعديل"), type: "dateRange", sortOrder: 23 },
-      { field: "UpdatedBy", label: t("Updated by", "عدّل بواسطة"), type: "text", sortOrder: 24 },
-      { field: "IDPeriod", label: t("IDPeriod", "IDPeriod"), type: "text", sortOrder: 25 },
+      { field: "IsCash", label: t("Is Cash", "Is Cash"), type: "select", options: [{ value: "1", label: t("Yes", "نعم") }, { value: "0", label: t("No", "لا") }], sortOrder: 6 },
+      { field: "FinancialTypeID", label: t("Financial Type ID", "Financial Type"), type: "search", searchModal: FinancialType(), sortOrder: 7 },
+      { field: "BeneficiaryName", label: t("Beneficiary Name", "المستفيد"), type: "text", sortOrder: 8 },
+      { field: "CashTypeID", label: t("Cash Type", "Cash Type"), type: "search", searchModal: CashTypes(), sortOrder: 9 },
+      { field: "Reason", label: t("Reason", "السبب"), type: "text", sortOrder: 10 },
+      { field: "Amount", label: t("Amount", "المبلغ"), type: "number", sortOrder: 11 },
+      { field: "AccountCode", label: t("Account Code", "Account Code"), type: "search", searchModal: ACCOUNT(), sortOrder: 12 },
     ],
     [IsLangEN]
   );
@@ -407,7 +430,9 @@ export function FinTrans_Expenses() {
     Columns,
     FilterFields,
     DefaultFilters,
-    PageSize: 7,
+    OrderBy: "TransactionID",
+    OrderType: "DESC" as "ASC" | "DESC",
+    PageSize: 10,
     EnableInsert: true,
     EnableUpdate: true,
     EnableDelete: true,
@@ -420,3 +445,6 @@ export function FinTrans_Expenses() {
     grid,
   };
 }
+
+// ⚠️ السطر اللي تحت ده بيقراه برنامج CreatePageReact عشان يفتح الشاشة ويعدّلها — متمسحوش
+// @CreatePageReact-Settings: {"Version":2,"Module":"FinTrans_Expenses","Table":"I_TR_FinancialTransactions","KeyColumn":"TransactionID","TitleAr":"المصروفات","TitleEn":"Expenses","SubAr":"المصروفات","SubEn":"Expenses","Icon":"fa-table-list","PageSize":10,"ProcessTrans":true,"TrType":"Fin_Expenses","FilterComp":true,"FilterBranch":true,"ExtraCondition":"","OrderBy":"TransactionID","OrderType":"DESC","Insert":true,"Edit":true,"Delete":true,"Export":true,"Permissions":true,"ParentMenu":"","IconColor":"indigo","Roles":"","Fields":[{"Field":"TransactionID","TitleAr":"الرقم","TitleEn":"ID","InGrid":true,"InForm":false,"Required":false,"Search":true,"InFilter":true,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":90,"Order":1},{"Field":"TrNo","TitleAr":"رقم الحركة","TitleEn":"Trans No","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":2},{"Field":"RefNo","TitleAr":"رقم المرجع","TitleEn":"Ref No","InGrid":true,"InForm":true,"Required":false,"Search":true,"InFilter":true,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":3},{"Field":"TransactionDate","TitleAr":"Transaction Date","TitleEn":"Transaction Date","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"date","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":4},{"Field":"CompCode","TitleAr":"Comp Code","TitleEn":"Comp Code","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"CompCode","DefaultValue":"","Width":120,"Order":5},{"Field":"BranchCode","TitleAr":"Branch Code","TitleEn":"Branch Code","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"BranchCode","DefaultValue":"","Width":120,"Order":6},{"Field":"IsActive","TitleAr":"فعال","TitleEn":"Active","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"checkbox","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"true","Width":100,"Order":7},{"Field":"IsCash","TitleAr":"Is Cash","TitleEn":"Is Cash","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"checkbox","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"true","Width":100,"Order":8},{"Field":"FinancialTypeID","TitleAr":"Financial Type","TitleEn":"Financial Type ID","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"search","Options":"","SearchFn":"FinancialType","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":9},{"Field":"BeneficiaryName","TitleAr":"المستفيد","TitleEn":"Beneficiary Name","InGrid":true,"InForm":true,"Required":false,"Search":true,"InFilter":true,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":10},{"Field":"CashTypeID","TitleAr":"Cash Type","TitleEn":"Cash Type","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"search","Options":"","SearchFn":"CashTypes","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":11},{"Field":"Reason","TitleAr":"السبب","TitleEn":"Reason","InGrid":true,"InForm":true,"Required":false,"Search":true,"InFilter":true,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":12},{"Field":"Amount","TitleAr":"المبلغ","TitleEn":"Amount","InGrid":true,"InForm":true,"Required":false,"Search":false,"InFilter":true,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":13},{"Field":"AccountCode","TitleAr":"Account Code","TitleEn":"Account Code","InGrid":true,"InForm":true,"Required":false,"Search":true,"InFilter":true,"InputType":"search","Options":"","SearchFn":"ACCOUNT","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":14},{"Field":"TrType","TitleAr":"النوع","TitleEn":"Type","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"checkbox","Options":"","SearchFn":"","SearchCond":"1","Auto":"","DefaultValue":"1","Width":120,"Order":15},{"Field":"ChargePrc","TitleAr":"Charge Prc","TitleEn":"Charge Prc","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":16},{"Field":"DueAmount","TitleAr":"Due Amount","TitleEn":"Due Amount","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":17},{"Field":"LoanPayAmount","TitleAr":"Loan Pay Amount","TitleEn":"Loan Pay Amount","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":18},{"Field":"CustodyPayAmount","TitleAr":"Custody Pay Amount","TitleEn":"Custody Pay Amount","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":19},{"Field":"Status","TitleAr":"الحالة","TitleEn":"Status","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"1","Width":120,"Order":20},{"Field":"Remarks","TitleAr":"ملاحظات","TitleEn":"Remarks","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":21},{"Field":"IDUserCreate","TitleAr":"IDUser Create","TitleEn":"IDUser Create","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"number","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"0","Width":120,"Order":22},{"Field":"CreatedAt","TitleAr":"تاريخ الإنشاء","TitleEn":"Created at","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"date","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":23},{"Field":"CreatedBy","TitleAr":"أنشئ بواسطة","TitleEn":"Created by","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":24},{"Field":"UpdatedAt","TitleAr":"تاريخ التعديل","TitleEn":"Updated at","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"date","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":25},{"Field":"UpdatedBy","TitleAr":"عدّل بواسطة","TitleEn":"Updated by","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":26},{"Field":"IDPeriod","TitleAr":"IDPeriod","TitleEn":"IDPeriod","InGrid":false,"InForm":false,"Required":false,"Search":false,"InFilter":false,"InputType":"text","Options":"","SearchFn":"","SearchCond":"","Auto":"","DefaultValue":"","Width":220,"Order":27}]}

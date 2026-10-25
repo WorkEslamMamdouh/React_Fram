@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\PC\\Work\\React_Fram\\Backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|c:\\pc\\work\\react_fram\\backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|c:\\pc\\work\\react_fram\\backend\\controllers\\gateway\\services\\sqlserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:controllers\\gateway\\services\\sqlserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|c:\\pc\\work\\react_fram\\backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A324251C-EC87-DF9B-C9E9-E1C11B243ADC}|ERP.csproj|c:\\pc\\work\\react_fram\\backend\\controllers\\gateway\\managedatasqlcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -58,7 +58,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
@@ -70,7 +70,8 @@
               "RelativeToolTip": "Controllers\\GateWay\\ManageDataSQLController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-10-20T17:54:56.805Z"
+              "WhenOpened": "2026-10-20T17:54:56.805Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -86,15 +87,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "SQLServer.cs",
               "DocumentMoniker": "C:\\PC\\Work\\React_Fram\\Backend\\Controllers\\GateWay\\Services\\SQLServer.cs",
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Services\\SQLServer.cs",
               "ToolTip": "C:\\PC\\Work\\React_Fram\\Backend\\Controllers\\GateWay\\Services\\SQLServer.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Services\\SQLServer.cs",
-              "ViewState": "AgIAADQHAAAAAAAAAAAuwEoHAAAQAAAAAAAAAA==",
+              "ViewState": "AgIAAD4HAAAAAAAAAADwv0gHAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-10T20:27:30.704Z"
+              "WhenOpened": "2026-09-10T20:27:30.704Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -110,7 +112,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\PC\\Work\\React_Fram\\Backend\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",

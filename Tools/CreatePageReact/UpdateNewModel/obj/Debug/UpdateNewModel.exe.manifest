@@ -54,14 +54,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="UpdateNewModel.exe" size="258560">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="UpdateNewModel.exe" size="292864">
       <assemblyIdentity name="UpdateNewModel" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>P6VbtI/XcSvLpywIAhniKlijDS1E+Lts2Qr/H5L+cis=</dsig:DigestValue>
+        <dsig:DigestValue>2xTO+stdMnHfn3YtDvuQDGqNhz0zZt9a514oV+HxAy8=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

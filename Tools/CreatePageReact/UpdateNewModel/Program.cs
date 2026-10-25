@@ -16,7 +16,7 @@ namespace UpdateNewModel
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form4_GridPage());   // الشاشة الجديدة (فيها زرار يفتح Form3_React القديمة)
+            Application.Run(new Form4_GridPage());   // مولّد شاشات الجداول
         }
     }
 }

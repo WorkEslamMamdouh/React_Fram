@@ -1,26 +1,23 @@
 ﻿// =====================================================================================
-//  Form4_GridPage.cs  —  إنشاء شاشة جدول (DynamicGrid) جاهزة للفريم ورك React_Fram
+//  Form4_GridPage.cs  —  مولّد شاشات الجداول (DynamicGrid) للفريم ورك React_Fram
 // -------------------------------------------------------------------------------------
-//  الخطوات:
-//   1) اتصل بقاعدة البيانات واختار الجدول  →  الحقول بتتحمل لوحدها بإعدادات مقترحة
-//   2) ظبط كل حقل (يظهر في الجدول / الفورم / إجباري / بحث / فلتر / نوع الإدخال ...)
-//   3) ظبط بيانات الشاشة (الاسم / العناوين / G_ProcessTrans / الصلاحيات)
-//   4) توليد  →  حفظ الملفات  →  تنفيذ الصلاحيات على قاعدة البيانات
+//  ⓪ شاشة جديدة أو فتح شاشة موجودة من ClientApp وتعديلها
+//  ① الاتصال بقاعدة البيانات واختيار الجدول (الحقول بتتحمل بإعدادات مقترحة)
+//  ② بيانات الشاشة  ③ العرض والحفظ  ④ القائمة والصلاحيات  ⑤ المسارات
+//  تاب الحقول: إعدادات كل حقل (جدول / فورم / إجباري / بحث / فلتر / نوع الإدخال
+//              / اختيارات / نافذة بحث G_SearchFrom / قيمة تلقائية / قيمة افتراضية)
+//  تاب المعاينة: توليد → حفظ الملفات → تنفيذ الصلاحيات
 //
-//  الملفات اللي بتتعمل:
-//   app/ClientApp/<Module>/<Module>.ts     (المنطق)
-//   app/ClientApp/<Module>/page.tsx        (الشكل)
-//   public/StyleDesign/Pages/<Module>/<Module>EN.css + AR.css
-//   + سطر في Routes.tsx  + كلمات ترجمة في Shared/Resources.ts
-//   + Database/Add_<Module>_Module.sql   (Sys_Modules + Sys_RoleModule)
+//  كل شاشة البرنامج بيعملها بيتحفظ جواها سطر إعدادات (@CreatePageReact-Settings)
+//  عشان البرنامج يقدر يفتحها تاني ويعدّلها بالظبط.
 //
 //  مكتوب بـ C# 7.3 عشان يشتغل على .NET Framework 4.6.1
 // =====================================================================================
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
@@ -31,11 +28,71 @@ using System.Windows.Forms;
 
 namespace UpdateNewModel
 {
+    // =====================================================================
+    // #region الإعدادات اللي بتتحفظ جوه الشاشة
+    // =====================================================================
+    public class GridScreenSettings
+    {
+        public int Version = 2;
+        public string Module = "";
+        public string Table = "";
+        public string KeyColumn = "";
+        public string TitleAr = "";
+        public string TitleEn = "";
+        public string SubAr = "";
+        public string SubEn = "";
+        public string Icon = "fa-table-list";
+        public int PageSize = 10;
+
+        public bool ProcessTrans;
+        public string TrType = "";
+        public bool FilterComp = true;
+        public bool FilterBranch;
+        public string ExtraCondition = "";
+        public string OrderBy = "";
+        public string OrderType = "DESC";
+        public bool Insert = true;
+        public bool Edit = true;
+        public bool Delete = true;
+        public bool Export = true;
+
+        public bool Permissions = true;
+        public string ParentMenu = "";
+        public string IconColor = "indigo";
+        public string Roles = "";
+
+        public List<GridFieldSettings> Fields = new List<GridFieldSettings>();
+    }
+
+    public class GridFieldSettings
+    {
+        public string Field = "";
+        public string TitleAr = "";
+        public string TitleEn = "";
+        public bool InGrid = true;
+        public bool InForm = true;
+        public bool Required;
+        public bool Search;
+        public bool InFilter = true;
+        public string InputType = "text";
+        public string Options = "";        // 0=قبض=Receipt;1=صرف=Payment
+        public string SearchFn = "";       // Search_Users
+        public string SearchCond = "";     // USER_Status = 1
+        public string Auto = "";           // CompCode / BranchCode / UserID / FinYear
+        public string DefaultValue = "";
+        public int Width = 150;
+        public int Order = 99;
+    }
+    // #endregion
+
     public class Form4_GridPage : Form
     {
         // =====================================================================
         // #region الكنترولز
         // =====================================================================
+        ComboBox cmbScreens;
+        Label lblMode;
+
         TextBox txtServer, txtUser, txtPass, txtDatabase;
         ComboBox cmbTable;
         Label lblKey;
@@ -44,7 +101,8 @@ namespace UpdateNewModel
         NumericUpDown numPageSize;
 
         CheckBox chkProcessTrans, chkFilterComp, chkFilterBranch;
-        TextBox txtTrType;
+        TextBox txtTrType, txtExtraCondition;
+        ComboBox cmbOrderBy, cmbOrderType;
         CheckBox chkInsert, chkEdit, chkDelete, chkExport;
 
         CheckBox chkPermissions;
@@ -53,32 +111,36 @@ namespace UpdateNewModel
         TextBox txtAppPath, txtDbPath;
 
         DataGridView grid;
+        DataGridViewComboBoxColumn colSearchFn;
 
         TabControl tabsMain, tabsPreview;
         RichTextBox rtTs, rtTsx, rtResources, rtRoutes, rtSql;
         Label lblStatus;
         // #endregion
 
-        // اسم المفتاح الأساسي للجدول ونوعه
         string keyColumn = "";
         bool keyIsIdentity = false;
+        string openedScreen = "";          // اسم الشاشة المفتوحة للتعديل ("" = شاشة جديدة)
+        List<string> tablesCache = new List<string>();
+        List<string> searchFunctions = new List<string>();
 
-        // الحقول اللي بتتملى أوتوماتيك
         static readonly string[] AutoValues = { "", "CompCode", "BranchCode", "UserID", "FinYear" };
-        static readonly string[] InputTypes = { "text", "number", "textarea", "checkbox", "date", "select" };
+        static readonly string[] InputTypes = { "text", "number", "textarea", "checkbox", "date", "select", "search" };
+        const string SettingsMarker = "// @CreatePageReact-Settings:";
 
         // =====================================================================
-        // #region بيانات كل حقل (بنقراها من الجدول اللي في الشاشة)
+        // #region بيانات الحقل
         // =====================================================================
         class ColMeta
         {
             public string Name;
-            public string SqlType;
+            public string SqlType = "?";
             public int MaxLen;
-            public bool IsNullable;
+            public bool IsNullable = true;
             public bool IsIdentity;
             public bool IsPK;
             public bool IsComputed;
+            public bool NotInDb;            // حقل للعرض بس مش موجود في الجدول
         }
 
         class Opt
@@ -91,21 +153,11 @@ namespace UpdateNewModel
         class RowInfo
         {
             public ColMeta Meta;
-            public string Field;
-            public string TitleAr;
-            public string TitleEn;
-            public bool InGrid;
-            public bool InForm;
-            public bool Required;
-            public bool Search;
-            public bool InFilter;
-            public string InputType;
+            public GridFieldSettings S;
             public List<Opt> Options = new List<Opt>();
-            public string Auto;
-            public int Width;
-            public int Order;
             public bool IsKey;
             public bool IsDecimal;
+            public string Field { get { return S.Field; } }
         }
         // #endregion
 
@@ -113,6 +165,9 @@ namespace UpdateNewModel
         {
             BuildUI();
             LoadConfig();
+            RefreshScreensList();
+            RefreshSearchFunctions();
+            SetMode("");
         }
 
         // =====================================================================
@@ -120,8 +175,8 @@ namespace UpdateNewModel
         // =====================================================================
         void BuildUI()
         {
-            Text = "إنشاء شاشة جدول (DynamicGrid) — React_Fram";
-            Size = new Size(1400, 900);
+            Text = "مولّد شاشات الجداول (DynamicGrid) — React_Fram";
+            Size = new Size(1450, 920);
             StartPosition = FormStartPosition.CenterScreen;
             Font = new Font("Segoe UI", 9.5f);
             RightToLeft = RightToLeft.Yes;
@@ -130,111 +185,138 @@ namespace UpdateNewModel
             tabsMain = new TabControl { Dock = DockStyle.Fill, RightToLeftLayout = true };
             Controls.Add(tabsMain);
 
-            // ---------------- التاب 1: الجدول والإعدادات ----------------
-            var tab1 = new TabPage("1- الجدول والإعدادات");
+            // ================= التاب 1 =================
+            var tab1 = new TabPage("1- الشاشة والجدول");
             tabsMain.TabPages.Add(tab1);
-            var flow = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                AutoScroll = true,
-                Padding = new Padding(10)
-            };
+            var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Padding = new Padding(10) };
             tab1.Controls.Add(flow);
 
-            // ===== الاتصال =====
-            var gConn = NewGroup("① الاتصال بقاعدة البيانات واختيار الجدول", out TableLayoutPanel tConn);
-            txtServer = AddText(tConn, "السيرفر:", ".", true);
-            txtDatabase = AddText(tConn, "قاعدة البيانات:", "ESSA_React", true);
-            txtUser = AddText(tConn, "المستخدم:", "sa", true);
-            txtPass = AddText(tConn, "كلمة السر:", "", true);
+            // ⓪ فتح شاشة
+            TableLayoutPanel t0;
+            var g0 = NewGroup("⓪ شاشة جديدة أو تعديل شاشة موجودة في ClientApp", out t0);
+            cmbScreens = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, RightToLeft = RightToLeft.No };
+            AddPair(t0, NewLabel("الشاشات الموجودة:"), cmbScreens);
+            var p0 = new FlowLayoutPanel { AutoSize = true, WrapContents = false };
+            var btnOpen = NewButton("فتح الشاشة للتعديل", Color.FromArgb(79, 70, 229));
+            var btnNew = NewButton("شاشة جديدة", Color.FromArgb(107, 114, 128));
+            var btnReloadScreens = NewButton("تحديث القائمة", Color.FromArgb(107, 114, 128));
+            btnOpen.Click += (s, e) => OpenScreen();
+            btnNew.Click += (s, e) => NewScreen();
+            btnReloadScreens.Click += (s, e) => { RefreshScreensList(); RefreshSearchFunctions(); };
+            p0.Controls.AddRange(new Control[] { btnOpen, btnNew, btnReloadScreens });
+            AddPair(t0, new Label(), p0);
+            lblMode = NewLabel("");
+            lblMode.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
+            AddPair(t0, new Label(), lblMode);
+            Fit(g0, t0);
+            flow.Controls.Add(g0);
+
+            // ① الاتصال
+            TableLayoutPanel t1;
+            var g1 = NewGroup("① الاتصال بقاعدة البيانات واختيار الجدول", out t1);
+            txtServer = AddText(t1, "السيرفر:", ".", true);
+            txtDatabase = AddText(t1, "قاعدة البيانات:", "ESSA_React", true);
+            txtUser = AddText(t1, "المستخدم:", "sa", true);
+            txtPass = AddText(t1, "كلمة السر:", "", true);
             txtPass.UseSystemPasswordChar = true;
-
             var btnConnect = NewButton("اتصال وتحميل الجداول", Color.FromArgb(37, 99, 235));
-            btnConnect.Click += (s, e) => LoadTables();
-            AddPair(tConn, new Label(), btnConnect);
-
-            cmbTable = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDown, RightToLeft = RightToLeft.No };
-            AddPair(tConn, NewLabel("الجدول:"), cmbTable);
-
+            btnConnect.Click += (s, e) => LoadTables(true);
+            AddPair(t1, new Label(), btnConnect);
+            cmbTable = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDown, RightToLeft = RightToLeft.No, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
+            AddPair(t1, NewLabel("الجدول:"), cmbTable);
             var btnCols = NewButton("تحميل الحقول", Color.FromArgb(79, 70, 229));
             btnCols.Click += (s, e) => LoadColumns();
-            AddPair(tConn, new Label(), btnCols);
-
+            AddPair(t1, new Label(), btnCols);
             lblKey = NewLabel("المفتاح: —");
             lblKey.ForeColor = Color.DarkGreen;
-            AddPair(tConn, new Label(), lblKey);
-            Fit(gConn, tConn);
-            flow.Controls.Add(gConn);
+            AddPair(t1, new Label(), lblKey);
+            Fit(g1, t1);
+            flow.Controls.Add(g1);
 
-            // ===== بيانات الشاشة =====
-            var gScreen = NewGroup("② بيانات الشاشة", out TableLayoutPanel tScreen);
-            txtModuleCode = AddText(tScreen, "كود الشاشة (MODULE_CODE):", "", true);
-            txtIcon = AddText(tScreen, "الأيقونة (Font Awesome):", "fa-table-list", true);
-            txtTitleAr = AddText(tScreen, "العنوان عربي:", "", false);
-            txtTitleEn = AddText(tScreen, "العنوان إنجليزي:", "", true);
-            txtSubAr = AddText(tScreen, "وصف صغير عربي:", "", false);
-            txtSubEn = AddText(tScreen, "وصف صغير إنجليزي:", "", true);
+            // ② بيانات الشاشة
+            TableLayoutPanel t2;
+            var g2 = NewGroup("② بيانات الشاشة", out t2);
+            txtModuleCode = AddText(t2, "كود الشاشة (MODULE_CODE):", "", true);
+            txtIcon = AddText(t2, "الأيقونة (Font Awesome):", "fa-table-list", true);
+            txtTitleAr = AddText(t2, "العنوان عربي:", "", false);
+            txtTitleEn = AddText(t2, "العنوان إنجليزي:", "", true);
+            txtSubAr = AddText(t2, "وصف صغير عربي:", "", false);
+            txtSubEn = AddText(t2, "وصف صغير إنجليزي:", "", true);
             numPageSize = new NumericUpDown { Minimum = 5, Maximum = 200, Value = 10, Width = 80 };
-            AddPair(tScreen, NewLabel("عدد الصفوف في الصفحة:"), numPageSize);
-            AddPair(tScreen, new Label(), NewHint("كود الشاشة = اسم الفولدر = اسم الدالة، حروف إنجليزي من غير مسافات (مثلاً FinancialType)"));
-            Fit(gScreen, tScreen);
-            flow.Controls.Add(gScreen);
+            AddPair(t2, NewLabel("عدد الصفوف في الصفحة:"), numPageSize);
+            AddPair(t2, new Label(), NewHint("كود الشاشة = اسم الفولدر = اسم الدالة، حروف إنجليزي وأرقام من غير مسافات (مثلاً FinancialType)"));
+            Fit(g2, t2);
+            flow.Controls.Add(g2);
 
-            // ===== الحفظ =====
-            var gSave = NewGroup("③ الحفظ والصلاحيات داخل الجدول", out TableLayoutPanel tSave);
+            // ③ العرض والحفظ
+            TableLayoutPanel t3;
+            var g3 = NewGroup("③ العرض والحفظ", out t3);
+            chkFilterComp = new CheckBox { Text = "بيانات الشركة الحالية بس (CompCode)", AutoSize = true, Checked = true };
+            chkFilterBranch = new CheckBox { Text = "بيانات الفرع الحالي بس (BranchCode)", AutoSize = true };
+            AddPair(t3, chkFilterComp, chkFilterBranch);
+            txtExtraCondition = AddText(t3, "شرط إضافي على العرض:", "", true);
+            AddPair(t3, new Label(), NewHint("بيتضاف بـ AND على الشرط، مثلاً:  TrType = 1   أو   IsActive = 1 AND Amount > 0"));
+            cmbOrderBy = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, RightToLeft = RightToLeft.No };
+            cmbOrderType = new ComboBox { Width = 90, DropDownStyle = ComboBoxStyle.DropDownList, RightToLeft = RightToLeft.No };
+            cmbOrderType.Items.AddRange(new object[] { "DESC", "ASC" });
+            cmbOrderType.SelectedIndex = 0;
+            AddPair(t3, NewLabel("الترتيب حسب:"), cmbOrderBy);
+            AddPair(t3, NewLabel("اتجاه الترتيب:"), cmbOrderType);
             chkProcessTrans = new CheckBox { Text = "تشغيل G_ProcessTrans بعد الإضافة والتعديل والحذف", AutoSize = true };
             txtTrType = new TextBox { Dock = DockStyle.Fill, RightToLeft = RightToLeft.No, Enabled = false };
             chkProcessTrans.CheckedChanged += (s, e) => txtTrType.Enabled = chkProcessTrans.Checked;
-            AddPair(tSave, chkProcessTrans, new Label());
-            AddPair(tSave, NewLabel("@TrType:"), txtTrType);
-            chkFilterComp = new CheckBox { Text = "اعرض بيانات الشركة الحالية بس (CompCode)", AutoSize = true, Checked = true };
-            chkFilterBranch = new CheckBox { Text = "اعرض بيانات الفرع الحالي بس (BranchCode)", AutoSize = true };
-            AddPair(tSave, chkFilterComp, chkFilterBranch);
+            AddPair(t3, chkProcessTrans, new Label());
+            AddPair(t3, NewLabel("@TrType:"), txtTrType);
             chkInsert = new CheckBox { Text = "إضافة", AutoSize = true, Checked = true };
             chkEdit = new CheckBox { Text = "تعديل", AutoSize = true, Checked = true };
             chkDelete = new CheckBox { Text = "حذف", AutoSize = true, Checked = true };
             chkExport = new CheckBox { Text = "تصدير", AutoSize = true, Checked = true };
             var pFlags = new FlowLayoutPanel { AutoSize = true, WrapContents = false };
             pFlags.Controls.AddRange(new Control[] { chkInsert, chkEdit, chkDelete, chkExport });
-            AddPair(tSave, NewLabel("أزرار الجدول:"), pFlags);
-            Fit(gSave, tSave);
-            flow.Controls.Add(gSave);
+            AddPair(t3, NewLabel("أزرار الجدول:"), pFlags);
+            Fit(g3, t3);
+            flow.Controls.Add(g3);
 
-            // ===== الصلاحيات =====
-            var gPerm = NewGroup("④ القائمة والصلاحيات (Sys_Modules / Sys_RoleModule)", out TableLayoutPanel tPerm);
+            // ④ الصلاحيات
+            TableLayoutPanel t4;
+            var g4 = NewGroup("④ القائمة والصلاحيات (Sys_Modules / Sys_RoleModule)", out t4);
             chkPermissions = new CheckBox { Text = "اعمل سكريبت الصلاحيات", AutoSize = true, Checked = true };
-            AddPair(tPerm, chkPermissions, new Label());
-            txtParentMenu = AddText(tPerm, "كود القائمة الأب:", "", true);
-            txtIconColor = AddText(tPerm, "لون الأيقونة:", "indigo", true);
-            txtRoles = AddText(tPerm, "أرقام الأدوار:", "", true);
-            AddPair(tPerm, new Label(), NewHint("القائمة الأب فاضية = تظهر في أول القائمة.  الأدوار فاضية = كل دور عليه مستخدمين فعالين، أو اكتب مثلاً 1,2"));
-            Fit(gPerm, tPerm);
-            flow.Controls.Add(gPerm);
+            AddPair(t4, chkPermissions, new Label());
+            txtParentMenu = AddText(t4, "كود القائمة الأب:", "", true);
+            txtIconColor = AddText(t4, "لون الأيقونة:", "indigo", true);
+            txtRoles = AddText(t4, "أرقام الأدوار:", "", true);
+            AddPair(t4, new Label(), NewHint("القائمة الأب فاضية = أول القائمة.  الأدوار فاضية = كل دور عليه مستخدمين فعالين، أو اكتب مثلاً 1,2"));
+            Fit(g4, t4);
+            flow.Controls.Add(g4);
 
-            // ===== المسارات =====
-            var gPath = NewGroup("⑤ المسارات", out TableLayoutPanel tPath);
-            txtAppPath = AddText(tPath, "فولدر الواجهة (Frontend\\App):", "", true);
-            txtDbPath = AddText(tPath, "فولدر سكريبتات قاعدة البيانات:", "", true);
-            Fit(gPath, tPath);
-            flow.Controls.Add(gPath);
+            // ⑤ المسارات
+            TableLayoutPanel t5;
+            var g5 = NewGroup("⑤ المسارات", out t5);
+            txtAppPath = AddText(t5, "فولدر الواجهة (Frontend\\App):", "", true);
+            txtDbPath = AddText(t5, "فولدر سكريبتات قاعدة البيانات:", "", true);
+            Fit(g5, t5);
+            flow.Controls.Add(g5);
 
-            var btnOld = NewButton("فتح شاشة التوليد القديمة (من HTML)", Color.Gray);
-            btnOld.Click += (s, e) => new Form3_React().Show();
-            flow.Controls.Add(btnOld);
-
-            // ---------------- التاب 2: الحقول ----------------
+            // ================= التاب 2: الحقول =================
             var tab2 = new TabPage("2- الحقول");
             tabsMain.TabPages.Add(tab2);
+            var pTop = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 46, Padding = new Padding(4) };
+            var btnNewSearch = NewButton("➕ نافذة بحث جديدة (G_SearchFrom)", Color.FromArgb(5, 150, 105));
+            btnNewSearch.Click += (s, e) => OpenSearchBuilder();
+            var btnUp = NewButton("▲ لفوق", Color.FromArgb(107, 114, 128));
+            var btnDown = NewButton("▼ لتحت", Color.FromArgb(107, 114, 128));
+            btnUp.Click += (s, e) => MoveRow(-1);
+            btnDown.Click += (s, e) => MoveRow(1);
+            pTop.Controls.AddRange(new Control[] { btnNewSearch, btnUp, btnDown });
             var hint = new Label
             {
                 Dock = DockStyle.Top,
-                Height = 48,
+                Height = 66,
                 Padding = new Padding(8),
                 BackColor = Color.FromArgb(239, 246, 255),
-                Text = "• الاختيارات (للنوع select) بالشكل ده:   0=قبض=Receipt;1=صرف=Payment      (القيمة=عربي=إنجليزي)\n" +
-                       "• قيمة تلقائية: الحقل بيتملى لوحده من الجلسة ومش بيظهر في الفورم.   • الحقل اللي مش في الفورم ولا تلقائي بيتعرض بس ومش بيتحفظ."
+                Text = "• select: اكتب الاختيارات بالشكل ده  0=قبض=Receipt;1=صرف=Payment   (القيمة=عربي=إنجليزي)\n" +
+                       "• search: اختار دالة البحث من G_SearchFrom واكتب شرطها (مثلاً USER_Status = 1) — القيمة اللي بترجع هي returnField بتاع الدالة\n" +
+                       "• قيمة تلقائية: بتتملى من الجلسة ومش بتظهر في الفورم.   • الحقل اللي مش في الفورم ولا تلقائي بيتعرض بس ومش بيتحفظ."
             };
             grid = new DataGridView
             {
@@ -242,19 +324,21 @@ namespace UpdateNewModel
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
                 RowHeadersWidth = 30,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
-                RightToLeft = RightToLeft.No
+                RightToLeft = RightToLeft.No,
+                SelectionMode = DataGridViewSelectionMode.CellSelect
             };
             grid.DataError += (s, e) => { e.ThrowException = false; };
             grid.CurrentCellDirtyStateChanged += (s, e) =>
             {
                 if (grid.IsCurrentCellDirty) grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
             };
+            grid.CellValueChanged += (s, e) => { if (e.RowIndex >= 0) StyleRow(grid.Rows[e.RowIndex]); };
             BuildGridColumns();
             tab2.Controls.Add(grid);
             tab2.Controls.Add(hint);
+            tab2.Controls.Add(pTop);
 
-            // ---------------- التاب 3: المعاينة والحفظ ----------------
+            // ================= التاب 3: المعاينة والحفظ =================
             var tab3 = new TabPage("3- المعاينة والحفظ");
             tabsMain.TabPages.Add(tab3);
             var pButtons = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 52, Padding = new Padding(6) };
@@ -264,9 +348,8 @@ namespace UpdateNewModel
             btnGen.Click += (s, e) => Generate();
             btnSave.Click += (s, e) => SaveFiles();
             btnRunSql.Click += (s, e) => RunPermissionsSql();
-            lblStatus = new Label { AutoSize = true, Padding = new Padding(10, 10, 10, 0), ForeColor = Color.DarkBlue };
+            lblStatus = new Label { AutoSize = true, Padding = new Padding(10, 10, 10, 0) };
             pButtons.Controls.AddRange(new Control[] { btnGen, btnSave, btnRunSql, lblStatus });
-
             tabsPreview = new TabControl { Dock = DockStyle.Fill };
             rtTs = AddPreview("Module.ts");
             rtTsx = AddPreview("page.tsx");
@@ -280,19 +363,23 @@ namespace UpdateNewModel
         void BuildGridColumns()
         {
             grid.Columns.Add(TextCol("Field", "الحقل", 140, true));
-            grid.Columns.Add(TextCol("SqlType", "النوع في SQL", 100, true));
-            grid.Columns.Add(TextCol("TitleAr", "العنوان عربي", 150, false));
-            grid.Columns.Add(TextCol("TitleEn", "العنوان إنجليزي", 150, false));
+            grid.Columns.Add(TextCol("SqlType", "النوع في SQL", 105, true));
+            grid.Columns.Add(TextCol("TitleAr", "العنوان عربي", 140, false));
+            grid.Columns.Add(TextCol("TitleEn", "العنوان إنجليزي", 140, false));
             grid.Columns.Add(CheckCol("InGrid", "في الجدول"));
             grid.Columns.Add(CheckCol("InForm", "في الفورم"));
             grid.Columns.Add(CheckCol("Required", "إجباري"));
             grid.Columns.Add(CheckCol("Search", "بحث سريع"));
             grid.Columns.Add(CheckCol("InFilter", "فلتر"));
-            grid.Columns.Add(ComboCol("InputType", "نوع الإدخال", InputTypes, 95));
-            grid.Columns.Add(TextCol("Options", "الاختيارات (select)", 220, false));
-            grid.Columns.Add(ComboCol("Auto", "قيمة تلقائية", AutoValues, 100));
-            grid.Columns.Add(TextCol("Width", "العرض", 60, false));
-            grid.Columns.Add(TextCol("Order", "الترتيب", 60, false));
+            grid.Columns.Add(ComboCol("InputType", "نوع الإدخال", InputTypes, 90));
+            grid.Columns.Add(TextCol("Options", "الاختيارات (select)", 190, false));
+            colSearchFn = ComboCol("SearchFn", "دالة البحث (search)", new string[] { "" }, 140);
+            grid.Columns.Add(colSearchFn);
+            grid.Columns.Add(TextCol("SearchCond", "شرط البحث", 150, false));
+            grid.Columns.Add(ComboCol("Auto", "قيمة تلقائية", AutoValues, 95));
+            grid.Columns.Add(TextCol("DefaultValue", "قيمة افتراضية", 90, false));
+            grid.Columns.Add(TextCol("Width", "العرض", 55, false));
+            grid.Columns.Add(TextCol("Order", "الترتيب", 55, false));
         }
         // #endregion
 
@@ -301,7 +388,7 @@ namespace UpdateNewModel
         // =====================================================================
         GroupBox NewGroup(string title, out TableLayoutPanel table)
         {
-            var g = new GroupBox { Text = title, Width = 1300, Padding = new Padding(10), Font = new Font("Segoe UI", 10f, FontStyle.Bold) };
+            var g = new GroupBox { Text = title, Width = 1340, Padding = new Padding(10), Font = new Font("Segoe UI", 10f, FontStyle.Bold) };
             table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, AutoSize = true, Font = new Font("Segoe UI", 9.5f) };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
@@ -311,7 +398,6 @@ namespace UpdateNewModel
             return g;
         }
 
-        // ارتفاع المجموعة على قد اللي جواها
         void Fit(GroupBox g, TableLayoutPanel t)
         {
             g.Height = t.GetPreferredSize(new Size(g.Width - 24, 0)).Height + 40;
@@ -329,16 +415,7 @@ namespace UpdateNewModel
 
         Button NewButton(string text, Color color)
         {
-            return new Button
-            {
-                Text = text,
-                AutoSize = true,
-                BackColor = color,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Padding = new Padding(8, 4, 8, 4),
-                Margin = new Padding(4)
-            };
+            return new Button { Text = text, AutoSize = true, BackColor = color, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Padding = new Padding(8, 4, 8, 4), Margin = new Padding(4), Cursor = Cursors.Hand };
         }
 
         TextBox AddText(TableLayoutPanel t, string label, string value, bool ltr)
@@ -365,12 +442,12 @@ namespace UpdateNewModel
 
         DataGridViewTextBoxColumn TextCol(string name, string header, int width, bool readOnly)
         {
-            return new DataGridViewTextBoxColumn { Name = name, HeaderText = header, Width = width, ReadOnly = readOnly };
+            return new DataGridViewTextBoxColumn { Name = name, HeaderText = header, Width = width, ReadOnly = readOnly, SortMode = DataGridViewColumnSortMode.NotSortable };
         }
 
         DataGridViewCheckBoxColumn CheckCol(string name, string header)
         {
-            return new DataGridViewCheckBoxColumn { Name = name, HeaderText = header, Width = 70 };
+            return new DataGridViewCheckBoxColumn { Name = name, HeaderText = header, Width = 62 };
         }
 
         DataGridViewComboBoxColumn ComboCol(string name, string header, string[] items, int width)
@@ -385,14 +462,34 @@ namespace UpdateNewModel
             lblStatus.ForeColor = error ? Color.DarkRed : Color.DarkGreen;
             lblStatus.Text = text;
         }
+
+        void SetMode(string screen)
+        {
+            openedScreen = screen;
+            if (screen == "")
+            {
+                lblMode.Text = "🆕 شاشة جديدة";
+                lblMode.ForeColor = Color.DarkGreen;
+                Text = "مولّد شاشات الجداول (DynamicGrid) — شاشة جديدة";
+            }
+            else
+            {
+                lblMode.Text = "✏️ بتعدّل الشاشة: " + screen;
+                lblMode.ForeColor = Color.DarkOrange;
+                Text = "مولّد شاشات الجداول (DynamicGrid) — تعديل " + screen;
+            }
+        }
         // #endregion
 
         // =====================================================================
-        // #region الإعدادات وقاعدة البيانات
+        // #region الإعدادات العامة والمسارات
         // =====================================================================
+        string ClientAppPath { get { return Path.Combine(txtAppPath.Text.Trim(), "app", "ClientApp"); } }
+        string SearchFilePath { get { return Path.Combine(ClientAppPath, "Shared", "G_SearchFrom.ts"); } }
+        string Module { get { return txtModuleCode.Text.Trim(); } }
+
         void LoadConfig()
         {
-            // نفس ملف Config.txt بتاع البرنامج
             try
             {
                 string file = Path.Combine(Application.StartupPath, "Config.txt");
@@ -408,7 +505,6 @@ namespace UpdateNewModel
             }
             catch { }
 
-            // المسارات: البرنامج جوه React_Fram\Tools\CreatePageReact\UpdateNewModel\bin\Debug
             string root = @"C:\PC\Work\React_Fram";
             try
             {
@@ -420,6 +516,53 @@ namespace UpdateNewModel
             txtDbPath.Text = Path.Combine(root, "Database");
         }
 
+        // الشاشات اللي في ClientApp وفيها جدول (TableName)
+        void RefreshScreensList()
+        {
+            cmbScreens.Items.Clear();
+            try
+            {
+                if (!Directory.Exists(ClientAppPath)) return;
+                foreach (var dir in Directory.GetDirectories(ClientAppPath).OrderBy(x => x))
+                {
+                    string name = Path.GetFileName(dir);
+                    string ts = Path.Combine(dir, name + ".ts");
+                    if (!File.Exists(ts)) continue;
+                    string text = File.ReadAllText(ts);
+                    if (!Regex.IsMatch(text, @"const\s+TableName\s*=")) continue;
+                    cmbScreens.Items.Add(name + (text.Contains(SettingsMarker) ? "" : "   (قديمة)"));
+                }
+            }
+            catch { }
+            if (cmbScreens.Items.Count > 0) cmbScreens.SelectedIndex = 0;
+        }
+
+        // أسماء دوال البحث اللي في G_SearchFrom.ts
+        void RefreshSearchFunctions()
+        {
+            searchFunctions.Clear();
+            try
+            {
+                if (File.Exists(SearchFilePath))
+                    foreach (Match m in Regex.Matches(File.ReadAllText(SearchFilePath), @"export\s+const\s+(\w+)\s*=\s*\("))
+                        searchFunctions.Add(m.Groups[1].Value);
+            }
+            catch { }
+            colSearchFn.Items.Clear();
+            colSearchFn.Items.Add("");
+            foreach (var f in searchFunctions) colSearchFn.Items.Add(f);
+            // أي قيمة موجودة في الجدول ومش في القائمة نضيفها عشان متختفيش
+            foreach (DataGridViewRow r in grid.Rows)
+            {
+                string v = Str(r, "SearchFn");
+                if (v != "" && !colSearchFn.Items.Contains(v)) colSearchFn.Items.Add(v);
+            }
+        }
+        // #endregion
+
+        // =====================================================================
+        // #region قاعدة البيانات
+        // =====================================================================
         string ConnString()
         {
             var b = new SqlConnectionStringBuilder
@@ -433,24 +576,33 @@ namespace UpdateNewModel
             return b.ConnectionString;
         }
 
-        void LoadTables()
+        bool LoadTables(bool showMessage)
         {
             try
             {
+                string keep = cmbTable.Text;
                 cmbTable.Items.Clear();
+                tablesCache.Clear();
                 using (var con = new SqlConnection(ConnString()))
                 using (var cmd = new SqlCommand("SELECT name FROM sys.tables ORDER BY name", con))
                 {
                     con.Open();
                     using (var r = cmd.ExecuteReader())
-                        while (r.Read()) cmbTable.Items.Add(r.GetString(0));
+                        while (r.Read()) tablesCache.Add(r.GetString(0));
                 }
-                MessageBox.Show("تم تحميل " + cmbTable.Items.Count + " جدول ✔️");
-                cmbTable.DroppedDown = true;
+                cmbTable.Items.AddRange(tablesCache.Cast<object>().ToArray());
+                cmbTable.Text = keep;
+                if (showMessage)
+                {
+                    MessageBox.Show("تم تحميل " + tablesCache.Count + " جدول ✔️");
+                    cmbTable.DroppedDown = true;
+                }
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("مقدرتش أتصل بقاعدة البيانات:\n" + ex.Message, "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (showMessage) MessageBox.Show("مقدرتش أتصل بقاعدة البيانات:\n" + ex.Message, "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 
@@ -474,9 +626,7 @@ ORDER BY c.column_id";
                 cmd.Parameters.AddWithValue("@t", table);
                 con.Open();
                 using (var r = cmd.ExecuteReader())
-                {
                     while (r.Read())
-                    {
                         list.Add(new ColMeta
                         {
                             Name = r.GetString(0),
@@ -487,13 +637,10 @@ ORDER BY c.column_id";
                             IsComputed = Convert.ToBoolean(r[5]),
                             IsPK = Convert.ToBoolean(r[6])
                         });
-                    }
-                }
             }
             return list;
         }
 
-        // أسماء الحقول من جدول G_Resources لو موجود (KeyRes / NameResAr / NameResEn)
         Dictionary<string, string[]> ReadResources()
         {
             var dic = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
@@ -518,7 +665,7 @@ ORDER BY c.column_id";
         // #endregion
 
         // =====================================================================
-        // #region تحميل الحقول بإعدادات مقترحة
+        // #region الإعدادات المقترحة للحقول
         // =====================================================================
         static readonly Dictionary<string, string[]> KnownTitles = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
@@ -545,31 +692,140 @@ ORDER BY c.column_id";
             { "UpdatedBy", new[] { "عدّل بواسطة", "Updated by" } },
         };
 
-        static bool IsNumberType(string t)
-        {
-            return t == "int" || t == "bigint" || t == "smallint" || t == "tinyint" || IsDecimalType(t);
-        }
-
-        static bool IsDecimalType(string t)
-        {
-            return t == "decimal" || t == "numeric" || t == "money" || t == "smallmoney" || t == "float" || t == "real";
-        }
-
-        static bool IsDateType(string t)
-        {
-            return t == "date" || t == "datetime" || t == "smalldatetime" || t == "datetime2" || t == "datetimeoffset";
-        }
-
-        static bool IsTextType(string t)
-        {
-            return t == "nvarchar" || t == "varchar" || t == "nchar" || t == "char" || t == "text" || t == "ntext";
-        }
+        static bool IsNumberType(string t) { return t == "int" || t == "bigint" || t == "smallint" || t == "tinyint" || IsDecimalType(t); }
+        static bool IsDecimalType(string t) { return t == "decimal" || t == "numeric" || t == "money" || t == "smallmoney" || t == "float" || t == "real"; }
+        static bool IsDateType(string t) { return t == "date" || t == "datetime" || t == "smalldatetime" || t == "datetime2" || t == "datetimeoffset"; }
+        static bool IsTextType(string t) { return t == "nvarchar" || t == "varchar" || t == "nchar" || t == "char" || t == "text" || t == "ntext"; }
 
         static string SplitWords(string name)
         {
             return Regex.Replace(name.Replace("_", " "), "([a-z])([A-Z])", "$1 $2").Trim();
         }
 
+        static string AutoOf(string field)
+        {
+            foreach (var a in AutoValues)
+                if (a != "" && field.Equals(a, StringComparison.OrdinalIgnoreCase)) return a;
+            return "";
+        }
+
+        GridFieldSettings DefaultField(ColMeta c, Dictionary<string, string[]> res, int order)
+        {
+            bool isKey = c.Name == keyColumn;
+            string auto = AutoOf(c.Name);
+
+            string input = "text";
+            if (c.SqlType == "bit") input = "checkbox";
+            else if (IsNumberType(c.SqlType)) input = "number";
+            else if (IsDateType(c.SqlType)) input = "date";
+
+            string ar, en;
+            string[] found;
+            if (res.TryGetValue(c.Name, out found) && !string.IsNullOrWhiteSpace(found[0]))
+            {
+                ar = found[0];
+                en = string.IsNullOrWhiteSpace(found[1]) ? SplitWords(c.Name) : found[1];
+            }
+            else if (KnownTitles.TryGetValue(c.Name, out found)) { ar = found[0]; en = found[1]; }
+            else if (isKey) { ar = "الرقم"; en = "ID"; }
+            else { en = SplitWords(c.Name); ar = en; }
+
+            bool inForm = !isKey && auto == "" && !c.IsComputed && !c.IsIdentity;
+            if (isKey && !keyIsIdentity) inForm = true;
+
+            return new GridFieldSettings
+            {
+                Field = c.Name,
+                TitleAr = ar,
+                TitleEn = en,
+                InGrid = auto == "",
+                InForm = inForm,
+                Required = (inForm && !c.IsNullable) || (isKey && !keyIsIdentity),
+                Search = isKey || (IsTextType(c.SqlType) && auto == ""),
+                InFilter = auto == "" && !c.IsComputed,
+                InputType = input,
+                Auto = auto,
+                Width = isKey ? 90 : (input == "checkbox" ? 100 : (input == "number" ? 120 : 220)),
+                Order = order
+            };
+        }
+
+        void SetKey(List<ColMeta> cols, string preferred)
+        {
+            ColMeta key = null;
+            if (!string.IsNullOrEmpty(preferred)) key = cols.FirstOrDefault(c => c.Name.Equals(preferred, StringComparison.OrdinalIgnoreCase));
+            if (key == null) key = cols.FirstOrDefault(c => c.IsIdentity) ?? cols.FirstOrDefault(c => c.IsPK) ?? cols.FirstOrDefault();
+            keyColumn = key == null ? "" : key.Name;
+            keyIsIdentity = key != null && key.IsIdentity;
+            lblKey.Text = "المفتاح: " + keyColumn + (keyIsIdentity ? "  (ترقيم تلقائي)" : "  (بيتكتب يدوي)");
+        }
+        // #endregion
+
+        // =====================================================================
+        // #region تعبئة جدول الحقول
+        // =====================================================================
+        void AddGridRow(ColMeta meta, GridFieldSettings f)
+        {
+            if (f.SearchFn != "" && !colSearchFn.Items.Contains(f.SearchFn)) colSearchFn.Items.Add(f.SearchFn);
+
+            int i = grid.Rows.Add();
+            var row = grid.Rows[i];
+            row.Tag = meta;
+            row.Cells["Field"].Value = meta.Name;
+            row.Cells["SqlType"].Value = meta.NotInDb ? "— مش في الجدول" :
+                meta.SqlType + (IsTextType(meta.SqlType) ? "(" + (meta.MaxLen == -1 ? "max" : meta.MaxLen.ToString()) + ")" : "");
+            row.Cells["TitleAr"].Value = f.TitleAr;
+            row.Cells["TitleEn"].Value = f.TitleEn;
+            row.Cells["InGrid"].Value = f.InGrid;
+            row.Cells["InForm"].Value = f.InForm;
+            row.Cells["Required"].Value = f.Required;
+            row.Cells["Search"].Value = f.Search;
+            row.Cells["InFilter"].Value = f.InFilter;
+            row.Cells["InputType"].Value = InputTypes.Contains(f.InputType) ? f.InputType : "text";
+            row.Cells["Options"].Value = f.Options;
+            row.Cells["SearchFn"].Value = f.SearchFn;
+            row.Cells["SearchCond"].Value = f.SearchCond;
+            row.Cells["Auto"].Value = AutoValues.Contains(f.Auto) ? f.Auto : "";
+            row.Cells["DefaultValue"].Value = f.DefaultValue;
+            row.Cells["Width"].Value = f.Width;
+            row.Cells["Order"].Value = f.Order;
+            StyleRow(row);
+        }
+
+        // ألوان الصف حسب نوعه
+        void StyleRow(DataGridViewRow row)
+        {
+            var meta = row.Tag as ColMeta;
+            if (meta == null) return;
+            if (meta.Name == keyColumn) row.DefaultCellStyle.BackColor = Color.FromArgb(220, 252, 231);
+            else if (meta.NotInDb) row.DefaultCellStyle.BackColor = Color.FromArgb(254, 243, 199);
+            else if (Str(row, "Auto") != "") row.DefaultCellStyle.BackColor = Color.FromArgb(243, 244, 246);
+            else row.DefaultCellStyle.BackColor = Color.White;
+        }
+
+        void FillOrderBy(IEnumerable<string> fields, string selected)
+        {
+            cmbOrderBy.Items.Clear();
+            foreach (var f in fields) cmbOrderBy.Items.Add(f);
+            if (!string.IsNullOrEmpty(selected) && cmbOrderBy.Items.Contains(selected)) cmbOrderBy.SelectedItem = selected;
+            else if (cmbOrderBy.Items.Contains(keyColumn)) cmbOrderBy.SelectedItem = keyColumn;
+            else if (cmbOrderBy.Items.Count > 0) cmbOrderBy.SelectedIndex = 0;
+        }
+
+        void MoveRow(int dir)
+        {
+            if (grid.CurrentCell == null) return;
+            int i = grid.CurrentCell.RowIndex, j = i + dir;
+            if (j < 0 || j >= grid.Rows.Count) return;
+            var row = grid.Rows[i];
+            int col = grid.CurrentCell.ColumnIndex;
+            grid.Rows.RemoveAt(i);
+            grid.Rows.Insert(j, row);
+            for (int k = 0; k < grid.Rows.Count; k++) grid.Rows[k].Cells["Order"].Value = k + 1;
+            grid.CurrentCell = grid.Rows[j].Cells[col];
+        }
+
+        // جدول جديد: الحقول بإعدادات مقترحة
         void LoadColumns()
         {
             string table = cmbTable.Text.Trim();
@@ -580,23 +836,21 @@ ORDER BY c.column_id";
             catch (Exception ex) { MessageBox.Show("خطأ في قراءة الحقول:\n" + ex.Message); return; }
             if (cols.Count == 0) { MessageBox.Show("الجدول مش موجود أو مفيهوش حقول"); return; }
 
+            if (grid.Rows.Count > 0 &&
+                MessageBox.Show("إعدادات الحقول الحالية هتتمسح وتتحمل من جديد. تكمل؟", "تأكيد", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
             var res = ReadResources();
+            SetKey(cols, null);
 
-            // المفتاح: أول عمود ترقيم تلقائي، وإلا أول مفتاح أساسي، وإلا أول عمود
-            var key = cols.FirstOrDefault(c => c.IsIdentity) ?? cols.FirstOrDefault(c => c.IsPK) ?? cols[0];
-            keyColumn = key.Name;
-            keyIsIdentity = key.IsIdentity;
-            lblKey.Text = "المفتاح: " + keyColumn + (keyIsIdentity ? "  (ترقيم تلقائي)" : "  (بيتكتب يدوي)");
-
-            // اقتراح كود الشاشة من اسم الجدول (D_A_CashTypes → CashTypes)
-            if (txtModuleCode.Text.Trim() == "")
+            if (Module == "")
             {
                 string m = Regex.Replace(table, @"^([A-Za-z]{1,3}_)+", "");
                 m = Regex.Replace(m, @"[^A-Za-z0-9_]", "");
                 if (m == "" || char.IsDigit(m[0])) m = "Page_" + m;
                 txtModuleCode.Text = m;
             }
-            if (txtTitleEn.Text.Trim() == "") txtTitleEn.Text = SplitWords(txtModuleCode.Text);
+            if (txtTitleEn.Text.Trim() == "") txtTitleEn.Text = SplitWords(Module);
             if (txtTitleAr.Text.Trim() == "") txtTitleAr.Text = txtTitleEn.Text;
 
             grid.Rows.Clear();
@@ -604,60 +858,9 @@ ORDER BY c.column_id";
             foreach (var c in cols)
             {
                 if (c.Name.Equals("StatusFlag", StringComparison.OrdinalIgnoreCase)) continue;
-
-                bool isKey = c.Name == keyColumn;
-                string auto = "";
-                foreach (var a in AutoValues)
-                    if (a != "" && c.Name.Equals(a, StringComparison.OrdinalIgnoreCase)) auto = a;
-
-                string input = "text";
-                if (c.SqlType == "bit") input = "checkbox";
-                else if (IsNumberType(c.SqlType)) input = "number";
-                else if (IsDateType(c.SqlType)) input = "date";
-
-                string ar, en;
-                string[] found;
-                if (res.TryGetValue(c.Name, out found) && !string.IsNullOrWhiteSpace(found[0]))
-                {
-                    ar = found[0];
-                    en = string.IsNullOrWhiteSpace(found[1]) ? SplitWords(c.Name) : found[1];
-                }
-                else if (KnownTitles.TryGetValue(c.Name, out found))
-                {
-                    ar = found[0]; en = found[1];
-                }
-                else if (isKey)
-                {
-                    ar = "الرقم"; en = "ID";
-                }
-                else
-                {
-                    en = SplitWords(c.Name); ar = en;
-                }
-
-                bool inForm = !isKey && auto == "" && !c.IsComputed && !c.IsIdentity;
-                if (isKey && !keyIsIdentity) inForm = true;
-
-                int i = grid.Rows.Add();
-                var row = grid.Rows[i];
-                row.Tag = c;
-                row.Cells["Field"].Value = c.Name;
-                row.Cells["SqlType"].Value = c.SqlType + (IsTextType(c.SqlType) ? "(" + (c.MaxLen == -1 ? "max" : c.MaxLen.ToString()) + ")" : "");
-                row.Cells["TitleAr"].Value = ar;
-                row.Cells["TitleEn"].Value = en;
-                row.Cells["InGrid"].Value = auto == "";
-                row.Cells["InForm"].Value = inForm;
-                row.Cells["Required"].Value = (inForm && !c.IsNullable) || (isKey && !keyIsIdentity);
-                row.Cells["Search"].Value = isKey || (IsTextType(c.SqlType) && auto == "");
-                row.Cells["InFilter"].Value = auto == "" && !c.IsComputed;
-                row.Cells["InputType"].Value = input;
-                row.Cells["Options"].Value = "";
-                row.Cells["Auto"].Value = auto;
-                row.Cells["Width"].Value = isKey ? 90 : (input == "checkbox" ? 100 : (input == "number" ? 120 : 220));
-                row.Cells["Order"].Value = order++;
-                if (isKey) row.DefaultCellStyle.BackColor = Color.FromArgb(220, 252, 231);
-                if (auto != "") row.DefaultCellStyle.BackColor = Color.FromArgb(243, 244, 246);
+                AddGridRow(c, DefaultField(c, res, order++));
             }
+            FillOrderBy(cols.Select(c => c.Name), keyColumn);
 
             tabsMain.SelectedIndex = 1;
             MessageBox.Show("تم تحميل " + grid.Rows.Count + " حقل ✔️\nراجع الإعدادات في تاب (الحقول)");
@@ -665,7 +868,356 @@ ORDER BY c.column_id";
         // #endregion
 
         // =====================================================================
-        // #region قراءة الإعدادات من الشاشة
+        // #region شاشة جديدة / فتح شاشة موجودة
+        // =====================================================================
+        void NewScreen()
+        {
+            if (grid.Rows.Count > 0 &&
+                MessageBox.Show("كل الإعدادات الحالية هتتمسح. تكمل؟", "شاشة جديدة", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+            ApplySettingsToForm(new GridScreenSettings());
+            grid.Rows.Clear();
+            cmbOrderBy.Items.Clear();
+            keyColumn = "";
+            keyIsIdentity = false;
+            lblKey.Text = "المفتاح: —";
+            ClearPreview();
+            SetMode("");
+        }
+
+        void ClearPreview()
+        {
+            rtTs.Clear(); rtTsx.Clear(); rtResources.Clear(); rtRoutes.Clear(); rtSql.Clear();
+            SetStatus("");
+        }
+
+        void OpenScreen()
+        {
+            if (cmbScreens.SelectedItem == null) { MessageBox.Show("مفيش شاشات في ClientApp — اتأكد من مسار الواجهة"); return; }
+            string name = cmbScreens.SelectedItem.ToString().Split(' ')[0].Trim();
+            string dir = Path.Combine(ClientAppPath, name);
+
+            GridScreenSettings st;
+            string note;
+            try
+            {
+                string ts = File.ReadAllText(Path.Combine(dir, name + ".ts"));
+                string tsx = File.Exists(Path.Combine(dir, "page.tsx")) ? File.ReadAllText(Path.Combine(dir, "page.tsx")) : "";
+                st = ReadSettingsBlock(ts);
+                if (st != null)
+                {
+                    note = "اتقرت الإعدادات كاملة ✔️";
+                }
+                else
+                {
+                    st = ParseLegacyScreen(name, ts, tsx);
+                    note = "⚠️ الشاشة دي معمولة يدوي، فالإعدادات اتقرت من الكود على قد ما ينفع.\nراجعها كويس قبل الحفظ. بعد أول حفظ هتتقرا كاملة.";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("مقدرتش أقرا الشاشة:\n" + ex.Message, "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            ApplySettingsToForm(st);
+            ClearPreview();
+
+            // الحقول: ندمج إعدادات الشاشة مع حقول الجدول من قاعدة البيانات
+            List<ColMeta> cols = null;
+            string dbNote = "";
+            try { cols = ReadColumns(st.Table); }
+            catch (Exception ex) { dbNote = "\n\n⚠️ مقدرتش أقرا الجدول من قاعدة البيانات (" + ex.Message + ")\nالحقول اتعرضت من إعدادات الشاشة بس."; }
+            if (cols != null && cols.Count == 0) { dbNote = "\n\n⚠️ الجدول " + st.Table + " مش موجود في قاعدة البيانات"; cols = null; }
+
+            grid.Rows.Clear();
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (cols != null)
+            {
+                SetKey(cols, st.KeyColumn);
+                var res = ReadResources();
+                int maxOrder = st.Fields.Count == 0 ? 0 : st.Fields.Max(f => f.Order);
+                var newFields = new List<string>();
+
+                // الحقول اللي في الشاشة بترتيبها
+                foreach (var f in st.Fields.OrderBy(x => x.Order))
+                {
+                    var meta = cols.FirstOrDefault(c => c.Name.Equals(f.Field, StringComparison.OrdinalIgnoreCase))
+                               ?? new ColMeta { Name = f.Field, NotInDb = true };
+                    AddGridRow(meta, f);
+                    used.Add(f.Field);
+                }
+                // حقول جديدة في الجدول مش موجودة في الشاشة: بتتضاف مقفولة
+                foreach (var c in cols)
+                {
+                    if (used.Contains(c.Name) || c.Name.Equals("StatusFlag", StringComparison.OrdinalIgnoreCase)) continue;
+                    var f = DefaultField(c, res, ++maxOrder);
+                    f.InGrid = false; f.InForm = false; f.InFilter = false; f.Search = false; f.Required = false;
+                    AddGridRow(c, f);
+                    newFields.Add(c.Name);
+                }
+                if (newFields.Count > 0) dbNote += "\n\nℹ️ حقول جديدة في الجدول اتضافت مقفولة (فعّلها لو محتاجها):\n" + string.Join(", ", newFields);
+                FillOrderBy(cols.Select(c => c.Name), st.OrderBy);
+            }
+            else
+            {
+                keyColumn = st.KeyColumn;
+                keyIsIdentity = true;
+                lblKey.Text = "المفتاح: " + keyColumn + "  (من إعدادات الشاشة)";
+                foreach (var f in st.Fields.OrderBy(x => x.Order))
+                    AddGridRow(new ColMeta { Name = f.Field }, f);
+                FillOrderBy(st.Fields.Select(f => f.Field), st.OrderBy);
+            }
+
+            SetMode(name);
+            tabsMain.SelectedIndex = 1;
+            MessageBox.Show(note + dbNote, "فتح الشاشة " + name);
+        }
+
+        void ApplySettingsToForm(GridScreenSettings st)
+        {
+            txtModuleCode.Text = st.Module;
+            cmbTable.Text = st.Table;
+            txtTitleAr.Text = st.TitleAr;
+            txtTitleEn.Text = st.TitleEn;
+            txtSubAr.Text = st.SubAr;
+            txtSubEn.Text = st.SubEn;
+            txtIcon.Text = st.Icon;
+            numPageSize.Value = Math.Max(numPageSize.Minimum, Math.Min(numPageSize.Maximum, st.PageSize));
+            chkProcessTrans.Checked = st.ProcessTrans;
+            txtTrType.Text = st.TrType;
+            chkFilterComp.Checked = st.FilterComp;
+            chkFilterBranch.Checked = st.FilterBranch;
+            txtExtraCondition.Text = st.ExtraCondition;
+            cmbOrderType.SelectedItem = st.OrderType == "ASC" ? "ASC" : "DESC";
+            chkInsert.Checked = st.Insert;
+            chkEdit.Checked = st.Edit;
+            chkDelete.Checked = st.Delete;
+            chkExport.Checked = st.Export;
+            chkPermissions.Checked = st.Permissions;
+            txtParentMenu.Text = st.ParentMenu;
+            txtIconColor.Text = st.IconColor;
+            txtRoles.Text = st.Roles;
+        }
+
+        GridScreenSettings CollectSettings(List<RowInfo> rows)
+        {
+            return new GridScreenSettings
+            {
+                Module = Module,
+                Table = cmbTable.Text.Trim(),
+                KeyColumn = keyColumn,
+                TitleAr = txtTitleAr.Text.Trim(),
+                TitleEn = txtTitleEn.Text.Trim(),
+                SubAr = txtSubAr.Text.Trim(),
+                SubEn = txtSubEn.Text.Trim(),
+                Icon = txtIcon.Text.Trim(),
+                PageSize = (int)numPageSize.Value,
+                ProcessTrans = chkProcessTrans.Checked,
+                TrType = txtTrType.Text.Trim(),
+                FilterComp = chkFilterComp.Checked,
+                FilterBranch = chkFilterBranch.Checked,
+                ExtraCondition = CleanCondition(txtExtraCondition.Text),
+                OrderBy = OrderByField(),
+                OrderType = Convert.ToString(cmbOrderType.SelectedItem) == "ASC" ? "ASC" : "DESC",
+                Insert = chkInsert.Checked,
+                Edit = chkEdit.Checked,
+                Delete = chkDelete.Checked,
+                Export = chkExport.Checked,
+                Permissions = chkPermissions.Checked,
+                ParentMenu = txtParentMenu.Text.Trim(),
+                IconColor = txtIconColor.Text.Trim(),
+                Roles = txtRoles.Text.Trim(),
+                Fields = rows.Select(r => r.S).ToList()
+            };
+        }
+
+        string OrderByField()
+        {
+            string v = Convert.ToString(cmbOrderBy.SelectedItem ?? "");
+            return v == "" ? keyColumn : v;
+        }
+
+        GridScreenSettings ReadSettingsBlock(string ts)
+        {
+            int i = ts.LastIndexOf(SettingsMarker, StringComparison.Ordinal);
+            if (i < 0) return null;
+            string line = ts.Substring(i + SettingsMarker.Length);
+            int nl = line.IndexOf('\n');
+            if (nl >= 0) line = line.Substring(0, nl);
+            try { return JsonConvert.DeserializeObject<GridScreenSettings>(line.Trim()); }
+            catch { return null; }
+        }
+        // #endregion
+
+        // =====================================================================
+        // #region قراءة الشاشات القديمة (المعمولة يدوي) من الكود
+        // =====================================================================
+        static string M1(string input, string pattern)
+        {
+            var m = Regex.Match(input, pattern, RegexOptions.Singleline);
+            return m.Success ? m.Groups[1].Value : "";
+        }
+
+        // بينضّف الشرط: بيشيل AND / OR الزيادة في الأول والآخر، والقوس اللي حوالين الشرط كله
+        static string CleanCondition(string c)
+        {
+            c = (c ?? "").Trim();
+            string old;
+            do
+            {
+                old = c;
+                c = Regex.Replace(c, @"^(?:AND|OR)\b", "", RegexOptions.IgnoreCase).Trim();
+                c = Regex.Replace(c, @"\b(?:AND|OR)$", "", RegexOptions.IgnoreCase).Trim();
+                if (c.StartsWith("(") && c.EndsWith(")") && c.IndexOf('(', 1) < 0) c = c.Substring(1, c.Length - 2).Trim();
+            } while (c != old);
+            return c;
+        }
+
+        static string Unjs(string s)
+        {
+            return (s ?? "").Replace("\\\"", "\"").Replace("\\\\", "\\");
+        }
+
+        const string StrRx = @"""((?:[^""\\]|\\.)*)""";
+
+        // قيمة زي TrTypes.Receipt → بندوّر على Receipt: 0 في الملف
+        static string ResolveValue(string token, string ts)
+        {
+            token = token.Trim();
+            if (token.StartsWith("\"") && token.EndsWith("\"") && token.Length >= 2) return Unjs(token.Substring(1, token.Length - 2));
+            var m = Regex.Match(token, @"^\w+\.(\w+)$");
+            if (m.Success)
+            {
+                string v = M1(ts, @"\b" + m.Groups[1].Value + @"\s*:\s*([^,\s}]+)");
+                if (v != "") return v.Trim('"');
+            }
+            return token;
+        }
+
+        static string ParseOptions(string block, string ts)
+        {
+            var parts = new List<string>();
+            foreach (Match m in Regex.Matches(block, @"\{\s*value:\s*([^,]+?)\s*,\s*label:\s*t\(\s*" + StrRx + @"\s*,\s*" + StrRx + @"\s*\)", RegexOptions.Singleline))
+                parts.Add(ResolveValue(m.Groups[1].Value, ts) + "=" + Unjs(m.Groups[3].Value) + "=" + Unjs(m.Groups[2].Value));
+            return string.Join(";", parts);
+        }
+
+        static string ReadResourceValue(string res, string key, bool arabic)
+        {
+            var arM = Regex.Match(res, @"^[ \t]*ar[ \t]*:[ \t]*\{", RegexOptions.Multiline);
+            if (!arM.Success) return "";
+            string part = arabic ? res.Substring(arM.Index) : res.Substring(0, arM.Index);
+            return Unjs(M1(part, @"(?m)^[ \t]*" + Regex.Escape(key) + @"[ \t]*:[ \t]*" + StrRx));
+        }
+
+        GridScreenSettings ParseLegacyScreen(string name, string ts, string tsx)
+        {
+            var st = new GridScreenSettings();
+            st.Module = name;
+            st.Table = M1(ts, @"const\s+TableName\s*=\s*" + StrRx);
+            st.KeyColumn = M1(ts, @"const\s+KeyColumn\s*=\s*" + StrRx);
+            st.TrType = M1(ts, @"const\s+TrType\s*=\s*" + StrRx);
+            st.ProcessTrans = M1(ts, @"const\s+RunProcessTrans\s*=\s*(true|false)") == "true";
+
+            // الشرط
+            string cond = M1(ts, @"const\s+Condition\s*=\s*`([^`]*)`");
+            st.FilterComp = cond.Contains("CompCode = ${CompCode}");
+            st.FilterBranch = cond.Contains("BranchCode = ${BranchCode}");
+            st.ExtraCondition = CleanCondition(cond.Replace("CompCode = ${CompCode}", "").Replace("BranchCode = ${BranchCode}", ""));
+
+            // من page.tsx: العناوين / الأيقونة / الصفحة / الأزرار
+            string prefix = M1(tsx, @"L\.(\w+?)_title\b");
+            string resPath = Path.Combine(ClientAppPath, "Shared", "Resources.ts");
+            if (prefix != "" && File.Exists(resPath))
+            {
+                string res = File.ReadAllText(resPath);
+                st.TitleEn = ReadResourceValue(res, prefix + "_title", false);
+                st.TitleAr = ReadResourceValue(res, prefix + "_title", true);
+                st.SubEn = ReadResourceValue(res, prefix + "_subtitle", false);
+                st.SubAr = ReadResourceValue(res, prefix + "_subtitle", true);
+            }
+            if (st.TitleAr == "") st.TitleAr = name;
+            if (st.TitleEn == "") st.TitleEn = name;
+            string icon = M1(tsx, @"fa-solid\s+(fa-[\w-]+)");
+            if (icon != "" && icon != "fa-rotate") st.Icon = icon;
+            string ps = M1(tsx, @"pageSize=\{(\d+)\}");
+            if (ps != "") st.PageSize = int.Parse(ps);
+            st.Insert = M1(tsx, @"enableInsert=\{(\w+)\}") != "false";
+            st.Edit = M1(tsx, @"enableUpdate=\{(\w+)\}") != "false";
+            st.Delete = M1(tsx, @"enableDelete=\{(\w+)\}") != "false";
+            st.Export = M1(tsx, @"enableExport=\{(\w+)\}") != "false";
+            if (M1(tsx, @"orderType=""(\w+)""") == "ASC") st.OrderType = "ASC";
+            st.OrderBy = st.KeyColumn;
+
+            // الأعمدة والفلاتر
+            int cStart = ts.IndexOf("const Columns", StringComparison.Ordinal);
+            int fStart = ts.IndexOf("const FilterFields", StringComparison.Ordinal);
+            string colsBlock = cStart < 0 ? "" : (fStart > cStart ? ts.Substring(cStart, fStart - cStart) : ts.Substring(cStart));
+            string filterBlock = "";
+            if (fStart >= 0)
+            {
+                int fEnd = ts.IndexOf("// #endregion", fStart, StringComparison.Ordinal);
+                filterBlock = fEnd > fStart ? ts.Substring(fStart, fEnd - fStart) : ts.Substring(fStart);
+            }
+
+            var fieldMatches = Regex.Matches(colsBlock, @"field:\s*""(\w+)""");
+            for (int i = 0; i < fieldMatches.Count; i++)
+            {
+                int a = fieldMatches[i].Index;
+                int b = i + 1 < fieldMatches.Count ? fieldMatches[i + 1].Index : colsBlock.Length;
+                string blk = colsBlock.Substring(a, b - a);
+                string field = fieldMatches[i].Groups[1].Value;
+
+                var f = new GridFieldSettings { Field = field, Order = i + 1 };
+                var tm = Regex.Match(blk, @"title:\s*t\(\s*" + StrRx + @"\s*,\s*" + StrRx + @"\s*\)");
+                if (tm.Success) { f.TitleEn = Unjs(tm.Groups[1].Value); f.TitleAr = Unjs(tm.Groups[2].Value); }
+                else { f.TitleEn = Unjs(M1(blk, @"title:\s*" + StrRx)); f.TitleAr = f.TitleEn; }
+
+                string inputType = M1(blk, @"inputType:\s*""(\w+)""");
+                string type = M1(blk, @"\btype:\s*""(\w+)""");
+                f.InputType = inputType != "" ? inputType : (type == "number" || type == "checkbox" || type == "date" || type == "select" ? type : "text");
+
+                // الاختيارات (مباشرة أو في متغير)
+                string so = M1(blk, @"selectOptions:\s*(\[.*?\])\s*,");
+                if (so == "")
+                {
+                    string soVar = M1(blk, @"selectOptions:\s*(\w+)");
+                    if (soVar != "") so = M1(ts, @"const\s+" + soVar + @"\s*=\s*useMemo\(\s*\(\)\s*=>\s*(\[.*?\])\s*,\s*\[");
+                }
+                if (so != "") f.Options = ParseOptions(so, ts);
+
+                // نافذة البحث (مباشرة أو في متغير)
+                var sm = Regex.Match(blk, @"searchModal:\s*(\w+)\(\s*(?:" + StrRx + @")?\s*\)");
+                if (!sm.Success)
+                {
+                    string smVar = M1(blk, @"searchModal:\s*(\w+)");
+                    if (smVar != "") sm = Regex.Match(ts, @"const\s+" + smVar + @"\s*=\s*useMemo\(\s*\(\)\s*=>\s*(\w+)\(\s*(?:" + StrRx + @")?\s*\)");
+                }
+                if (sm.Success) { f.SearchFn = sm.Groups[1].Value; f.SearchCond = Unjs(sm.Groups[2].Value); f.InputType = "search"; }
+
+                bool notEditable = Regex.IsMatch(blk, @"editable:\s*false");
+                bool notInsertable = Regex.IsMatch(blk, @"insertable:\s*false");
+                f.InForm = !(notEditable && notInsertable);
+                f.Required = Regex.IsMatch(blk, @"IsRequired:\s*true");
+                f.InGrid = !Regex.IsMatch(blk, @"IsVisibleDisplayInGrid:\s*false");
+                f.Search = !Regex.IsMatch(blk, @"IsSearchColumn:\s*false");
+                f.InFilter = Regex.IsMatch(filterBlock, @"field:\s*""" + Regex.Escape(field) + @"""");
+                string w = M1(blk, @"width:\s*(\d+)");
+                if (w != "") f.Width = int.Parse(w);
+
+                string dv = M1(blk, @"DefaultValue:\s*([^,\r\n]+)").Trim();
+                if (dv != "" && AutoValues.Contains(dv)) { f.Auto = dv; f.InForm = false; }
+                else if (dv != "") f.DefaultValue = ResolveValue(dv, ts);
+
+                st.Fields.Add(f);
+            }
+            return st;
+        }
+        // #endregion
+
+        // =====================================================================
+        // #region قراءة إعدادات الحقول من الشاشة
         // =====================================================================
         static string Str(DataGridViewRow r, string col)
         {
@@ -692,9 +1244,8 @@ ORDER BY c.column_id";
             {
                 var meta = r.Tag as ColMeta;
                 if (meta == null) continue;
-                var info = new RowInfo
+                var s = new GridFieldSettings
                 {
-                    Meta = meta,
                     Field = meta.Name,
                     TitleAr = Str(r, "TitleAr"),
                     TitleEn = Str(r, "TitleEn"),
@@ -704,45 +1255,50 @@ ORDER BY c.column_id";
                     Search = Bool(r, "Search"),
                     InFilter = Bool(r, "InFilter"),
                     InputType = Str(r, "InputType"),
+                    Options = Str(r, "Options"),
+                    SearchFn = Str(r, "SearchFn"),
+                    SearchCond = Str(r, "SearchCond"),
                     Auto = Str(r, "Auto"),
+                    DefaultValue = Str(r, "DefaultValue"),
                     Width = Int(r, "Width", 150),
-                    Order = Int(r, "Order", 99),
-                    IsKey = meta.Name == keyColumn,
-                    IsDecimal = IsDecimalType(meta.SqlType)
+                    Order = Int(r, "Order", 99)
                 };
-                if (info.InputType == "") info.InputType = "text";
-                if (info.TitleAr == "") info.TitleAr = info.Field;
-                if (info.TitleEn == "") info.TitleEn = info.Field;
-                if (info.Auto != "") info.InForm = false;          // التلقائي مش بيظهر في الفورم
+                if (s.InputType == "") s.InputType = "text";
+                if (s.TitleAr == "") s.TitleAr = s.Field;
+                if (s.TitleEn == "") s.TitleEn = s.Field;
+                if (s.Auto != "") s.InForm = false;
 
-                // الاختيارات:  0=قبض=Receipt;1=صرف=Payment
-                foreach (var part in Str(r, "Options").Split(new[] { ';', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                var info = new RowInfo { Meta = meta, S = s, IsKey = meta.Name == keyColumn, IsDecimal = IsDecimalType(meta.SqlType) };
+                foreach (var part in s.Options.Split(new[] { ';', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var p = part.Split('=');
                     if (p.Length < 2 || p[0].Trim() == "") continue;
-                    info.Options.Add(new Opt
-                    {
-                        Value = p[0].Trim(),
-                        Ar = p[1].Trim(),
-                        En = p.Length > 2 && p[2].Trim() != "" ? p[2].Trim() : p[1].Trim()
-                    });
+                    info.Options.Add(new Opt { Value = p[0].Trim(), Ar = p[1].Trim(), En = p.Length > 2 && p[2].Trim() != "" ? p[2].Trim() : p[1].Trim() });
                 }
                 list.Add(info);
             }
-            return list.OrderBy(x => x.Order).ToList();
+            return list.OrderBy(x => x.S.Order).ToList();
         }
-
-        string Module { get { return txtModuleCode.Text.Trim(); } }
 
         string Validate(List<RowInfo> rows)
         {
-            if (rows.Count == 0) return "حمّل الحقول الأول (تاب 1 ← تحميل الحقول)";
+            if (rows.Count == 0) return "حمّل الحقول الأول (تاب 1 ← تحميل الحقول) أو افتح شاشة موجودة";
             if (!Regex.IsMatch(Module, @"^[A-Za-z][A-Za-z0-9_]*$")) return "كود الشاشة لازم حروف إنجليزي وأرقام بس ويبدأ بحرف";
+            if (cmbTable.Text.Trim() == "") return "اختار الجدول";
+            if (keyColumn == "") return "مفيش مفتاح للجدول";
             if (txtTitleAr.Text.Trim() == "" || txtTitleEn.Text.Trim() == "") return "اكتب عنوان الشاشة عربي وإنجليزي";
             if (chkProcessTrans.Checked && txtTrType.Text.Trim() == "") return "اكتب @TrType أو اقفل G_ProcessTrans";
+            if (txtExtraCondition.Text.Contains("`")) return "الشرط الإضافي مينفعش يكون فيه العلامة `";
+            if (openedScreen == "" && Directory.Exists(Path.Combine(ClientAppPath, Module)) && !File.Exists(Path.Combine(ClientAppPath, Module, Module + ".ts")))
+                return "فيه فولدر بنفس الاسم " + Module + " في ClientApp ومش شاشة جدول — اختار اسم تاني";
             foreach (var r in rows)
-                if (r.InputType == "select" && r.Options.Count == 0)
-                    return "الحقل " + r.Field + " نوعه select ومفيهوش اختيارات";
+            {
+                if (r.S.InputType == "select" && r.Options.Count == 0) return "الحقل " + r.Field + " نوعه select ومفيهوش اختيارات";
+                if (r.S.InputType == "search" && r.S.SearchFn == "") return "الحقل " + r.Field + " نوعه search ومفيهوش دالة بحث";
+                if (r.S.InputType == "search" && !Regex.IsMatch(r.S.SearchFn, @"^[A-Za-z_]\w*$")) return "اسم دالة البحث في الحقل " + r.Field + " غلط";
+                if (r.S.InputType == "search" && searchFunctions.Count > 0 && !searchFunctions.Contains(r.S.SearchFn))
+                    return "دالة البحث " + r.S.SearchFn + " مش موجودة في G_SearchFrom.ts — اعملها من زرار (نافذة بحث جديدة)";
+            }
             return null;
         }
         // #endregion
@@ -750,32 +1306,34 @@ ORDER BY c.column_id";
         // =====================================================================
         // #region التوليد
         // =====================================================================
-        static string Js(string s)
-        {
-            return (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", " ");
-        }
+        static string Js(string s) { return (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", " "); }
+        static string Sql(string s) { return (s ?? "").Replace("'", "''"); }
+        static string T(string en, string ar) { return "t(\"" + Js(en) + "\", \"" + Js(ar) + "\")"; }
 
-        static string Sql(string s)
-        {
-            return (s ?? "").Replace("'", "''");
-        }
-
-        static string JsValue(string v)
+        static bool IsNumber(string v)
         {
             double d;
-            return double.TryParse(v, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d)
-                ? v : "\"" + Js(v) + "\"";
+            return double.TryParse(v, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d);
         }
 
-        static string T(string en, string ar)
+        static string JsValue(string v) { return IsNumber(v) ? v : "\"" + Js(v) + "\""; }
+
+        static string SearchCall(GridFieldSettings s)
         {
-            return "t(\"" + Js(en) + "\", \"" + Js(ar) + "\")";
+            return s.SearchFn + "(" + (s.SearchCond == "" ? "" : "\"" + Js(s.SearchCond) + "\"") + ")";
         }
 
-        static string AutoExpr(string auto)
+        // القيمة الافتراضية اللي المستخدم كتبها حسب نوع الحقل
+        static string DefaultLiteral(RowInfo r)
         {
-            // الأسماء دي متعرفة كـ const في ملف الـ ts
-            return auto;
+            string v = r.S.DefaultValue;
+            if (r.S.InputType == "checkbox")
+            {
+                string l = v.ToLower();
+                return (l == "1" || l == "true" || l == "نعم") ? "true" : "false";
+            }
+            if (r.S.InputType == "number") return IsNumber(v) ? v : "0";
+            return JsValue(v);
         }
 
         string GenColumns(List<RowInfo> rows)
@@ -784,48 +1342,45 @@ ORDER BY c.column_id";
             int formOrder = 1;
             foreach (var r in rows)
             {
-                bool isSave = r.IsKey || r.Auto != "" || r.InForm;
+                var s = r.S;
+                bool keyManual = r.IsKey && !keyIsIdentity;
+                bool inForm = (s.InForm || keyManual) && !(r.IsKey && keyIsIdentity);
+                bool isSave = !r.Meta.NotInDb && (r.IsKey || s.Auto != "" || inForm);
+                string type = s.InputType;
                 var lines = new List<string>();
-                lines.Add("field: \"" + r.Field + "\",");
-                lines.Add("title: " + T(r.TitleEn, r.TitleAr) + ",");
 
-                string type = r.InputType;
+                lines.Add("field: \"" + s.Field + "\",");
+                lines.Add("title: " + T(s.TitleEn, s.TitleAr) + ",");
                 if (type == "number" || type == "checkbox" || type == "date") lines.Add("type: \"" + type + "\",");
                 if (type != "text" && type != "checkbox") lines.Add("inputType: \"" + type + "\",");
                 if (type == "textarea") lines.Add("rows: 3,");
                 if (type == "number" && r.IsDecimal) lines.Add("step: 0.01,");
                 if (type == "select")
+                    lines.Add("selectOptions: [" + string.Join(", ", r.Options.Select(o => "{ value: " + JsValue(o.Value) + ", label: " + T(o.En, o.Ar) + " }")) + "],");
+                if (type == "search")
                 {
-                    var opts = r.Options.Select(o => "{ value: " + JsValue(o.Value) + ", label: " + T(o.En, o.Ar) + " }");
-                    lines.Add("selectOptions: [" + string.Join(", ", opts) + "],");
-                    lines.Add("DefaultValue: " + JsValue(r.Options[0].Value) + ",");
-                }
-                if (type == "checkbox" && !r.IsKey && r.Auto == "") lines.Add("DefaultValue: true,");
-                if (type == "number" && !r.IsKey && r.Auto == "" && r.InForm) lines.Add("DefaultValue: 0,");
-                if (r.Auto != "") lines.Add("DefaultValue: " + AutoExpr(r.Auto) + ",          // تلقائي من الجلسة");
-
-                lines.Add("width: " + r.Width + ",");
-
-                if (r.IsKey && keyIsIdentity)
-                {
-                    lines.Add("editable: false,");
-                    lines.Add("insertable: false,          // ترقيم تلقائي");
-                }
-                else if (r.IsKey)
-                {
-                    lines.Add("IsDisabledInEdit: true,     // المفتاح مش بيتعدّل");
-                }
-                else if (!r.InForm)
-                {
-                    lines.Add("editable: false,");
-                    lines.Add("insertable: false,");
+                    lines.Add("searchModal: " + SearchCall(s) + ",");
+                    lines.Add("placeholder: t(\"Press 🔍 to pick\", \"دوس 🔍 للاختيار\"),");
                 }
 
-                if (r.Required && (r.InForm || (r.IsKey && !keyIsIdentity))) lines.Add("IsRequired: true,");
-                lines.Add("IsSave: " + (isSave ? "true" : "false") + "," + (isSave ? "" : "              // للعرض بس"));
-                if (!r.InGrid) lines.Add("IsVisibleDisplayInGrid: false,");
-                if (!r.Search) lines.Add("IsSearchColumn: false,");
-                if (r.InForm || (r.IsKey && !keyIsIdentity)) lines.Add("SortFieldInEditAndAdd: " + (formOrder++) + ",");
+                // القيمة الافتراضية
+                if (s.Auto != "") lines.Add("DefaultValue: " + s.Auto + ",          // تلقائي من الجلسة");
+                else if (s.DefaultValue != "") lines.Add("DefaultValue: " + DefaultLiteral(r) + ",");
+                else if (type == "select" && r.Options.Count > 0) lines.Add("DefaultValue: " + JsValue(r.Options[0].Value) + ",");
+                else if (type == "checkbox" && inForm) lines.Add("DefaultValue: true,");
+                else if (type == "number" && inForm && !r.IsKey) lines.Add("DefaultValue: 0,");
+
+                lines.Add("width: " + s.Width + ",");
+
+                if (r.IsKey && keyIsIdentity) { lines.Add("editable: false,"); lines.Add("insertable: false,          // ترقيم تلقائي"); }
+                else if (keyManual) lines.Add("IsDisabledInEdit: true,     // المفتاح مش بيتعدّل");
+                else if (!inForm) { lines.Add("editable: false,"); lines.Add("insertable: false,"); }
+
+                if ((s.Required && inForm) || keyManual) lines.Add("IsRequired: true,");
+                lines.Add("IsSave: " + (isSave ? "true," : "false,              // " + (r.Meta.NotInDb ? "مش في الجدول" : "للعرض بس")));
+                if (!s.InGrid) lines.Add("IsVisibleDisplayInGrid: false,");
+                if (!s.Search || r.Meta.NotInDb) lines.Add("IsSearchColumn: false,");
+                if (inForm) lines.Add("SortFieldInEditAndAdd: " + (formOrder++) + ",");
 
                 sb.AppendLine("      {");
                 foreach (var l in lines) sb.AppendLine("        " + l);
@@ -838,29 +1393,30 @@ ORDER BY c.column_id";
         {
             var sb = new StringBuilder();
             int n = 1;
-            foreach (var r in rows.Where(x => x.InFilter))
+            foreach (var r in rows.Where(x => x.S.InFilter && !x.Meta.NotInDb))
             {
-                string label = T(r.TitleEn, r.TitleAr);
-                if (r.InputType == "select")
+                string head = "      { field: \"" + r.Field + "\", label: " + T(r.S.TitleEn, r.S.TitleAr) + ", ";
+                string tail = "sortOrder: " + (n++) + " },";
+                switch (r.S.InputType)
                 {
-                    var opts = r.Options.Select(o => "{ value: \"" + Js(o.Value) + "\", label: " + T(o.En, o.Ar) + " }");
-                    sb.AppendLine("      { field: \"" + r.Field + "\", label: " + label + ", type: \"select\", options: [" + string.Join(", ", opts) + "], sortOrder: " + (n++) + " },");
-                }
-                else if (r.InputType == "checkbox")
-                {
-                    sb.AppendLine("      { field: \"" + r.Field + "\", label: " + label + ", type: \"select\", options: [{ value: \"1\", label: t(\"Yes\", \"نعم\") }, { value: \"0\", label: t(\"No\", \"لا\") }], sortOrder: " + (n++) + " },");
-                }
-                else if (r.InputType == "number")
-                {
-                    sb.AppendLine("      { field: \"" + r.Field + "\", label: " + label + ", type: \"number\", sortOrder: " + (n++) + " },");
-                }
-                else if (r.InputType == "date")
-                {
-                    sb.AppendLine("      { field: \"" + r.Field + "\", label: " + label + ", type: \"dateRange\", sortOrder: " + (n++) + " },");
-                }
-                else
-                {
-                    sb.AppendLine("      { field: \"" + r.Field + "\", label: " + label + ", type: \"text\", sortOrder: " + (n++) + " },");
+                    case "select":
+                        sb.AppendLine(head + "type: \"select\", options: [" + string.Join(", ", r.Options.Select(o => "{ value: \"" + Js(o.Value) + "\", label: " + T(o.En, o.Ar) + " }")) + "], " + tail);
+                        break;
+                    case "checkbox":
+                        sb.AppendLine(head + "type: \"select\", options: [{ value: \"1\", label: t(\"Yes\", \"نعم\") }, { value: \"0\", label: t(\"No\", \"لا\") }], " + tail);
+                        break;
+                    case "search":
+                        sb.AppendLine(head + "type: \"search\", searchModal: " + SearchCall(r.S) + ", " + tail);
+                        break;
+                    case "number":
+                        sb.AppendLine(head + "type: \"number\", " + tail);
+                        break;
+                    case "date":
+                        sb.AppendLine(head + "type: \"dateRange\", " + tail);
+                        break;
+                    default:
+                        sb.AppendLine(head + "type: \"text\", " + tail);
+                        break;
                 }
             }
             return sb.ToString().TrimEnd();
@@ -869,34 +1425,46 @@ ORDER BY c.column_id";
         string GenCondition(List<RowInfo> rows)
         {
             var parts = new List<string>();
-            if (chkFilterComp.Checked && rows.Any(r => r.Field.Equals("CompCode", StringComparison.OrdinalIgnoreCase)))
+            if (chkFilterComp.Checked && rows.Any(r => r.Field.Equals("CompCode", StringComparison.OrdinalIgnoreCase) && !r.Meta.NotInDb))
                 parts.Add("CompCode = ${CompCode}");
-            if (chkFilterBranch.Checked && rows.Any(r => r.Field.Equals("BranchCode", StringComparison.OrdinalIgnoreCase)))
+            if (chkFilterBranch.Checked && rows.Any(r => r.Field.Equals("BranchCode", StringComparison.OrdinalIgnoreCase) && !r.Meta.NotInDb))
                 parts.Add("BranchCode = ${BranchCode}");
+            string extra = CleanCondition(txtExtraCondition.Text).Replace("\\", "\\\\").Replace("${", "\\${");
+            if (extra != "") parts.Add(parts.Count == 0 ? extra : "(" + extra + ")");
             return parts.Count == 0 ? "\"\"" : "`" + string.Join(" AND ", parts) + "`";
+        }
+
+        string GenImports(List<RowInfo> rows)
+        {
+            var fns = rows.Where(r => r.S.InputType == "search" && r.S.SearchFn != "")
+                          .Select(r => r.S.SearchFn).Distinct().OrderBy(x => x).ToList();
+            return fns.Count == 0 ? "" : "import { " + string.Join(", ", fns) + " } from \"../Shared/G_SearchFrom\";\r\n";
         }
 
         string GenTs(List<RowInfo> rows)
         {
-            string saveDesc = chkProcessTrans.Checked
-                ? "مع G_ProcessTrans  (@TrType = '" + txtTrType.Text.Trim() + "')"
-                : "عادي من غير G_ProcessTrans";
+            string saveDesc = chkProcessTrans.Checked ? "مع G_ProcessTrans  (@TrType = '" + txtTrType.Text.Trim() + "')" : "عادي من غير G_ProcessTrans";
+            string settingsJson = JsonConvert.SerializeObject(CollectSettings(rows), Formatting.None);
             return TPL_TS
                 .Replace("__MODULE__", Module)
                 .Replace("__TITLE_AR__", txtTitleAr.Text.Trim())
                 .Replace("__TABLE__", cmbTable.Text.Trim())
                 .Replace("__KEY__", keyColumn)
                 .Replace("__SAVE_DESC__", saveDesc)
+                .Replace("__SEARCH_IMPORTS__", GenImports(rows))
                 .Replace("__TRTYPE__", Js(chkProcessTrans.Checked ? txtTrType.Text.Trim() : ""))
                 .Replace("__RUN_PT__", chkProcessTrans.Checked ? "true" : "false")
                 .Replace("__CONDITION__", GenCondition(rows))
                 .Replace("__COLUMNS__", GenColumns(rows))
                 .Replace("__FILTERS__", GenFilters(rows))
+                .Replace("__ORDER_BY__", Js(OrderByField()))
+                .Replace("__ORDER_TYPE__", Convert.ToString(cmbOrderType.SelectedItem) == "ASC" ? "ASC" : "DESC")
                 .Replace("__PAGE_SIZE__", numPageSize.Value.ToString())
                 .Replace("__INSERT__", chkInsert.Checked ? "true" : "false")
                 .Replace("__EDIT__", chkEdit.Checked ? "true" : "false")
                 .Replace("__DELETE__", chkDelete.Checked ? "true" : "false")
-                .Replace("__EXPORT__", chkExport.Checked ? "true" : "false");
+                .Replace("__EXPORT__", chkExport.Checked ? "true" : "false")
+                + SettingsMarker + " " + settingsJson + "\r\n";
         }
 
         string GenTsx()
@@ -907,40 +1475,35 @@ ORDER BY c.column_id";
             return TPL_TSX.Replace("__MODULE__", Module).Replace("__ICON__", icon).Replace("__TITLE_AR__", txtTitleAr.Text.Trim());
         }
 
-        string[] ResKeys()
+        string[] ResKeys() { return new[] { Module + "_title", Module + "_subtitle", Module + "_refresh" }; }
+
+        string[] ResValues(bool arabic)
         {
-            return new[] { Module + "_title", Module + "_subtitle", Module + "_refresh" };
+            return arabic
+                ? new[] { txtTitleAr.Text.Trim(), txtSubAr.Text.Trim(), "تحديث" }
+                : new[] { txtTitleEn.Text.Trim(), txtSubEn.Text.Trim(), "Refresh" };
         }
 
-        string GenResEn(string nl)
+        string GenResBlock(bool arabic, string nl, List<int> only)
         {
             var k = ResKeys();
-            return "    // ===== " + Module + " =====" + nl +
-                   "    " + k[0] + ": \"" + Js(txtTitleEn.Text.Trim()) + "\"," + nl +
-                   "    " + k[1] + ": \"" + Js(txtSubEn.Text.Trim()) + "\"," + nl +
-                   "    " + k[2] + ": \"Refresh\"";
-        }
-
-        string GenResAr(string nl)
-        {
-            var k = ResKeys();
-            return "    // ===== " + Module + " =====" + nl +
-                   "    " + k[0] + ": \"" + Js(txtTitleAr.Text.Trim()) + "\"," + nl +
-                   "    " + k[1] + ": \"" + Js(txtSubAr.Text.Trim()) + "\"," + nl +
-                   "    " + k[2] + ": \"تحديث\"";
+            var v = ResValues(arabic);
+            var idx = only ?? new List<int> { 0, 1, 2 };
+            var lines = new List<string> { "    // ===== " + Module + " =====" };
+            for (int i = 0; i < idx.Count; i++)
+                lines.Add("    " + k[idx[i]] + ": \"" + Js(v[idx[i]]) + "\"" + (i < idx.Count - 1 ? "," : ""));
+            return string.Join(nl, lines);
         }
 
         string GenSql()
         {
-            if (!chkPermissions.Checked) return "-- سكريبت الصلاحيات مقفول";
-            string roles;
+            if (!chkPermissions.Checked) return "";
             var ids = txtRoles.Text.Split(new[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => { int n; return int.TryParse(x, out n) ? (int?)n : null; })
                 .Where(x => x.HasValue).Select(x => x.Value).Distinct().ToList();
-            if (ids.Count == 0)
-                roles = "INSERT INTO @Roles (RoleId) SELECT DISTINCT RoleId FROM dbo.Sys_RoleUsers WHERE ISActive = 1;   -- كل دور عليه مستخدمين فعالين";
-            else
-                roles = "INSERT INTO @Roles (RoleId) VALUES " + string.Join(", ", ids.Select(x => "(" + x + ")")) + ";";
+            string roles = ids.Count == 0
+                ? "INSERT INTO @Roles (RoleId) SELECT DISTINCT RoleId FROM dbo.Sys_RoleUsers WHERE ISActive = 1;   -- كل دور عليه مستخدمين فعالين"
+                : "INSERT INTO @Roles (RoleId) VALUES " + string.Join(", ", ids.Select(x => "(" + x + ")")) + ";";
 
             string sql = TPL_SQL
                 .Replace("__DB__", txtDatabase.Text.Trim())
@@ -953,27 +1516,19 @@ ORDER BY c.column_id";
 
             if (chkProcessTrans.Checked)
             {
-                sql += Environment.NewLine + Environment.NewLine +
-                       "-- =====================================================================" + Environment.NewLine +
-                       "-- ⚠️ G_ProcessTrans: لازم يكون فيه جزء للنوع '" + Sql(txtTrType.Text.Trim()) + "' وإلا الحفظ هيفشل" + Environment.NewLine +
-                       "-- انسخ ده جوه الإجراء (مكان التعليق ➕) لو مش موجود:" + Environment.NewLine +
-                       "-- =====================================================================" + Environment.NewLine +
-                       "/*" + Environment.NewLine +
-                       "		if @TrType = '" + Sql(txtTrType.Text.Trim()) + "'" + Environment.NewLine +
-                       "		begin" + Environment.NewLine +
-                       "			Set @TrNo = 1" + Environment.NewLine +
-                       "			-- اكتب هنا اللي محتاج يحصل بعد الإضافة / التعديل / الحذف (@OpMode)" + Environment.NewLine +
-                       "			set @r = 0" + Environment.NewLine +
-                       "		END" + Environment.NewLine +
-                       "*/";
+                string tr = Sql(txtTrType.Text.Trim());
+                sql += "\r\n\r\n-- =====================================================================\r\n" +
+                       "-- ⚠️ G_ProcessTrans: لازم يكون فيه جزء للنوع '" + tr + "' وإلا الحفظ هيفشل\r\n" +
+                       "-- انسخ ده جوه الإجراء (مكان التعليق ➕) لو مش موجود:\r\n" +
+                       "-- =====================================================================\r\n" +
+                       "/*\r\n\t\tif @TrType = '" + tr + "'\r\n\t\tbegin\r\n\t\t\tSet @TrNo = 1\r\n" +
+                       "\t\t\t-- اكتب هنا اللي محتاج يحصل بعد الإضافة / التعديل / الحذف (@OpMode)\r\n" +
+                       "\t\t\tset @r = 0\r\n\t\tEND\r\n*/";
             }
             return sql;
         }
 
-        string GenRoutesLine()
-        {
-            return "    " + Module + ": HomeLayout,";
-        }
+        string GenRoutesLine() { return "    " + Module + ": HomeLayout,"; }
 
         void Generate()
         {
@@ -981,12 +1536,15 @@ ORDER BY c.column_id";
             string err = Validate(rows);
             if (err != null) { MessageBox.Show(err, "ناقص حاجة", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
+            if (openedScreen != "" && openedScreen != Module &&
+                MessageBox.Show("غيّرت كود الشاشة من " + openedScreen + " لـ " + Module + "\nده هيعمل شاشة جديدة والقديمة هتفضل زي ما هي. تكمل؟", "تأكيد", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
             rtTs.Text = GenTs(rows);
             rtTsx.Text = GenTsx();
-            rtResources.Text = "// en:" + Environment.NewLine + GenResEn(Environment.NewLine) + Environment.NewLine + Environment.NewLine +
-                               "// ar:" + Environment.NewLine + GenResAr(Environment.NewLine);
+            rtResources.Text = "// en:\r\n" + GenResBlock(false, "\r\n", null) + "\r\n\r\n// ar:\r\n" + GenResBlock(true, "\r\n", null);
             rtRoutes.Text = GenRoutesLine();
-            rtSql.Text = GenSql();
+            rtSql.Text = chkPermissions.Checked ? GenSql() : "-- سكريبت الصلاحيات مقفول";
             tabsPreview.TabPages[0].Text = Module + ".ts";
             tabsMain.SelectedIndex = 2;
 
@@ -994,7 +1552,6 @@ ORDER BY c.column_id";
             SetStatus(warn ?? "تم التوليد ✔️  راجع الملفات وبعدين اضغط (حفظ الملفات)", warn != null);
         }
 
-        // بيتأكد إن G_ProcessTrans فيه جزء للنوع ده
         string CheckProcessTrans()
         {
             if (!chkProcessTrans.Checked) return null;
@@ -1029,46 +1586,52 @@ ORDER BY c.column_id";
         {
             if (rtTs.Text.Trim() == "") { MessageBox.Show("اضغط (توليد الكود) الأول"); return; }
             string app = txtAppPath.Text.Trim();
-            if (!Directory.Exists(Path.Combine(app, "app", "ClientApp")))
-            {
-                MessageBox.Show("مسار الواجهة غلط، لازم يكون فيه app\\ClientApp:\n" + app);
-                return;
-            }
+            if (!Directory.Exists(ClientAppPath)) { MessageBox.Show("مسار الواجهة غلط، لازم يكون فيه app\\ClientApp:\n" + app); return; }
 
-            string pageDir = Path.Combine(app, "app", "ClientApp", Module);
-            if (Directory.Exists(pageDir) &&
-                MessageBox.Show("الشاشة " + Module + " موجودة قبل كده. أكتب فوقها؟", "تأكيد", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
+            string pageDir = Path.Combine(ClientAppPath, Module);
+            bool exists = File.Exists(Path.Combine(pageDir, Module + ".ts"));
+            if (exists)
+            {
+                string msg = openedScreen == Module
+                    ? "هيتم حفظ التعديلات فوق الشاشة " + Module + "\n(هتتعمل نسخة احتياطية من الملفات القديمة)"
+                    : "الشاشة " + Module + " موجودة قبل كده! أكتب فوقها؟\n(هتتعمل نسخة احتياطية من الملفات القديمة)";
+                if (MessageBox.Show(msg, "تأكيد", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            }
 
             var done = new List<string>();
             try
             {
-                // 1) ملفات الشاشة
+                // 0) نسخة احتياطية (برا ClientApp عشان Next.js ميقراهاش)
+                if (exists)
+                {
+                    string bak = Path.Combine(app, "_Backup_Screens", Module + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+                    Directory.CreateDirectory(bak);
+                    foreach (var f in Directory.GetFiles(pageDir)) File.Copy(f, Path.Combine(bak, Path.GetFileName(f)), true);
+                    done.Add("✔️ نسخة احتياطية: _Backup_Screens\\" + Path.GetFileName(bak));
+                }
+
                 WriteFile(pageDir, Module + ".ts", rtTs.Text);
                 WriteFile(pageDir, "page.tsx", rtTsx.Text);
                 done.Add("✔️ " + Module + ".ts و page.tsx");
 
-                // 2) ملفات التنسيق
                 string cssDir = Path.Combine(app, "public", "StyleDesign", "Pages", Module);
                 if (!File.Exists(Path.Combine(cssDir, Module + "EN.css"))) WriteFile(cssDir, Module + "EN.css", "/* " + Module + " - English (LTR) */\r\n");
                 if (!File.Exists(Path.Combine(cssDir, Module + "AR.css"))) WriteFile(cssDir, Module + "AR.css", "/* " + Module + " - Arabic (RTL) */\r\n");
                 done.Add("✔️ ملفات التنسيق");
 
-                // 3) Routes.tsx
-                done.Add(UpdateRoutes(Path.Combine(app, "app", "ClientApp", "Routes.tsx")));
+                done.Add(UpdateRoutes(Path.Combine(ClientAppPath, "Routes.tsx")));
+                done.Add(UpdateResources(Path.Combine(ClientAppPath, "Shared", "Resources.ts")));
 
-                // 4) Resources.ts
-                done.Add(UpdateResources(Path.Combine(app, "app", "ClientApp", "Shared", "Resources.ts")));
-
-                // 5) سكريبت الصلاحيات
                 if (chkPermissions.Checked)
                 {
-                    WriteFile(txtDbPath.Text.Trim(), "Add_" + Module + "_Module.sql", rtSql.Text);
+                    WriteFile(txtDbPath.Text.Trim(), "Add_" + Module + "_Module.sql", GenSql());
                     done.Add("✔️ Database\\Add_" + Module + "_Module.sql");
                 }
 
+                SetMode(Module);
+                RefreshScreensList();
                 SetStatus("تم الحفظ ✔️");
-                MessageBox.Show(string.Join("\n", done) + "\n\nالخطوة الجاية: (تنفيذ الصلاحيات على قاعدة البيانات)", "تم الحفظ");
+                MessageBox.Show(string.Join("\n", done) + "\n\nالخطوة الجاية: (تنفيذ الصلاحيات على قاعدة البيانات) لو الشاشة جديدة", "تم الحفظ");
             }
             catch (Exception ex)
             {
@@ -1081,15 +1644,11 @@ ORDER BY c.column_id";
         {
             if (!File.Exists(path)) return "⚠️ Routes.tsx مش موجود — ضيف السطر بإيدك: " + GenRoutesLine().Trim();
             string s = File.ReadAllText(path);
-            if (Regex.IsMatch(s, @"^[ \t]*" + Module + @"[ \t]*:", RegexOptions.Multiline))
-                return "ℹ️ الشاشة موجودة في Routes.tsx قبل كده";
+            if (Regex.IsMatch(s, @"^[ \t]*" + Module + @"[ \t]*:", RegexOptions.Multiline)) return "ℹ️ الشاشة موجودة في Routes.tsx";
 
             string nl = s.Contains("\r\n") ? "\r\n" : "\n";
             var m = Regex.Match(s, @"^([ \t]*)Home[ \t]*:[ \t]*HomeLayout[ \t]*,[ \t]*\r?\n", RegexOptions.Multiline);
-            if (m.Success)
-            {
-                s = s.Insert(m.Index + m.Length, m.Groups[1].Value + Module + ": HomeLayout," + nl);
-            }
+            if (m.Success) s = s.Insert(m.Index + m.Length, m.Groups[1].Value + Module + ": HomeLayout," + nl);
             else
             {
                 var m2 = Regex.Match(s, @"const[ \t]+routes[^{]*\{[ \t]*\r?\n");
@@ -1100,48 +1659,69 @@ ORDER BY c.column_id";
             return "✔️ Routes.tsx";
         }
 
-        // بيضيف سطور قبل قوس القفل اللي في المكان closeIdx، ويحط فاصلة لو ناقصة
         static string InsertBeforeClose(string s, int closeIdx, string block, string nl)
         {
             int p = closeIdx - 1;
             while (p >= 0 && char.IsWhiteSpace(s[p])) p--;
             string head = s.Substring(0, p + 1);
-            if (s[p] != ',' && s[p] != '{') head += ",";
+            if (p >= 0 && s[p] != ',' && s[p] != '{') head += ",";
             return head + nl + block + s.Substring(p + 1);
         }
 
+        // بيحدّث الكلمات الموجودة ويضيف الناقص (عربي وإنجليزي)
         string UpdateResources(string path)
         {
             if (!File.Exists(path)) return "⚠️ Resources.ts مش موجود";
             string s = File.ReadAllText(path);
-            if (s.Contains(ResKeys()[0] + ":")) return "ℹ️ كلمات الترجمة موجودة قبل كده";
-
             string nl = s.Contains("\r\n") ? "\r\n" : "\n";
+
             var arMatch = Regex.Match(s, @"^[ \t]*ar[ \t]*:[ \t]*\{", RegexOptions.Multiline);
-            int end = s.LastIndexOf("};", StringComparison.Ordinal);
-            if (!arMatch.Success || end < 0) return "⚠️ مقدرتش أفهم شكل Resources.ts — انسخ الترجمة بإيدك من التاب";
+            if (!arMatch.Success || s.LastIndexOf("};", StringComparison.Ordinal) < arMatch.Index)
+                return "⚠️ مقدرتش أفهم شكل Resources.ts — انسخ الترجمة بإيدك من التاب";
 
-            // الأول العربي (في آخر الملف) عشان أماكن الإنجليزي متتغيرش
-            int arClose = s.LastIndexOf('}', end - 1);
-            s = InsertBeforeClose(s, arClose, GenResAr(nl), nl);
-
-            int enClose = s.LastIndexOf('}', arMatch.Index);
-            s = InsertBeforeClose(s, enClose, GenResEn(nl), nl);
-
-            File.WriteAllText(path, s, Utf8NoBom);
+            string enPart = s.Substring(0, arMatch.Index);
+            string arPart = s.Substring(arMatch.Index);
+            arPart = UpsertKeys(arPart, ResValues(true), true, nl);
+            enPart = UpsertKeys(enPart, ResValues(false), false, nl);
+            File.WriteAllText(path, enPart + arPart, Utf8NoBom);
             return "✔️ Resources.ts";
+        }
+
+        string UpsertKeys(string part, string[] values, bool isArPart, string nl)
+        {
+            var keys = ResKeys();
+            var missing = new List<int>();
+            for (int i = 0; i < keys.Length; i++)
+            {
+                var rx = new Regex(@"(?m)^([ \t]*" + Regex.Escape(keys[i]) + @"[ \t]*:[ \t]*)""(?:[^""\\]|\\.)*""");
+                if (rx.IsMatch(part))
+                {
+                    string val = Js(values[i]);
+                    part = rx.Replace(part, m => m.Groups[1].Value + "\"" + val + "\"", 1);
+                }
+                else missing.Add(i);
+            }
+            if (missing.Count == 0) return part;
+
+            int closeIdx;
+            if (isArPart)
+            {
+                int end = part.LastIndexOf("};", StringComparison.Ordinal);
+                closeIdx = part.LastIndexOf('}', end - 1);
+            }
+            else closeIdx = part.LastIndexOf('}');
+            return InsertBeforeClose(part, closeIdx, GenResBlock(isArPart, nl, missing), nl);
         }
 
         void RunPermissionsSql()
         {
-            if (!chkPermissions.Checked || rtSql.Text.Trim() == "") { MessageBox.Show("اضغط (توليد الكود) الأول"); return; }
+            if (!chkPermissions.Checked) { MessageBox.Show("سكريبت الصلاحيات مقفول (تاب 1 ← ④)"); return; }
+            if (rtTs.Text.Trim() == "") { MessageBox.Show("اضغط (توليد الكود) الأول"); return; }
             if (MessageBox.Show("هيتم إضافة الشاشة " + Module + " في Sys_Modules و Sys_RoleModule على قاعدة البيانات " + txtDatabase.Text + "\nتكمل؟",
                     "تأكيد", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-
             try
             {
-                // تقسيم السكريبت عند GO
-                var batches = Regex.Split(rtSql.Text, @"^[ \t]*GO[ \t]*\r?$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+                var batches = Regex.Split(GenSql(), @"^[ \t]*GO[ \t]*\r?$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
                 var messages = new StringBuilder();
                 using (var con = new SqlConnection(ConnString()))
                 {
@@ -1165,14 +1745,39 @@ ORDER BY c.column_id";
         // #endregion
 
         // =====================================================================
+        // #region نافذة بحث جديدة
+        // =====================================================================
+        void OpenSearchBuilder()
+        {
+            if (!File.Exists(SearchFilePath)) { MessageBox.Show("مش لاقي الملف:\n" + SearchFilePath); return; }
+            if (tablesCache.Count == 0 && !LoadTables(false))
+            {
+                MessageBox.Show("اتصل بقاعدة البيانات الأول (تاب 1)");
+                return;
+            }
+            using (var f = new Form5_SearchBuilder(ConnString(), tablesCache, SearchFilePath, searchFunctions))
+            {
+                if (f.ShowDialog(this) == DialogResult.OK)
+                {
+                    RefreshSearchFunctions();
+                    SetStatus("✔️ اتضافت الدالة " + f.CreatedName + " في G_SearchFrom.ts");
+                    // لو فيه حقل واقف عليه نوعه search ومفيهوش دالة نحطهاله
+                    if (grid.CurrentRow != null && Str(grid.CurrentRow, "InputType") == "search" && Str(grid.CurrentRow, "SearchFn") == "")
+                        grid.CurrentRow.Cells["SearchFn"].Value = f.CreatedName;
+                    MessageBox.Show("✔️ اتضافت الدالة " + f.CreatedName + " في G_SearchFrom.ts\nاختارها من عمود (دالة البحث) في أي حقل نوعه search");
+                }
+            }
+        }
+        // #endregion
+
+        // =====================================================================
         // #region القوالب (Templates)
         // =====================================================================
-
         const string TPL_TS = @"""use client"";
 
 // =====================================================================================
 //  📄 __MODULE__.ts   ←  ملف المنطق (البيزنس) — شاشة __TITLE_AR__
-//  اتعمل أوتوماتيك من برنامج CreatePageReact
+//  اتعمل أوتوماتيك من برنامج CreatePageReact — تقدر تفتحه في البرنامج وتعدّله
 // -------------------------------------------------------------------------------------
 //  الجدول : __TABLE__
 //  الحفظ  : __SAVE_DESC__
@@ -1182,7 +1787,7 @@ import { useEffect, useMemo, useRef, useState } from ""react"";
 import { useSys } from ""../Shared/SystemUsing"";
 import { DynamicGridColumn } from ""../Shared/Components/Import/ModelGrid"";
 import { FilterFieldConfig, ActiveFilter } from ""../Shared/Components/Import/AdvancedFilter"";
-
+__SEARCH_IMPORTS__
 // =======================
 // #region ثوابت الشاشة
 // =======================
@@ -1245,6 +1850,7 @@ export function __MODULE__() {
   // =======================
   //  ⚠️ الأعمدة والفلاتر جوه useMemo عشان الجدول ميعيدش التحميل على طول
 
+  // الشرط اللي بيتعرض بيه الجدول
   const Condition = __CONDITION__;
 
   const Columns = useMemo<DynamicGridColumn[]>(
@@ -1286,6 +1892,8 @@ __FILTERS__
     Columns,
     FilterFields,
     DefaultFilters,
+    OrderBy: ""__ORDER_BY__"",
+    OrderType: ""__ORDER_TYPE__"" as ""ASC"" | ""DESC"",
     PageSize: __PAGE_SIZE__,
     EnableInsert: __INSERT__,
     EnableUpdate: __EDIT__,
@@ -1299,6 +1907,8 @@ __FILTERS__
     grid,
   };
 }
+
+// ⚠️ السطر اللي تحت ده بيقراه برنامج CreatePageReact عشان يفتح الشاشة ويعدّلها — متمسحوش
 ";
 
         const string TPL_TSX = @"""use client"";
@@ -1395,8 +2005,8 @@ function __MODULE__Page(p: Props) {
           keyColumn={p.grid.KeyColumn}
           columns={columns}
           condition={p.grid.Condition}
-          orderBy={p.grid.KeyColumn}
-          orderType=""DESC""
+          orderBy={p.grid.OrderBy}
+          orderType={p.grid.OrderType}
           pageSize={p.grid.PageSize}
           compCode={p.grid.CompCode}
           branchCode={p.grid.BranchCode}
