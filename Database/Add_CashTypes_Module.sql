@@ -65,7 +65,7 @@ BEGIN TRY
     SELECT
          r.RoleId, m.MODULE_CODE, m.MODULE_MENU, m.MODULE_DESCE, m.MODULE_DESCA, m.Url_Image, m.Icon_Color,
          m.MODULE_TYPE, m.MODULE_SORT, 1,
-         1, 1, 1, 1, 1, 1,                      -- EXECUTE و IS_Show لازم 1 عشان تظهر في القائمة
+         1, 1, 1, 1, 1, 1,                      -- [EXECUTE] و IS_Show لازم 1 عشان تظهر في القائمة
          0, 0, 0, 0, 0, 0, 0, 0, 0,
          0, 0, 1
     FROM @Roles r

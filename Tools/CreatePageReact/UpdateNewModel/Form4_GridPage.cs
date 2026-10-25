@@ -1481,7 +1481,7 @@ BEGIN TRY
     INSERT INTO dbo.Sys_RoleModule
         (RoleId, MODULE_CODE, MODULE_MENU, MODULE_DESCE, MODULE_DESCA, Url_Image, Icon_Color,
          MODULE_TYPE, MODULE_SORT, IS_Show,
-         EXECUTE, [CREATE], EDIT, [DELETE], [PRINT], [VIEW],
+         [EXECUTE], [CREATE], EDIT, [DELETE], [PRINT], [VIEW],
          CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5, CUSTOM6, CUSTOM7, CUSTOM8, CUSTOM9,
          ViewImages, EditImages, Prc_Preference)
     SELECT

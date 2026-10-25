@@ -158,7 +158,11 @@ export const useTranslate = () => {
     ft_subtitle: "Receipt and payment types used in financial transactions",
     ft_refresh: "Refresh",
     ft_receipt: "Receipt",
-    ft_payment: "Payment"
+    ft_payment: "Payment",
+    // ===== FinTrans_Expenses =====
+    FinTrans_Expenses_title: "Expenses",
+    FinTrans_Expenses_subtitle: "Expenses",
+    FinTrans_Expenses_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -308,6 +312,10 @@ export const useTranslate = () => {
     ft_subtitle: "أنواع القبض والصرف اللي بتستخدم في الحركات المالية",
     ft_refresh: "تحديث",
     ft_receipt: "قبض",
-    ft_payment: "صرف"
+    ft_payment: "صرف",
+    // ===== FinTrans_Expenses =====
+    FinTrans_Expenses_title: "المصروفات",
+    FinTrans_Expenses_subtitle: "المصروفات",
+    FinTrans_Expenses_refresh: "تحديث"
   }
 };

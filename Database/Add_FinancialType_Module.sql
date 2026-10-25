@@ -60,13 +60,13 @@ BEGIN TRY
     INSERT INTO dbo.Sys_RoleModule
         (RoleId, MODULE_CODE, MODULE_MENU, MODULE_DESCE, MODULE_DESCA, Url_Image, Icon_Color,
          MODULE_TYPE, MODULE_SORT, IS_Show,
-         EXECUTE, [CREATE], EDIT, [DELETE], [PRINT], [VIEW],
+         [EXECUTE], [CREATE], EDIT, [DELETE], [PRINT], [VIEW],
          CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5, CUSTOM6, CUSTOM7, CUSTOM8, CUSTOM9,
          ViewImages, EditImages, Prc_Preference)
     SELECT
          r.RoleId, m.MODULE_CODE, m.MODULE_MENU, m.MODULE_DESCE, m.MODULE_DESCA, m.Url_Image, m.Icon_Color,
          m.MODULE_TYPE, m.MODULE_SORT, 1,
-         1, 1, 1, 1, 1, 1,                      -- EXECUTE و IS_Show لازم 1 عشان تظهر في القائمة
+         1, 1, 1, 1, 1, 1,                      -- [EXECUTE] و IS_Show لازم 1 عشان تظهر في القائمة
          0, 0, 0, 0, 0, 0, 0, 0, 0,
          0, 0, 1
     FROM @Roles r
@@ -88,8 +88,8 @@ GO
 -- =========================
 -- 3) تأكيد: لازم تلاقي الشاشة هنا
 --    هتلاقي صف لكل (دور × شركة × سنة مالية) لأن القالب بيربط بـ Sys_ControlYear
---    لازم EXECUTE = 1 و IS_Show = 1 عشان تظهر في القائمة
+--    لازم [EXECUTE] = 1 و IS_Show = 1 عشان تظهر في القائمة
 -- =========================
-SELECT RoleId, CompCode, FIN_YEAR, MODULE_CODE, MODULE_DESCA, MODULE_MENU, MODULE_TYPE, IS_Show, EXECUTE
+SELECT RoleId, CompCode, FIN_YEAR, MODULE_CODE, MODULE_DESCA, MODULE_MENU, MODULE_TYPE, IS_Show, [EXECUTE]
 FROM dbo.IQ_Sys_RoleModule
 WHERE MODULE_CODE = N'FinancialType';
