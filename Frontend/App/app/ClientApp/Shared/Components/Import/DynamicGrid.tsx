@@ -51,6 +51,8 @@ export interface DynamicGridExtendedProps extends DynamicGridProps {
   filterFields?: FilterFieldConfig[];
   defaultFilters?: ActiveFilter[];
   enableAdvancedFilter?: boolean;
+  // ✅ تحقق إضافي قبل الحفظ (Validation.ts → ValidateRow) — يرجّع رسالة الخطأ أو null
+  beforeSave?: (row: Record<string, any>, isInsert: boolean) => Promise<string | null> | string | null;
 }
 
 // ============================================================
@@ -1021,6 +1023,7 @@ export default function DynamicGrid({
   filterFields = [],
   defaultFilters = [],
   enableAdvancedFilter = false,
+  beforeSave,
 }: DynamicGridExtendedProps & { compCode?: number; branchCode?: number; keyTrType?: string; runProcessTrans?: boolean }) {
   
   const isDark = useSys((s) => s.IsDark);
@@ -1305,6 +1308,25 @@ export default function DynamicGrid({
     }
     
     setValidationErrors({});
+
+    // ✅ التحقق الإضافي (قواعد Validation.ts) قبل الحفظ
+    if (beforeSave) {
+      try {
+        ShowLoader();
+        const msg = await beforeSave(formData, isInsert);
+        if (msg) {
+          Sys.ShowMessage("❌ " + msg, "❌ " + msg, "error");
+          return;
+        }
+      } catch (e) {
+        const m = Sys.GetErrorMessage(e);
+        Sys.ShowMessage("❌ Validation failed: " + m, "❌ فشل التحقق: " + m, "error");
+        return;
+      } finally {
+        CloseLoader();
+      }
+    }
+
     const saveData = prepareDataForSave(formData);
     
     try {

@@ -93,7 +93,7 @@
               "RelativeDocumentMoniker": "Controllers\\GateWay\\Services\\SQLServer.cs",
               "ToolTip": "C:\\PC\\Work\\React_Fram\\Backend\\Controllers\\GateWay\\Services\\SQLServer.cs",
               "RelativeToolTip": "Controllers\\GateWay\\Services\\SQLServer.cs",
-              "ViewState": "AgIAAD4HAAAAAAAAAADwv0gHAAARAAAAAAAAAA==",
+              "ViewState": "AgIAACADAAAAAAAAAAAjwDcDAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-10T20:27:30.704Z",
               "EditorCaption": ""
@@ -120,8 +120,7 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-09-10T20:27:30.725Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-10T20:27:30.725Z"
             },
             {
               "$type": "Document",

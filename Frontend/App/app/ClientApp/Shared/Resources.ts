@@ -166,7 +166,11 @@ export const useTranslate = () => {
     // ===== Employees =====
     Employees_title: "Employees",
     Employees_subtitle: "Employees",
-    Employees_refresh: "Refresh"
+    Employees_refresh: "Refresh",
+    // ===== SalesInvoice =====
+    SalesInvoice_title: "Sales Invoices",
+    SalesInvoice_subtitle: "Sales invoices and their items",
+    SalesInvoice_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -324,6 +328,10 @@ export const useTranslate = () => {
     // ===== Employees =====
     Employees_title: "Employees",
     Employees_subtitle: "Employees",
-    Employees_refresh: "تحديث"
+    Employees_refresh: "تحديث",
+    // ===== SalesInvoice =====
+    SalesInvoice_title: "فواتير المبيعات",
+    SalesInvoice_subtitle: "فواتير البيع والأصناف بتاعتها",
+    SalesInvoice_refresh: "تحديث"
   }
 };

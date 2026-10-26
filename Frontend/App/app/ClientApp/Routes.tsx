@@ -57,6 +57,7 @@ useEffect(() => {
     // **************AdminLayout   
     Admin: AdminLayout,
     Home: HomeLayout,
+    SalesInvoice: HomeLayout,
     Employees: HomeLayout,
     FinTrans_Expenses: HomeLayout,
     TestPage: HomeLayout,

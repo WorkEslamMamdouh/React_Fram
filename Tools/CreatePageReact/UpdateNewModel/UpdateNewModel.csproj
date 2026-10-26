@@ -98,6 +98,10 @@
     <Compile Include="Form4_GridPage.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Form4_GridPage.Gen.cs">
+      <DependentUpon>Form4_GridPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GridScreenSettings.cs" />
     <Compile Include="Form5_SearchBuilder.cs">
       <SubType>Form</SubType>
     </Compile>

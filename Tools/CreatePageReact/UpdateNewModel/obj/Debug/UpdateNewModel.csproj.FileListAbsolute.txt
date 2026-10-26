@@ -230,4 +230,4 @@ C:\PC\Work\React_Fram\Tools\CreatePageReact\UpdateNewModel\obj\Debug\UpdateNewMo
 C:\PC\Work\React_Fram\Tools\CreatePageReact\UpdateNewModel\obj\Debug\UpdateNe.FCC1A692.Up2Date
 C:\PC\Work\React_Fram\Tools\CreatePageReact\UpdateNewModel\obj\Debug\UpdateNewModel.exe
 C:\PC\Work\React_Fram\Tools\CreatePageReact\UpdateNewModel\obj\Debug\UpdateNewModel.pdb
-C:\PC\Work\React_Fram\Tools\CreatePageReact\UpdateNewModel\obj\Debug\UpdateNewModel.GridScreenSettings.resources
+C:\PC\Work\React_Fram\Tools\CreatePageReact\UpdateNewModel\obj\Debug\UpdateNewModel.Form4_GridPage.resources
