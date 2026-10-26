@@ -131,3 +131,24 @@ export const ACCOUNT = (_condition: string = ""): SearchModalConfig => {
     orderType: "DESC"
   };
 };
+
+// ===== TEst — اتعملت من برنامج CreatePageReact =====
+export const TEst = (_condition: string = ""): SearchModalConfig => {
+  return {
+    title: "TEst",
+    tableName: "D_A_FinancialType",
+    keyColumn: "FinancialTypeID",
+    condition: _condition,
+    columns: [
+      { field: "FinancialTypeID", title: "Financial Type ID", width: 80 },
+      { field: "DescAr", title: "Desc Ar", width: 200 },
+      { field: "DescEn", title: "Desc En", width: 200 },
+    ],
+    searchColumns: ["DescAr", "DescEn"],
+    returnField: "FinancialTypeID",
+    displayField: "DescAr",
+    pageSize: 20,
+    orderBy: "FinancialTypeID",
+    orderType: "DESC"
+  };
+};

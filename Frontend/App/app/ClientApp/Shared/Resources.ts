@@ -162,7 +162,11 @@ export const useTranslate = () => {
     // ===== FinTrans_Expenses =====
     FinTrans_Expenses_title: "Expenses",
     FinTrans_Expenses_subtitle: "Expenses",
-    FinTrans_Expenses_refresh: "Refresh"
+    FinTrans_Expenses_refresh: "Refresh",
+    // ===== Employees =====
+    Employees_title: "Employees",
+    Employees_subtitle: "Employees",
+    Employees_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -316,6 +320,10 @@ export const useTranslate = () => {
     // ===== FinTrans_Expenses =====
     FinTrans_Expenses_title: "المصروفات",
     FinTrans_Expenses_subtitle: "المصروفات",
-    FinTrans_Expenses_refresh: "تحديث"
+    FinTrans_Expenses_refresh: "تحديث",
+    // ===== Employees =====
+    Employees_title: "Employees",
+    Employees_subtitle: "Employees",
+    Employees_refresh: "تحديث"
   }
 };
