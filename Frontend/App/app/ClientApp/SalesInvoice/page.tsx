@@ -51,8 +51,8 @@ function SalesInvoicePage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
-        {/* ============ Ø§Ù„Ù…Ø§Ø³ØªØ± Ø¯ÙŠØªÙŠÙ„ (Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© + Ø§Ù„ÙÙˆØ±Ù…) ============ */}
+
+
         <MasterDetail config={p.Config} />
       </div>
     </>

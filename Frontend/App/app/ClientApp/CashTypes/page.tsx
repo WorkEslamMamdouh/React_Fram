@@ -1,8 +1,8 @@
 "use client";
 
 // =====================================================================================
-//  ðŸ“„ page.tsx   â†  Ù…Ù„Ù Ø§Ù„Ø´ÙƒÙ„ (HTML) Ø¨Ø³ â€” Ø´Ø§Ø´Ø© Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ù…Ø§Ù„ÙŠØ§Øª
-//  ÙƒÙ„ Ø­Ø§Ø¬Ø© Ø¬Ø§ÙŠØ© Ù…Ù†  CashTypes.ts  Ø¹Ù† Ø·Ø±ÙŠÙ‚  p.
+
+
 // =====================================================================================
 
 import { CashTypes } from "./CashTypes";
@@ -11,7 +11,7 @@ import { useSys } from "../Shared/SystemUsing";
 import DynamicGrid from "../Shared/Components/Import/DynamicGrid";
 
 // =======================
-// Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© (Ù†ÙØ³ Ø´Ø§Ø´Ø© Login)
+
 // =======================
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -36,7 +36,7 @@ type Props = _ReturnType & {
 };
 
 // =======================
-// Ø§Ù„Ø´Ø§Ø´Ø©
+
 // =======================
 function CashTypesPage(p: Props) {
   const L = p.Lang;
@@ -55,8 +55,8 @@ function CashTypesPage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
-        {/* ============ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ============ */}
+
+
         <DynamicGrid
           key={p.gridKey}
           tableName={p.grid.TableName}

@@ -68,8 +68,8 @@ function FinTrans_ExpensesPage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
-        {/* ============ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ============ */}
+
+
         <DynamicGrid
           key={p.gridKey}
           tableName={p.grid.TableName}

@@ -1,10 +1,10 @@
 "use client";
 
 // =====================================================================================
-//  ðŸ“„ page.tsx   â†  Ù…Ù„Ù Ø§Ù„Ø´ÙƒÙ„ (HTML) Ø¨Ø³
+
 // -------------------------------------------------------------------------------------
-//  Ù‡Ù†Ø§ Ù…ÙÙŠØ´ Ø£ÙŠ Ø¨ÙŠØ²Ù†Ø³. ÙƒÙ„ Ø§Ù„Ø¯ÙˆØ§Ù„ ÙˆØ§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¬Ø§ÙŠØ© Ù…Ù†  TestPage.ts  Ø¹Ù† Ø·Ø±ÙŠÙ‚  p.
-//  Ù…Ø«Ø§Ù„:  p.RefreshAll   p.stats.total   p.grid.Columns
+
+
 // =====================================================================================
 
 import { useMemo } from "react";
@@ -15,7 +15,7 @@ import DynamicGrid from "../Shared/Components/Import/DynamicGrid";
 import SearchModal from "../Shared/Components/Import/SearchModal";
 
 // =======================
-// Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© (Ù†ÙØ³ Ø´Ø§Ø´Ø© Login)
+
 // =======================
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -40,13 +40,12 @@ type Props = _ReturnType & {
 };
 
 // =======================
-// Ø§Ù„Ø´Ø§Ø´Ø©
+
 // =======================
 function TestPagePage(p: Props) {
   const L = p.Lang;
   const d = p.IsDark;
 
-  // Ø£Ù„ÙˆØ§Ù† Ø¨ØªØªØºÙŠØ± Ù…Ø¹ Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø¯Ø§ÙƒÙ†
   const card = d
     ? "bg-gray-900/80 border-gray-700/60 text-gray-100"
     : "bg-white/90 border-gray-200 text-gray-800";
@@ -55,8 +54,7 @@ function TestPagePage(p: Props) {
     ? "bg-gray-800 border-gray-600 text-gray-200 hover:border-blue-500"
     : "bg-white border-gray-300 text-gray-700 hover:border-blue-600";
 
-  // ðŸ‘‡ Ø´ÙƒÙ„ Ø¹Ù…ÙˆØ¯ Ø§Ù„Ø­Ø§Ù„Ø© Ø¬ÙˆÙ‡ Ø§Ù„Ø¬Ø¯ÙˆÙ„ (HTML) â€” Ø¨Ù†Ø¶ÙŠÙÙ‡ Ø¹Ù„Ù‰ Ø§Ù„Ø£Ø¹Ù…Ø¯Ø© Ø§Ù„Ù„ÙŠ Ø¬Ø§ÙŠØ© Ù…Ù† TestPage.ts
-  //    Ù„Ø§Ø²Ù… useMemo Ø¹Ø´Ø§Ù† Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ù…ÙŠØ¹ÙŠØ¯Ø´ Ø§Ù„ØªØ­Ù…ÙŠÙ„ Ø¹Ù„Ù‰ Ø·ÙˆÙ„
+
   const columns = useMemo(
     () =>
       p.grid.Columns.map((col) =>
@@ -72,8 +70,8 @@ function TestPagePage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ÙˆØ§Ù„Ø£Ø²Ø±Ø§Ø± ============ */}
-        {/* ============ Ø´Ø±Ø­ Ø§Ù„Ø´Ø§Ø´Ø© ============ */}
+
+
         {p.showHelp && (
           <div className={`rounded-2xl border p-4 md:p-5 ${d ? "bg-indigo-950/40 border-indigo-800/60 text-gray-100" : "bg-blue-50/80 border-blue-200 text-gray-800"}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
@@ -86,7 +84,7 @@ function TestPagePage(p: Props) {
           </div>
         )}
 
-        {/* ============ â‘  ÙƒØ±ÙˆØª Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª (Ø¯ÙˆØ³ Ø¹Ø´Ø§Ù† ØªÙÙ„ØªØ±) ============ */}
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatCard
             label={L.tp_total} value={p.stats.total} icon="fa-building" color="from-blue-600 to-indigo-600"
@@ -105,7 +103,7 @@ function TestPagePage(p: Props) {
           />
         </div>
 
-        {/* ============ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ù„Ù…Ø®ØªØ§Ø± + Ø§Ù„ØµÙ Ø§Ù„Ù…Ø®ØªØ§Ø± ============ */}
+
         {(p.selectedUser || p.selectedRow) && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {p.selectedUser && (
@@ -125,7 +123,7 @@ function TestPagePage(p: Props) {
           </div>
         )}
 
-        {/* ============ â‘¢ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ============ */}
+
         <DynamicGrid
           key={p.gridKey}                         // Ù„Ù…Ø§ ÙŠØªØºÙŠØ± Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø¨ÙŠØªØ­Ù…Ù„ Ù…Ù† Ø¬Ø¯ÙŠØ¯
           tableName={p.grid.TableName}
@@ -140,29 +138,29 @@ function TestPagePage(p: Props) {
           keyTrType=""
           runProcessTrans={false}
           height="calc(100vh - 140px)"
-          // Ø§Ù„Ø£Ø²Ø±Ø§Ø± Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©
+
           enableInsert={true}
           enableUpdate={true}
           enableDelete={true}
           enableSearch={true}
           enableExport={true}
           enableSort={true}
-          // Ø§Ù„ÙÙ„ØªØ± Ø§Ù„Ù…ØªÙ‚Ø¯Ù…
+
           enableAdvancedFilter={true}
           filterFields={p.grid.FilterFields}
           defaultFilters={p.grid.DefaultFilters}
-          // Ø£Ø²Ø±Ø§Ø± Ø¥Ø¶Ø§ÙÙŠØ© Ø¬Ù†Ø¨ ÙƒÙ„ ØµÙ
+
           enablePrint={true}
           onPrint={p.OnPrint}
           enableCopy={true}
           onCopy={p.OnCopy}
           extraActions={p.grid.ExtraActions}
-          // â‘£ Ø¯Ø¨Ù„ ÙƒÙ„ÙŠÙƒ
+
           onRowDoubleClick={p.ShowRowDetails}
         />
       </div>
 
-      {/* ============ â‘¡ Ù†Ø§ÙØ°Ø© Ø¨Ø­Ø« Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† (G_SearchFrom) ============ */}
+
       <SearchModal
         isOpen={p.isUserSearchOpen}
         onClose={p.CloseUserSearch}
@@ -176,10 +174,9 @@ function TestPagePage(p: Props) {
 }
 
 // =====================================================================================
-//  Ù…ÙƒÙˆÙ†Ø§Øª ØµØºÙŠØ±Ø© Ù„Ù„Ø´ÙƒÙ„ Ø¨Ø³
+
 // =====================================================================================
 
-// Ø´Ø§Ø±Ø© Ø§Ù„Ø­Ø§Ù„Ø© Ø¬ÙˆÙ‡ Ø§Ù„Ø¬Ø¯ÙˆÙ„
 function StatusBadge({ value, L }: { value: any; L: any }) {
   const active = value == 1;
   return (
@@ -190,7 +187,6 @@ function StatusBadge({ value, L }: { value: any; L: any }) {
   );
 }
 
-// ÙƒØ§Ø±Øª Ø¥Ø­ØµØ§Ø¦ÙŠØ©
 function StatCard(x: {
   label: string; value: number; icon: string; color: string; selected: boolean;
   onClick: () => void; loading: boolean; hint: string; card: string; muted: string;
@@ -212,7 +208,6 @@ function StatCard(x: {
   );
 }
 
-// ÙƒØ§Ø±Øª Ø¨ÙŠØ¹Ø±Ø¶ Ø¨ÙŠØ§Ù†Ø§Øª (Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ Ø§Ù„ØµÙ)
 function InfoCard(x: {
   title: string; icon: string; data: Record<string, any>; onClose: () => void;
   closeText: string; card: string; muted: string;
@@ -239,7 +234,6 @@ function InfoCard(x: {
   );
 }
 
-// Ø¨Ù†Ø¯ ÙÙŠ Ø§Ù„Ø´Ø±Ø­
 function HelpItem(x: { n: number; title: string; body: string; d: boolean }) {
   return (
     <div className={`rounded-xl p-3 ${x.d ? "bg-gray-900/60" : "bg-white/80"}`}>

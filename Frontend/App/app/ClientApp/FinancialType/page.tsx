@@ -1,8 +1,8 @@
 "use client";
 
 // =====================================================================================
-//  ðŸ“„ page.tsx   â†  Ù…Ù„Ù Ø§Ù„Ø´ÙƒÙ„ (HTML) Ø¨Ø³ â€” Ø´Ø§Ø´Ø© Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„Ù…Ø§Ù„ÙŠØ©
-//  ÙƒÙ„ Ø­Ø§Ø¬Ø© Ø¬Ø§ÙŠØ© Ù…Ù†  FinancialType.ts  Ø¹Ù† Ø·Ø±ÙŠÙ‚  p.
+
+
 // =====================================================================================
 
 import { useMemo } from "react";
@@ -12,7 +12,7 @@ import { useSys } from "../Shared/SystemUsing";
 import DynamicGrid from "../Shared/Components/Import/DynamicGrid";
 
 // =======================
-// Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© (Ù†ÙØ³ Ø´Ø§Ø´Ø© Login)
+
 // =======================
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -37,7 +37,7 @@ type Props = _ReturnType & {
 };
 
 // =======================
-// Ø§Ù„Ø´Ø§Ø´Ø©
+
 // =======================
 function FinancialTypePage(p: Props) {
   const L = p.Lang;
@@ -51,8 +51,7 @@ function FinancialTypePage(p: Props) {
     ? "bg-gray-800 border-gray-600 text-gray-200 hover:border-blue-500"
     : "bg-white border-gray-300 text-gray-700 hover:border-blue-600";
 
-  // ðŸ‘‡ Ø´ÙƒÙ„ Ø¹Ù…ÙˆØ¯ Ø§Ù„Ù†ÙˆØ¹ Ø¬ÙˆÙ‡ Ø§Ù„Ø¬Ø¯ÙˆÙ„ (Ù‚Ø¨Ø¶ Ø£Ø®Ø¶Ø± / ØµØ±Ù Ø£Ø­Ù…Ø±)
-  //    Ù„Ø§Ø²Ù… useMemo Ø¹Ø´Ø§Ù† Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ù…ÙŠØ¹ÙŠØ¯Ø´ Ø§Ù„ØªØ­Ù…ÙŠÙ„ Ø¹Ù„Ù‰ Ø·ÙˆÙ„
+
   const columns = useMemo(
     () =>
       p.grid.Columns.map((col) =>
@@ -68,8 +67,8 @@ function FinancialTypePage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
-        {/* ============ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ============ */}
+
+
         <DynamicGrid
           key={p.gridKey}
           tableName={p.grid.TableName}
@@ -100,7 +99,7 @@ function FinancialTypePage(p: Props) {
 }
 
 // =====================================================================================
-//  Ø´Ø§Ø±Ø© Ù†ÙˆØ¹ Ø§Ù„Ø­Ø±ÙƒØ© Ø¬ÙˆÙ‡ Ø§Ù„Ø¬Ø¯ÙˆÙ„
+
 // =====================================================================================
 function TrTypeBadge({ value, L }: { value: any; L: any }) {
   if (value === null || value === undefined || value === "") return <span>-</span>;
