@@ -37,6 +37,8 @@ export interface DynamicSelectConfig {
   placeholder?: { en: string; ar: string };
 }
 
+export type ColumnMode = "create" | "edit" | "view";
+
 export interface DynamicGridColumn {
   field: string;
   NameDataBase?: string;
@@ -51,7 +53,7 @@ export interface DynamicGridColumn {
   IsSearchColumn?: boolean;
   IsDisabledInEdit?: boolean;
   IsDisabledInAdd?: boolean;
-  SortFieldInEditAndAdd?: number;  // ✅ ترتيب الحقل في الفورم
+  SortFieldInEditAndAdd?: number;
   width?: number | string;
   options?: SelectOption[];
   IsRequired?: boolean;
@@ -60,6 +62,7 @@ export interface DynamicGridColumn {
   inputType?: InputControlType;
   selectOptions?: SelectOption[];
   searchModal?: SearchModalConfig;
+  dynamicSelect?: DynamicSelectConfig;
   placeholder?: string;
   rows?: number;
   min?: number;
@@ -69,6 +72,15 @@ export interface DynamicGridColumn {
   itemTemplate?: (value: any, row: any, index: number, onChange: (newValue: any) => void) => React.ReactNode;
   EditTemplate?: (value: any, row: any, onChange: (newValue: any) => void, isEdit: boolean) => React.ReactNode;
   InsertTemplate?: (value: any, onChange: (newValue: any) => void) => React.ReactNode;
+  visibleInCreate?: boolean;
+  visibleInEdit?: boolean;
+  visibleInView?: boolean;
+  dateDisplayFormat?: string;
+  dateStorageFormat?: string;
+  dateMode?: "date" | "datetime";
+  visibleWhen?: (row: Record<string, any>, mode: ColumnMode) => boolean;
+  enabledWhen?: (row: Record<string, any>, mode: ColumnMode) => boolean;
+  align?: "left" | "center" | "right";
 }
 
 export interface DynamicGridProps {

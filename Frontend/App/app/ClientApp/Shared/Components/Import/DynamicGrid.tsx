@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 import { SQL } from "../../CallDataBase";
 import { Sys } from "../../SystemTools";
 import { useSys } from "../../SystemUsing";
-import { DynamicGridColumn, DynamicGridProps, SortDirection } from "../Import/ModelGrid";
+import { DynamicGridColumn, DynamicGridProps, SortDirection, ColumnMode } from "../Import/ModelGrid";
 import { SearchModalConfig } from "../Import/ModelGrid";
 import SearchModal from "./SearchModal";
 import AdvancedFilter, { FilterFieldConfig, ActiveFilter } from './AdvancedFilter';
+import DynamicGridFilter from './DynamicGridFilter';
+import { displayDate } from "../../dateUtils";
 
 // ============================================================
 // TYPES
@@ -53,6 +55,18 @@ export interface DynamicGridExtendedProps extends DynamicGridProps {
   enableAdvancedFilter?: boolean;
   // ✅ تحقق إضافي قبل الحفظ (Validation.ts → ValidateRow) — يرجّع رسالة الخطأ أو null
   beforeSave?: (row: Record<string, any>, isInsert: boolean) => Promise<string | null> | string | null;
+  gridFilter?: GridFilterConfig;
+  onGridFilterChange?: (filters: ActiveFilter[]) => void;
+  deferLoadUntilFilter?: boolean;
+}
+
+export interface GridFilterConfig {
+  fields: FilterFieldConfig[];
+  visible?: boolean;
+  applyOnInit?: boolean;
+  applyOnChange?: boolean;
+  layout?: "inline" | "stacked";
+  columns?: number;
 }
 
 // ============================================================
@@ -677,6 +691,10 @@ const InputControl: React.FC<{
     if (disabled) return true;
     if (isEdit && column.IsDisabledInEdit) return true;
     if (!isEdit && column.IsDisabledInAdd) return true;
+    if (column.enabledWhen) {
+      const mode: ColumnMode = isEdit ? "edit" : "create";
+      if (!column.enabledWhen({}, mode)) return true;
+    }
     return false;
   };
   
@@ -847,8 +865,14 @@ const FormModal: React.FC<FormModalProps> = ({
 
   const t = (en: string, ar: string) => lang === "ar" ? ar : en;
   
+  const mode: ColumnMode = isEdit ? "edit" : "create";
   const sortedColumns = [...columns]
-    .filter(c => isEdit ? c.editable !== false : c.insertable !== false)
+    .filter(c => {
+      if (c.visibleWhen && !c.visibleWhen(data, mode)) return false;
+      if (mode === "create") return c.visibleInCreate ?? (c.insertable !== false);
+      if (mode === "edit") return c.visibleInEdit ?? (c.editable !== false);
+      return true;
+    })
     .sort((a, b) => (a.SortFieldInEditAndAdd || 999) - (b.SortFieldInEditAndAdd || 999));
 
   return createPortal(
@@ -1024,6 +1048,9 @@ export default function DynamicGrid({
   defaultFilters = [],
   enableAdvancedFilter = false,
   beforeSave,
+  gridFilter,
+  onGridFilterChange,
+  deferLoadUntilFilter,
 }: DynamicGridExtendedProps & { compCode?: number; branchCode?: number; keyTrType?: string; runProcessTrans?: boolean }) {
   
   const isDark = useSys((s) => s.IsDark);
@@ -1052,7 +1079,9 @@ export default function DynamicGrid({
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [selectedRowForSheet, setSelectedRowForSheet] = useState<any>(null);
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>(defaultFilters);
-  
+  const [gridFilterValues, setGridFilterValues] = useState<ActiveFilter[]>([]);
+  const [gridFilterReady, setGridFilterReady] = useState(!gridFilter || !deferLoadUntilFilter);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1150,6 +1179,9 @@ export default function DynamicGrid({
       return value ? (lang === "ar" ? "✅ نعم" : "✅ Yes") : (lang === "ar" ? "❌ لا" : "❌ No");
     }
     if (value === null || value === undefined) return "-";
+    if ((col.type === "date" || col.inputType === "date") && col.dateDisplayFormat) {
+      return displayDate(value, col.dateDisplayFormat);
+    }
     return String(value);
   };
 
@@ -1212,11 +1244,12 @@ export default function DynamicGrid({
 
   // Load data
   const loadData = useCallback(async () => {
+    if (!gridFilterReady) return;
     setLoading(true);
     try {
       let finalCondition = condition;
       const searchCols = getSearchColumns();
-      
+
       let searchCondition = '';
       if (enableSearch && search && searchCols.length > 0) {
         const searchParts = searchCols.map(col => `${col} LIKE N'%${search}%'`);
@@ -1226,18 +1259,22 @@ export default function DynamicGrid({
         const searchParts = allColumns.map(col => `${col} LIKE N'%${search}%'`);
         searchCondition = `(${searchParts.join(" OR ")})`;
       }
-      
+
       const advancedFilterCondition = enableAdvancedFilter ? buildFilterCondition(activeFilters, lang) : '';
-      
+      const gridFilterCondition = gridFilterValues.length > 0 ? buildFilterCondition(gridFilterValues, lang) : '';
+
       let combinedCondition = '';
       if (condition) combinedCondition = condition;
-      if (searchCondition) combinedCondition = combinedCondition 
-        ? `(${combinedCondition}) AND ${searchCondition}` 
+      if (searchCondition) combinedCondition = combinedCondition
+        ? `(${combinedCondition}) AND ${searchCondition}`
         : searchCondition;
-      if (advancedFilterCondition) combinedCondition = combinedCondition 
-        ? `(${combinedCondition}) AND ${advancedFilterCondition}` 
+      if (advancedFilterCondition) combinedCondition = combinedCondition
+        ? `(${combinedCondition}) AND ${advancedFilterCondition}`
         : advancedFilterCondition;
-      
+      if (gridFilterCondition) combinedCondition = combinedCondition
+        ? `(${combinedCondition}) AND ${gridFilterCondition}`
+        : gridFilterCondition;
+
       finalCondition = combinedCondition;
       
       const result = await SQL.Select(
@@ -1265,7 +1302,7 @@ export default function DynamicGrid({
     } finally {
       setLoading(false);
     }
-  }, [tableName, condition, search, pageNumber, pageSize, sortField, sortDirection, enableSearch, getSearchColumns, columns, isModalMode, activeFilters, enableAdvancedFilter, lang]);
+  }, [tableName, condition, search, pageNumber, pageSize, sortField, sortDirection, enableSearch, getSearchColumns, columns, isModalMode, activeFilters, enableAdvancedFilter, lang, gridFilterValues, gridFilterReady]);
 
   useEffect(() => {
     loadData();
@@ -1559,6 +1596,20 @@ export default function DynamicGrid({
             config={activeSearchModal.searchModal}
             lang={lang}
             isDark={isDark}
+          />
+        )}
+
+        {/* Grid Filter — ثابت فوق الجريد */}
+        {gridFilter && gridFilter.fields.length > 0 && (
+          <DynamicGridFilter
+            config={gridFilter}
+            onFiltersChange={(filters) => {
+              setGridFilterValues(filters);
+              if (!gridFilterReady) setGridFilterReady(true);
+              onGridFilterChange?.(filters);
+              setPageNumber(1);
+            }}
+            onReady={() => { if (!gridFilterReady) setGridFilterReady(true); }}
           />
         )}
 

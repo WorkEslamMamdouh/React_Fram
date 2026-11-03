@@ -26,6 +26,7 @@ import { Sys } from "../../SystemTools";
 import { useSys } from "../../SystemUsing";
 import { RunValidations, SqlLiteral } from "../../Validation";
 import { MasterDetailColumn, MasterDetailConfig } from "./ModelMasterDetail";
+import { ColumnMode } from "./ModelGrid";
 
 type Row = Record<string, any>;
 
@@ -546,10 +547,14 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
   // ======================================================================
   // الفورم
   // ======================================================================
+  const formMode: ColumnMode = viewOnly ? "view" : isInsert ? "create" : "edit";
   const masterVisible = config.columns.filter((c) => c.IsVisibleDisplayInGrid !== false || c.insertable !== false || c.editable !== false);
   const masterFields = masterVisible.filter((c) => {
-    const editableNow = isInsert ? c.insertable !== false : c.editable !== false;
-    return editableNow || c.formula || c.IsVisibleDisplayInGrid !== false;
+    if (c.visibleWhen && !c.visibleWhen(master, formMode)) return false;
+    if (formMode === "view") return c.visibleInView ?? true;
+    if (formMode === "create") return (c.visibleInCreate ?? (c.insertable !== false)) || !!c.formula || c.IsVisibleDisplayInGrid !== false;
+    if (formMode === "edit") return (c.visibleInEdit ?? (c.editable !== false)) || !!c.formula || c.IsVisibleDisplayInGrid !== false;
+    return true;
   }).sort((a, b) => (a.SortFieldInEditAndAdd || 999) - (b.SortFieldInEditAndAdd || 999));
   const totalFields = new Set(config.details.flatMap((d) => (d.totals || []).map((x) => x.masterField)));
 
