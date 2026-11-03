@@ -136,6 +136,18 @@ export default function InitalizeComponent() {
           <button onClick={() => p.setShowHelp(true)} className={`p-1.5 rounded-lg transition ${d ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`} title={t("Help", "مساعدة")}>
             <i className="fa-solid fa-circle-question" />
           </button>
+          <button
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("admin_token");
+                window.location.href = "/ClientApp/AdminLogin";
+              }
+            }}
+            className={`p-1.5 rounded-lg transition ${d ? "hover:bg-red-900/40 text-red-400" : "hover:bg-red-50 text-red-500"}`}
+            title={t("Logout", "خروج")}
+          >
+            <i className="fa-solid fa-right-from-bracket" />
+          </button>
         </div>
 
         {/* Tab Bar */}

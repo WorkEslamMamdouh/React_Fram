@@ -1,35 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [ok, setOk] = useState(false);
 
-import { useEffect } from "react"; 
-import "@fortawesome/fontawesome-free/css/all.min.css"; 
-import LanguageLoginPage from "../../ClientApp/Language/LanguageLoginPage";
-import { useSys } from "../../ClientApp/Shared/SystemUsing"; 
-import { useTranslate } from "../../ClientApp/Shared/Resources";
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+    if (!token) {
+      router.replace("/ClientApp/AdminLogin");
+      return;
+    }
+    setOk(true);
+  }, [pathname, router]);
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  const IsLangEN = useSys((s) => s.IsLangEN);  
- 
-     // 🔥 stylesheet Component
-  const stylesheet = IsLangEN ? (
-  <link id="lang-style_LoginLayout" rel="stylesheet" href="/StyleDesign/Layouts/LoginLayoutEN.css" />
-  ) :  (
-  <link id="lang-style_LoginLayout" rel="stylesheet" href="/StyleDesign/Layouts/LoginLayoutAR.css" />
-  ) ;
-
+  if (!ok) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-950 text-gray-400">
+        <i className="fa-solid fa-spinner fa-spin mr-2" />
+        <span className="text-sm">...</span>
+      </div>
+    );
+  }
 
   return (
-    <>
-
-      <div className="" style={{ direction: IsLangEN ? "ltr" : "rtl" }}> 
-        <LanguageLoginPage />
-         {stylesheet}
-        {children}
-
-      </div>
-
-    </>
+    <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden", zIndex: 1 }}>
+      {children}
+    </div>
   );
 }
-

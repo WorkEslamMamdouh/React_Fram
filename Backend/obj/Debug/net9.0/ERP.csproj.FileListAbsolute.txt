@@ -881,3 +881,4 @@ C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9
 C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.runtimeconfig.json
 C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.dll
 C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.pdb
+C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

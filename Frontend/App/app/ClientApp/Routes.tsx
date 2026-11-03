@@ -52,10 +52,12 @@ useEffect(() => {
     Login: LoginLayout,
     Register: LoginLayout,
     LoginCompany:LoginLayout,
+    AdminLogin: NotLayout,
     // **************
 
-    // **************AdminLayout   
+    // **************AdminLayout
     Admin: AdminLayout,
+    ScreenBuilder: AdminLayout,
     Home: HomeLayout,
     CashTypesDemo: HomeLayout,
     CostCenterTree: HomeLayout,
@@ -66,7 +68,6 @@ useEffect(() => {
     CashTypes: HomeLayout,
     FinancialType: HomeLayout,
     Dashboard: HomeLayout,
-    ScreenBuilder: HomeLayout,
     Salse: HomeLayout,
     Pur: HomeLayout,
     // **************
