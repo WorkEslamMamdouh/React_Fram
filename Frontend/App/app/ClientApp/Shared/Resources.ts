@@ -182,7 +182,11 @@ export const useTranslate = () => {
     // ===== cost =====
     cost_Center_title: "Cost_Center",
     cost_Center_subtitle: "",
-    cost_Center_refresh: "Refresh"
+    cost_Center_refresh: "Refresh",
+    // ===== salesApproval =====
+    salesApproval_title: "Sales Approval",
+    salesApproval_subtitle: "Sales invoices and approvals",
+    salesApproval_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -356,6 +360,10 @@ export const useTranslate = () => {
     // ===== cost =====
     cost_Center_title: "Cost_Center",
     cost_Center_subtitle: "",
-    cost_Center_refresh: "تحديث"
+    cost_Center_refresh: "تحديث",
+    // ===== salesApproval =====
+    salesApproval_title: "اعتماد المبيعات",
+    salesApproval_subtitle: "فواتير المبيعات واعتمادها",
+    salesApproval_refresh: "تحديث"
   }
 };

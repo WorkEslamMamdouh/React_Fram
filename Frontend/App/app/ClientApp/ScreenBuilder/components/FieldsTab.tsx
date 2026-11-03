@@ -115,7 +115,8 @@ export default function FieldsTab({ target, detailIdx, searchFunctions, columnMe
                   {f.inputType === "selectSearch" && (
                     <div className="flex gap-1">
                       <input className={`${cellInput} w-20`} value={f.selectTable || ""} onChange={(e) => updateField(i, { selectTable: e.target.value }, target, detailIdx)} placeholder={t("Table", "جدول")} />
-                      <input className={`${cellInput} w-20`} value={f.selectDisplay || ""} onChange={(e) => updateField(i, { selectDisplay: e.target.value }, target, detailIdx)} placeholder={t("Display", "عرض")} />
+                      <input className={`${cellInput} w-20`} value={f.selectDisplay || ""} onChange={(e) => updateField(i, { selectDisplay: e.target.value }, target, detailIdx)} placeholder={t("Display AR", "عرض عربي")} title={t("Arabic display column", "عمود العرض العربي")} />
+                      <input className={`${cellInput} w-20`} value={f.selectDisplayEn || ""} onChange={(e) => updateField(i, { selectDisplayEn: e.target.value }, target, detailIdx)} placeholder={t("Display EN", "عرض انجليزي")} title={t("English display column (optional; falls back to AR)", "عمود العرض الإنجليزي (اختياري؛ لو فاضي هياخد العربي)")} />
                       <input className={`${cellInput} w-20`} value={f.selectValue || ""} onChange={(e) => updateField(i, { selectValue: e.target.value }, target, detailIdx)} placeholder={t("Value", "قيمة")} />
                       <input className={`${cellInput} w-24`} value={f.selectCondition || ""} onChange={(e) => updateField(i, { selectCondition: e.target.value }, target, detailIdx)} placeholder={t("Cond", "شرط")} />
                     </div>

@@ -33,12 +33,11 @@ function SalesApprovalPage(p: Props) {
 
   const Session = useSys((s) => s.Session);
   const FinYear = Session?.CurrentEnvironment?.FinYear || new Date().getFullYear();
-  const [fromDate, setFromDate] = useState<string>(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10));
-  const [toDate, setToDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [fromDate, setFromDate] = useState<string>(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10));
+  const [toDate, setToDate] = useState<string>(new Date().toISOString().slice(0,10));
   const headerFilterClause = (fromDate && toDate)
-    ? ` AND TrDate >= '${fromDate}' AND TrDate <= '${toDate}'`
+    ? ` AND SaleDate >= '${fromDate}' AND SaleDate <= '${toDate}'`
     : "";
-  void FinYear;
 
   return (
     <>

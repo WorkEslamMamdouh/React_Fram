@@ -129,7 +129,8 @@ export interface FieldConfigV4 {
   noSave?: boolean;       // عمود محسوب في القاعدة أو موجود في الـ View بس → مابيتحفظش
   // عند inputType === "selectSearch" نحمل الخيارات من جدول بدل options ثابتة
   selectTable?: string;
-  selectDisplay?: string;
+  selectDisplay?: string;       // Arabic display column
+  selectDisplayEn?: string;     // English display column (optional)
   selectValue?: string;
   selectCondition?: string;
 }

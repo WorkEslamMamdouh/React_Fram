@@ -92,7 +92,12 @@ function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenCo
   if (input === "selectSearch" && (f.selectTable || f.selectValue)) {
     const parts: string[] = [];
     parts.push(`tableName: ${q(f.selectTable || "")}`);
-    parts.push(`displayField: ${q(f.selectDisplay || "")}`);
+    const ar = f.selectDisplay || "";
+    const en = f.selectDisplayEn || "";
+    const displayExpr = en && en !== ar
+      ? `IsLangEN ? ${q(en)} : ${q(ar)}`
+      : q(ar);
+    parts.push(`displayField: ${displayExpr}`);
     parts.push(`valueField: ${q(f.selectValue || "")}`);
     if (f.selectCondition) parts.push(`condition: ${q(f.selectCondition)}`);
     set("selectConfig", `{ ${parts.join(", ")} }`);
