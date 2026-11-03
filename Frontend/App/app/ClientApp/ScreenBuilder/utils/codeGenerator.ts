@@ -480,21 +480,12 @@ ${headerFilterSessionBlock(cfg)}
   return (
     <>
       {p.stylesheet}
-      <div className="p-2 md:p-4 space-y-4">
-        <div className={\`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 \${card}\`}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-              <i className="fa-solid ${icon}"></i>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold truncate">{L.${camel(name)}_title}</h1>
-              <p className={\`text-sm \${muted}\`}>{L.${camel(name)}_subtitle}</p>
-            </div>
-          </div>${headerFilterUI(cfg)}
-          <button onClick={p.RefreshGrid} className={\`px-4 py-2 rounded-xl border-2 font-medium transition \${btnSecondary}\`}>
+      <div className="p-2 md:p-3 space-y-2">${hfEnabled ? `
+        <div className="flex items-center justify-between gap-2 flex-wrap">${headerFilterUI(cfg)}
+          <button onClick={p.RefreshGrid} className={\`px-3 py-1.5 rounded-lg border font-medium text-sm transition \${btnSecondary}\`}>
             <i className="fa-solid fa-rotate mx-1"></i> {L.${camel(name)}_refresh}
           </button>
-        </div>
+        </div>` : ""}
 
         <DynamicGrid
           key={p.gridKey}
@@ -509,7 +500,7 @@ ${headerFilterSessionBlock(cfg)}
           branchCode={p.grid.BranchCode}
           keyTrType={p.grid.TrType}
           runProcessTrans={p.grid.RunProcessTrans}
-          height="calc(100vh - 140px)"
+          height="calc(100vh - 80px)"
           enableInsert={${cfg.permissions.insert}}
           enableUpdate={${cfg.permissions.edit}}
           enableDelete={${cfg.permissions.delete}}
@@ -563,18 +554,9 @@ ${hfEnabled ? `  const FilteredConfig = useMemo(() => ({ ...p.Config, condition:
   return (
     <>
       {p.stylesheet}
-      <div className="p-2 md:p-4 space-y-4">
-        <div className={\`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 \${card}\`}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-              <i className="fa-solid ${icon}"></i>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold truncate">{L.${camel(name)}_title}</h1>
-              <p className={\`text-sm \${muted}\`}>{L.${camel(name)}_subtitle}</p>
-            </div>
-          </div>${headerFilterUI(cfg)}
-        </div>
+      <div className="p-2 md:p-3 space-y-2">${hfEnabled ? `
+        <div className="flex items-center gap-2 flex-wrap">${headerFilterUI(cfg)}
+        </div>` : ""}
 
         <MasterDetail config={${hfEnabled ? "FilteredConfig" : "p.Config"}} />
       </div>
@@ -616,25 +598,11 @@ type _ReturnType = ReturnType<typeof ${name}>;
 type Props = _ReturnType & { Lang: ReturnType<typeof useTranslate>; stylesheet: any };
 
 function ${name}Page(p: Props) {
-  const L = p.Lang;
-  const d = p.IsDark;
-  const card = d ? "bg-gray-900/80 border-gray-700/60 text-gray-100" : "bg-white/90 border-gray-200 text-gray-800";
-  const muted = d ? "text-gray-400" : "text-gray-500";
-
+  void p.Lang; void p.IsDark;
   return (
     <>
       {p.stylesheet}
-      <div className="p-2 md:p-4 space-y-4">
-        <div className={\`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex items-center gap-3 \${card}\`}>
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-            <i className="fa-solid ${icon}"></i>
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-bold truncate">{L.${camel(name)}_title}</h1>
-            <p className={\`text-sm \${muted}\`}>{L.${camel(name)}_subtitle}</p>
-          </div>
-        </div>
-
+      <div className="p-2 md:p-3">
         <TreeScreen config={p.Config} />
       </div>
     </>
