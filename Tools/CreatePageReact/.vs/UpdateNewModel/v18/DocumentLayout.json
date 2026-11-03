@@ -1,12 +1,84 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|c:\\pc\\work\\react_fram\\tools\\createpagereact\\updatenewmodel\\form4_gridpage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|solutionrelative:updatenewmodel\\form4_gridpage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|c:\\pc\\work\\react_fram\\tools\\createpagereact\\updatenewmodel\\form3_react.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|solutionrelative:updatenewmodel\\form3_react.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|c:\\pc\\work\\react_fram\\tools\\createpagereact\\updatenewmodel\\form2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|solutionrelative:updatenewmodel\\form2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|c:\\pc\\work\\react_fram\\tools\\createpagereact\\updatenewmodel\\form5_searchbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{EE934DE6-202C-44FC-8E99-F5B4D57AF5FD}|UpdateNewModel\\UpdateNewModel.csproj|solutionrelative:updatenewmodel\\form5_searchbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Form2.cs [Design]",
+              "DocumentMoniker": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form2.cs",
+              "RelativeDocumentMoniker": "UpdateNewModel\\Form2.cs",
+              "ToolTip": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form2.cs [Design]",
+              "RelativeToolTip": "UpdateNewModel\\Form2.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-03T00:30:05.272Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Form3_React.cs [Design]",
+              "DocumentMoniker": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form3_React.cs",
+              "RelativeDocumentMoniker": "UpdateNewModel\\Form3_React.cs",
+              "ToolTip": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form3_React.cs [Design]",
+              "RelativeToolTip": "UpdateNewModel\\Form3_React.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-03T00:30:02.116Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Form4_GridPage.cs [Design]",
+              "DocumentMoniker": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form4_GridPage.cs",
+              "RelativeDocumentMoniker": "UpdateNewModel\\Form4_GridPage.cs",
+              "ToolTip": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form4_GridPage.cs [Design]*",
+              "RelativeToolTip": "UpdateNewModel\\Form4_GridPage.cs [Design]*",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-03T00:29:59.565Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Form5_SearchBuilder.cs [Design]",
+              "DocumentMoniker": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form5_SearchBuilder.cs",
+              "RelativeDocumentMoniker": "UpdateNewModel\\Form5_SearchBuilder.cs",
+              "ToolTip": "C:\\PC\\Work\\React_Fram\\Tools\\CreatePageReact\\UpdateNewModel\\Form5_SearchBuilder.cs [Design]",
+              "RelativeToolTip": "UpdateNewModel\\Form5_SearchBuilder.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-11-03T00:29:56.937Z",
+              "EditorCaption": " [Design]"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1946,14 +1946,15 @@ namespace GateWay.App
             if (matches.Count == 0)
                 return ("WHERE " + condition, parameters);
 
-            foreach (Match match in matches)
+            // نبني StringBuilder ونستبدل من الآخر للأول عشان المواقع ماتتغيرش
+            var sb = new System.Text.StringBuilder(condition);
+            for (int i = matches.Count - 1; i >= 0; i--)
             {
-                string originalValue = match.Groups[1].ValueSpan.ToString(); // Span أسرع
+                var match = matches[i];
+                string originalValue = match.Groups[1].ValueSpan.ToString();
                 string paramName = $"@p{index++}";
 
                 object val;
-
-                // استخدام Length مرة واحدة
                 int len = originalValue.Length;
 
                 if (len >= 2 && originalValue[0] == 'N' && originalValue[1] == '\'')
@@ -1973,7 +1974,6 @@ namespace GateWay.App
                 }
                 else
                 {
-                    // ترتيب المحاولات حسب الأكثر شيوعاً في بياناتك
                     if (int.TryParse(originalValue, out int intVal))
                         val = intVal;
                     else if (decimal.TryParse(originalValue, out decimal decVal))
@@ -1986,9 +1986,11 @@ namespace GateWay.App
 
                 parameters.Add(new SqlParameter(paramName, val));
 
-                // 🚀 استخدام StringBuilder للاستبدال إذا كان فيه matches كتير
-                condition = condition.Replace(match.Value, $"= {paramName}");
+                // استبدال بالموقع الدقيق — مش string.Replace اللي بيبوظ القيم المشابهة
+                sb.Remove(match.Index, match.Length);
+                sb.Insert(match.Index, $"= {paramName}");
             }
+            condition = sb.ToString();
 
             return ("WHERE " + condition, parameters);
         }

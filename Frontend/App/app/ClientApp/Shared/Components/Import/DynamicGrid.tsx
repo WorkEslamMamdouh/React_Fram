@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { SQL } from "../../CallDataBase";
 import { Sys } from "../../SystemTools";
 import { useSys } from "../../SystemUsing";
 import { DynamicGridColumn, DynamicGridProps, SortDirection, ColumnMode } from "../Import/ModelGrid";
 import { SearchModalConfig } from "../Import/ModelGrid";
-import SearchModal from "./SearchModal";
 import AdvancedFilter, { FilterFieldConfig, ActiveFilter } from './AdvancedFilter';
 import DynamicGridFilter from './DynamicGridFilter';
 import { displayDate } from "../../dateUtils";
+
+const SearchModal = lazy(() => import("./SearchModal"));
 
 // ============================================================
 // TYPES
@@ -941,48 +942,58 @@ const FormModal: React.FC<FormModalProps> = ({
 // BUILD FILTER CONDITION FUNCTION
 // ============================================================
 
+const escSql = (v: any): string => String(v ?? '').replace(/'/g, "''");
+const isValidField = (f: string): boolean => /^[\w.[\]]+$/.test(f);
+const isValidDate = (d: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(d);
+
 const buildFilterCondition = (filters: ActiveFilter[], lang: string): string => {
   if (!filters || filters.length === 0) return '';
-  
+
   const conditions: string[] = [];
-  
+
   for (const filter of filters) {
     if (!filter.value && !filter.fromValue && !filter.toValue) continue;
-    
+    if (!isValidField(filter.field)) continue;
+
     switch (filter.type) {
       case 'text':
       case 'search':
         if (filter.value) {
-          conditions.push(`${filter.field} LIKE N'%${filter.value}%'`);
+          conditions.push(`${filter.field} LIKE N'%${escSql(filter.value)}%'`);
         }
         break;
       case 'number':
         if (filter.value !== null && filter.value !== undefined && filter.value !== '') {
-          conditions.push(`${filter.field} = ${filter.value}`);
+          const num = Number(filter.value);
+          if (!isNaN(num)) conditions.push(`${filter.field} = ${num}`);
         }
         break;
       case 'date':
-        if (filter.value) {
+        if (filter.value && isValidDate(String(filter.value))) {
           conditions.push(`CONVERT(date, ${filter.field}) = '${filter.value}'`);
         }
         break;
       case 'dateRange':
-        if (filter.fromValue && filter.toValue) {
-          conditions.push(`CONVERT(date, ${filter.field}) BETWEEN '${filter.fromValue}' AND '${filter.toValue}'`);
-        } else if (filter.fromValue) {
-          conditions.push(`CONVERT(date, ${filter.field}) >= '${filter.fromValue}'`);
-        } else if (filter.toValue) {
-          conditions.push(`CONVERT(date, ${filter.field}) <= '${filter.toValue}'`);
+        {
+          const from = filter.fromValue && isValidDate(String(filter.fromValue)) ? filter.fromValue : null;
+          const to = filter.toValue && isValidDate(String(filter.toValue)) ? filter.toValue : null;
+          if (from && to) {
+            conditions.push(`CONVERT(date, ${filter.field}) BETWEEN '${from}' AND '${to}'`);
+          } else if (from) {
+            conditions.push(`CONVERT(date, ${filter.field}) >= '${from}'`);
+          } else if (to) {
+            conditions.push(`CONVERT(date, ${filter.field}) <= '${to}'`);
+          }
         }
         break;
       case 'select':
         if (filter.value) {
-          conditions.push(`${filter.field} = '${filter.value}'`);
+          conditions.push(`${filter.field} = '${escSql(filter.value)}'`);
         }
         break;
       case 'multiselect':
         if (Array.isArray(filter.value) && filter.value.length > 0) {
-          const values = filter.value.map(v => `'${v}'`).join(',');
+          const values = filter.value.map(v => `'${escSql(v)}'`).join(',');
           conditions.push(`${filter.field} IN (${values})`);
         }
         break;
@@ -993,7 +1004,7 @@ const buildFilterCondition = (filters: ActiveFilter[], lang: string): string => 
         break;
     }
   }
-  
+
   return conditions.length > 0 ? `(${conditions.join(' AND ')})` : '';
 };
 
@@ -1252,12 +1263,14 @@ export default function DynamicGrid({
 
       let searchCondition = '';
       if (enableSearch && search && searchCols.length > 0) {
-        const searchParts = searchCols.map(col => `${col} LIKE N'%${search}%'`);
-        searchCondition = `(${searchParts.join(" OR ")})`;
+        const safeSearch = escSql(search);
+        const searchParts = searchCols.filter(isValidField).map(col => `${col} LIKE N'%${safeSearch}%'`);
+        searchCondition = searchParts.length > 0 ? `(${searchParts.join(" OR ")})` : '';
       } else if (enableSearch && search) {
-        const allColumns = columns.filter(c => c.IsVisibleDisplayInGrid !== false).map(col => col.field);
-        const searchParts = allColumns.map(col => `${col} LIKE N'%${search}%'`);
-        searchCondition = `(${searchParts.join(" OR ")})`;
+        const safeSearch = escSql(search);
+        const allColumns = columns.filter(c => c.IsVisibleDisplayInGrid !== false).map(col => col.field).filter(isValidField);
+        const searchParts = allColumns.map(col => `${col} LIKE N'%${safeSearch}%'`);
+        searchCondition = searchParts.length > 0 ? `(${searchParts.join(" OR ")})` : '';
       }
 
       const advancedFilterCondition = enableAdvancedFilter ? buildFilterCondition(activeFilters, lang) : '';
@@ -1584,19 +1597,21 @@ export default function DynamicGrid({
   return (
     <>
       <GlassContainer isDark={isDark} className="w-full" style={{ height: typeof height === "number" ? `${height}px` : height }}>
-        {/* Search Modal */}
+        {/* Search Modal — lazy loaded */}
         {activeSearchModal && activeSearchModal.searchModal && (
-          <SearchModal
-            isOpen={true}
-            onClose={() => setActiveSearchModal(null)}
-            onSelect={(value, row) => {
-              setFormData({ ...formData, [activeSearchModal.field]: value });
-              setActiveSearchModal(null);
-            }}
-            config={activeSearchModal.searchModal}
-            lang={lang}
-            isDark={isDark}
-          />
+          <Suspense fallback={null}>
+            <SearchModal
+              isOpen={true}
+              onClose={() => setActiveSearchModal(null)}
+              onSelect={(value: any, row: any) => {
+                setFormData({ ...formData, [activeSearchModal.field]: value });
+                setActiveSearchModal(null);
+              }}
+              config={activeSearchModal.searchModal}
+              lang={lang}
+              isDark={isDark}
+            />
+          </Suspense>
         )}
 
         {/* Grid Filter — ثابت فوق الجريد */}

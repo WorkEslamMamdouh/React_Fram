@@ -18,9 +18,9 @@
 //  الاستخدام:  <MasterDetail config={p.config} />   والإعدادات كلها في ملف الـ ts بتاع الشاشة
 // =====================================================================================
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, lazy, Suspense } from "react";
 import DynamicGrid from "./DynamicGrid";
-import SearchModal from "./SearchModal";
+const SearchModal = lazy(() => import("./SearchModal"));
 import { SQL } from "../../CallDataBase";
 import { Sys } from "../../SystemTools";
 import { useSys } from "../../SystemUsing";
@@ -713,16 +713,18 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
         </div>
       )}
 
-      {/* ===== نافذة البحث ===== */}
+      {/* ===== نافذة البحث — lazy loaded ===== */}
       {searchTarget && searchTarget.col.searchModal && (
-        <SearchModal
-          isOpen={true}
-          onClose={() => setSearchTarget(null)}
-          onSelect={onSearchSelect}
-          config={searchTarget.col.searchModal}
-          lang={lang}
-          isDark={isDark}
-        />
+        <Suspense fallback={null}>
+          <SearchModal
+            isOpen={true}
+            onClose={() => setSearchTarget(null)}
+            onSelect={onSearchSelect}
+            config={searchTarget.col.searchModal}
+            lang={lang}
+            isDark={isDark}
+          />
+        </Suspense>
       )}
     </div>
   );
