@@ -30,7 +30,39 @@ export interface ScreenConfigV4 {
   validations: ValidationConfigV4[];
   gridFilter: GridFilterConfigV4 | null;
   tree: TreeSettingsV4;
+  headerFilter: HeaderFilterConfigV4;
+  inlineStatus: InlineStatusConfigV4;
   meta: ScreenMeta;
+}
+
+// فلتر إجباري في الهيدر (مدى تاريخ)
+export interface HeaderFilterConfigV4 {
+  enabled: boolean;
+  field: string;            // عمود SQL (مثلاً TransDate)
+  labelAr: string;
+  labelEn: string;
+  type: "dateRange";
+  fromDefault: "monthStart" | "yearStart";
+  toDefault: "today" | "yearEnd";
+}
+
+export function createEmptyHeaderFilter(): HeaderFilterConfigV4 {
+  return { enabled: false, field: "", labelAr: "", labelEn: "", type: "dateRange", fromDefault: "monthStart", toDefault: "today" };
+}
+
+// مربع اعتماد مضمّن داخل الجريد
+export interface InlineStatusConfigV4 {
+  enabled: boolean;
+  field: string;
+  approveTrType: string;
+  unapproveTrType: string;
+  approvePermission: string;
+  unapprovePermission: string;
+  confirmBeforeChange: boolean;
+}
+
+export function createEmptyInlineStatus(): InlineStatusConfigV4 {
+  return { enabled: false, field: "", approveTrType: "", unapproveTrType: "", approvePermission: "", unapprovePermission: "", confirmBeforeChange: true };
 }
 
 export type ScreenType = "Grid" | "MasterDetail" | "Tree";
@@ -95,6 +127,11 @@ export interface FieldConfigV4 {
   dateMode?: "date" | "datetime";
   align?: "left" | "center" | "right";
   noSave?: boolean;       // عمود محسوب في القاعدة أو موجود في الـ View بس → مابيتحفظش
+  // عند inputType === "selectSearch" نحمل الخيارات من جدول بدل options ثابتة
+  selectTable?: string;
+  selectDisplay?: string;
+  selectValue?: string;
+  selectCondition?: string;
 }
 
 export interface DetailConfigV4 {
@@ -211,6 +248,8 @@ export function createEmptyScreen(type: ScreenType = "Grid"): ScreenConfigV4 {
     validations: [],
     gridFilter: null,
     tree: createEmptyTree(),
+    headerFilter: createEmptyHeaderFilter(),
+    inlineStatus: createEmptyInlineStatus(),
     meta: { lastModified: new Date().toISOString(), modifiedBy: "", source: "web" },
   };
 }
@@ -223,6 +262,8 @@ export function normalizeConfig(cfg: ScreenConfigV4): ScreenConfigV4 {
     ...cfg,
     permissions: { ...base.permissions, ...(cfg.permissions || {}) },
     tree: { ...createEmptyTree(), ...(cfg.tree || {}) },
+    headerFilter: { ...createEmptyHeaderFilter(), ...((cfg as any).headerFilter || {}) },
+    inlineStatus: { ...createEmptyInlineStatus(), ...((cfg as any).inlineStatus || {}) },
     fields: cfg.fields || [],
     listFields: cfg.listFields || [],
     details: cfg.details || [],
@@ -247,8 +288,8 @@ export function createEmptyValidation(): ValidationConfigV4 {
   };
 }
 
-export const INPUT_TYPES = ["text", "number", "textarea", "checkbox", "date", "select", "search"] as const;
-export const AUTO_VALUES = ["", "CompCode", "BranchCode", "UserID", "FinYear"] as const;
+export const INPUT_TYPES = ["text", "number", "textarea", "checkbox", "date", "select", "selectSearch", "search"] as const;
+export const AUTO_VALUES = ["", "CompCode", "BranchCode", "UserID", "FinYear", "UserName", "Today", "Now"] as const;
 export const VALIDATION_TYPES = ["required", "compare", "range", "regex", "unique", "exists", "notExists", "noDuplicate", "minRows", "custom"] as const;
 
 export const DEFAULT_PRESETS: { value: string; labelEn: string; labelAr: string; description: string }[] = [

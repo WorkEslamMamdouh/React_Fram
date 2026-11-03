@@ -141,9 +141,24 @@ export function getKnownTitle(fieldName: string): { ar: string; en: string } | n
 
 // Auto-detect field settings
 const AUTO_FIELDS = ["CompCode", "BranchCode", "UserID", "FinYear"];
+// حقول المستخدم اللي بتسجل مين ضاف/عدّل  →  UserName
+const USERNAME_FIELDS = new Set([
+  "CreatedBy", "ModifiedBy", "UpdatedBy",
+  "CREATED_BY", "UPDATED_BY", "MODIFIED_BY",
+  "CreatedUser", "ModifiedUser",
+]);
+// حقول تواريخ الإنشاء/التعديل  →  Now
+const DATETIME_FIELDS = new Set([
+  "CreatedAt", "UpdatedAt", "ModifiedAt",
+  "CREATED_AT", "UPDATED_AT", "LAST_UPDATE",
+  "ModifiedDate", "CreatedDate",
+]);
 
 export function detectAutoValue(fieldName: string): string {
-  return AUTO_FIELDS.includes(fieldName) ? fieldName : "";
+  if (AUTO_FIELDS.includes(fieldName)) return fieldName;
+  if (USERNAME_FIELDS.has(fieldName)) return "UserName";
+  if (DATETIME_FIELDS.has(fieldName)) return "Now";
+  return "";
 }
 
 export function detectDefaultValue(fieldName: string, sqlType: string, isNullable: boolean): string {

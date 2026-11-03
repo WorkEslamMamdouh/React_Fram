@@ -81,6 +81,21 @@ export interface DynamicGridColumn {
   visibleWhen?: (row: Record<string, any>, mode: ColumnMode) => boolean;
   enabledWhen?: (row: Record<string, any>, mode: ColumnMode) => boolean;
   align?: "left" | "center" | "right";
+  // DynamicSelect configuration when inputType === "selectSearch"
+  selectConfig?: {
+    tableName: string;
+    displayField: string;
+    valueField: string;
+    condition?: string;
+  };
+  // Inline checkbox in the data row that fires ProcessTrans on toggle
+  inlineToggle?: {
+    approveTrType: string;
+    unapproveTrType: string;
+    approvePermission?: string;
+    unapprovePermission?: string;
+    confirmBeforeChange?: boolean;
+  };
 }
 
 export interface DynamicGridProps {

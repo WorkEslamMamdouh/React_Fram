@@ -75,7 +75,7 @@ export function usedSearchFns(cfg: ScreenConfigV4): string[] {
   return Array.from(new Set(all.map((f) => f.searchFn).filter(Boolean)));
 }
 
-function fieldToColumnCode(f: FieldConfigV4, md: boolean = false): string {
+function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenConfigV4): string {
   const props: [string, string][] = [];
   const set = (k: string, v: string) => {
     const i = props.findIndex((p) => p[0] === k);
@@ -89,6 +89,14 @@ function fieldToColumnCode(f: FieldConfigV4, md: boolean = false): string {
   if (input === "number" || input === "date" || input === "checkbox" || input === "select") set("type", q(input));
   if (input !== "text") set("inputType", q(input));
   if (input === "select" && f.options) set("selectOptions", `[${parseSelectOptions(f.options)}]`);
+  if (input === "selectSearch" && (f.selectTable || f.selectValue)) {
+    const parts: string[] = [];
+    parts.push(`tableName: ${q(f.selectTable || "")}`);
+    parts.push(`displayField: ${q(f.selectDisplay || "")}`);
+    parts.push(`valueField: ${q(f.selectValue || "")}`);
+    if (f.selectCondition) parts.push(`condition: ${q(f.selectCondition)}`);
+    set("selectConfig", `{ ${parts.join(", ")} }`);
+  }
   if (f.searchFn) set("searchModal", `${f.searchFn}(${f.searchCond ? q(f.searchCond) : ""})`);
   if (md && f.fillFrom) set("fillFrom", fillFromToJs(f.fillFrom));
   if (md && f.formula) set("formula", formulaToJs(f.formula));
@@ -122,6 +130,19 @@ function fieldToColumnCode(f: FieldConfigV4, md: boolean = false): string {
   if (f.visibleInCreate === false) set("visibleInCreate", "false");
   if (f.visibleInEdit === false) set("visibleInEdit", "false");
   if (f.visibleInView === false) set("visibleInView", "false");
+
+  // Inline status checkbox — بيضيف inlineToggle للعمود المحدد في إعدادات الشاشة
+  if (cfg && cfg.inlineStatus?.enabled && cfg.inlineStatus.field && f.field === cfg.inlineStatus.field) {
+    const s = cfg.inlineStatus;
+    const parts: string[] = [];
+    parts.push(`approveTrType: ${q(s.approveTrType || "")}`);
+    parts.push(`unapproveTrType: ${q(s.unapproveTrType || "")}`);
+    if (s.approvePermission) parts.push(`approvePermission: ${q(s.approvePermission)}`);
+    if (s.unapprovePermission) parts.push(`unapprovePermission: ${q(s.unapprovePermission)}`);
+    parts.push(`confirmBeforeChange: ${s.confirmBeforeChange !== false}`);
+    set("inlineToggle", `{ ${parts.join(", ")} }`);
+    set("type", q("checkbox"));
+  }
 
   return "{\n" + props.map(([k, v]) => `  ${k}: ${v},`).join("\n") + "\n},";
 }
@@ -213,18 +234,18 @@ export function generateHookFile(cfg: ScreenConfigV4): string {
     `  const ${varName} = useMemo<${typeName}[]>(\n    () => [\n${indent(body, 6)}\n    ],\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n    [${deps}]\n  );`;
 
   const sections: string[] = [];
-  sections.push(memo(isGrid ? "Columns" : "MasterColumns", colType, cfg.fields.map((f) => fieldToColumnCode(f, md)).join("\n"), "IsLangEN"));
+  sections.push(memo(isGrid ? "Columns" : "MasterColumns", colType, cfg.fields.map((f) => fieldToColumnCode(f, md, cfg)).join("\n"), "IsLangEN"));
 
   if (type === "MasterDetail") {
     const list = cfg.listFields.length ? cfg.listFields : cfg.fields.filter((f) => f.inGrid);
-    sections.push(memo("ListColumns", "DynamicGridColumn", list.map((f) => fieldToColumnCode(f, false)).join("\n"), "IsLangEN"));
+    sections.push(memo("ListColumns", "DynamicGridColumn", list.map((f) => fieldToColumnCode(f, false, cfg)).join("\n"), "IsLangEN"));
   }
 
   const detailNames: string[] = [];
   cfg.details.forEach((d, i) => {
     const dn = `Detail${i + 1}Columns`;
     detailNames.push(dn);
-    sections.push(memo(dn, "MasterDetailColumn", d.fields.map((f) => fieldToColumnCode(f, true)).join("\n"), "IsLangEN"));
+    sections.push(memo(dn, "MasterDetailColumn", d.fields.map((f) => fieldToColumnCode(f, true, cfg)).join("\n"), "IsLangEN"));
   });
 
   if (!isTree) {
@@ -371,11 +392,51 @@ ${returnObj}
 // Generate page.tsx
 // ============================================================
 
+// Helpers for the header date-range filter in page.tsx
+function headerFilterSessionBlock(cfg: ScreenConfigV4): string {
+  if (!cfg.headerFilter?.enabled) return "";
+  const hf = cfg.headerFilter;
+  const fromExpr = hf.fromDefault === "yearStart"
+    ? "`${FinYear}-01-01`"
+    : "new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10)";
+  const toExpr = hf.toDefault === "yearEnd"
+    ? "`${FinYear}-12-31`"
+    : "new Date().toISOString().slice(0,10)";
+  return `
+  const Session = useSys((s) => s.Session);
+  const FinYear = Session?.CurrentEnvironment?.FinYear || new Date().getFullYear();
+  const [fromDate, setFromDate] = useState<string>(${fromExpr});
+  const [toDate, setToDate] = useState<string>(${toExpr});
+  const headerFilterClause = (fromDate && toDate)
+    ? \` AND ${hf.field} >= '\${fromDate}' AND ${hf.field} <= '\${toDate}'\`
+    : "";`;
+}
+
+function headerFilterUI(cfg: ScreenConfigV4): string {
+  if (!cfg.headerFilter?.enabled) return "";
+  const hf = cfg.headerFilter;
+  return `
+          <div className="flex items-end gap-2 flex-wrap">
+            <div>
+              <label className={\`text-[11px] block \${muted}\`}>{IsLangEN ? "${(hf.labelEn || "From").replace(/"/g, '\\"')}" : "${(hf.labelAr || "من").replace(/"/g, '\\"')}"} ({IsLangEN ? "From" : "من"})</label>
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={\`px-2 py-1.5 rounded-lg border text-sm \${d ? "bg-gray-800 border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-800"}\`} />
+            </div>
+            <div>
+              <label className={\`text-[11px] block \${muted}\`}>{IsLangEN ? "${(hf.labelEn || "To").replace(/"/g, '\\"')}" : "${(hf.labelAr || "إلى").replace(/"/g, '\\"')}"} ({IsLangEN ? "To" : "إلى"})</label>
+              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={\`px-2 py-1.5 rounded-lg border text-sm \${d ? "bg-gray-800 border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-800"}\`} />
+            </div>
+            {(!fromDate || !toDate) && (
+              <span className="text-[11px] text-amber-500 self-center">{IsLangEN ? "Filter required" : "الفلتر مطلوب"}</span>
+            )}
+          </div>`;
+}
+
 export function generatePageFile(cfg: ScreenConfigV4): string {
   const name = cfg.module || "NewScreen";
   const isGrid = cfg.screenType === "Grid";
   const icon = cfg.icon || "fa-table-list";
   if (cfg.screenType === "Tree") return generateTreePageFile(cfg);
+  const hfEnabled = !!cfg.headerFilter?.enabled;
 
   if (isGrid) {
     return `"use client";
@@ -383,7 +444,7 @@ export function generatePageFile(cfg: ScreenConfigV4): string {
 import { ${name} } from "./${name}";
 import { useTranslate } from "../../ClientApp/Shared/Resources";
 import { useSys } from "../Shared/SystemUsing";
-import DynamicGrid from "../Shared/Components/Import/DynamicGrid";
+import DynamicGrid from "../Shared/Components/Import/DynamicGrid";${hfEnabled ? '\nimport { useState } from "react";' : ""}
 
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -405,9 +466,11 @@ type Props = _ReturnType & { Lang: ReturnType<typeof useTranslate>; stylesheet: 
 function ${name}Page(p: Props) {
   const L = p.Lang;
   const d = p.IsDark;
+  ${hfEnabled ? "const IsLangEN = p.IsLangEN;" : "void p.IsLangEN;"}
   const card = d ? "bg-gray-900/80 border-gray-700/60 text-gray-100" : "bg-white/90 border-gray-200 text-gray-800";
   const muted = d ? "text-gray-400" : "text-gray-500";
   const btnSecondary = d ? "bg-gray-800 border-gray-600 text-gray-200 hover:border-blue-500" : "bg-white border-gray-300 text-gray-700 hover:border-blue-600";
+${headerFilterSessionBlock(cfg)}
 
   return (
     <>
@@ -422,7 +485,7 @@ function ${name}Page(p: Props) {
               <h1 className="text-lg md:text-2xl font-bold truncate">{L.${camel(name)}_title}</h1>
               <p className={\`text-sm \${muted}\`}>{L.${camel(name)}_subtitle}</p>
             </div>
-          </div>
+          </div>${headerFilterUI(cfg)}
           <button onClick={p.RefreshGrid} className={\`px-4 py-2 rounded-xl border-2 font-medium transition \${btnSecondary}\`}>
             <i className="fa-solid fa-rotate mx-1"></i> {L.${camel(name)}_refresh}
           </button>
@@ -433,7 +496,7 @@ function ${name}Page(p: Props) {
           tableName={p.grid.TableName}
           keyColumn={p.grid.KeyColumn}
           columns={p.grid.Columns}
-          condition={p.grid.Condition}
+          condition={${hfEnabled ? "p.grid.Condition + headerFilterClause" : "p.grid.Condition"}}
           orderBy={p.grid.KeyColumn}
           orderType="${cfg.orderType}"
           pageSize={${cfg.pageSize}}
@@ -464,7 +527,7 @@ function ${name}Page(p: Props) {
 import { ${name} } from "./${name}";
 import { useTranslate } from "../../ClientApp/Shared/Resources";
 import { useSys } from "../Shared/SystemUsing";
-import MasterDetail from "../Shared/Components/Import/MasterDetail";
+import MasterDetail from "../Shared/Components/Import/MasterDetail";${hfEnabled ? '\nimport { useMemo, useState } from "react";' : ""}
 
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -486,24 +549,29 @@ type Props = _ReturnType & { Lang: ReturnType<typeof useTranslate>; stylesheet: 
 function ${name}Page(p: Props) {
   const L = p.Lang;
   const d = p.IsDark;
+  ${hfEnabled ? "const IsLangEN = p.IsLangEN;" : "void p.IsLangEN;"}
   const card = d ? "bg-gray-900/80 border-gray-700/60 text-gray-100" : "bg-white/90 border-gray-200 text-gray-800";
   const muted = d ? "text-gray-400" : "text-gray-500";
+${headerFilterSessionBlock(cfg)}
+${hfEnabled ? `  const FilteredConfig = useMemo(() => ({ ...p.Config, condition: (p.Config.condition || "") + headerFilterClause }), [p.Config, fromDate, toDate]);` : ""}
 
   return (
     <>
       {p.stylesheet}
       <div className="p-2 md:p-4 space-y-4">
-        <div className={\`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex items-center gap-3 \${card}\`}>
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-            <i className="fa-solid ${icon}"></i>
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-bold truncate">{L.${camel(name)}_title}</h1>
-            <p className={\`text-sm \${muted}\`}>{L.${camel(name)}_subtitle}</p>
-          </div>
+        <div className={\`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 \${card}\`}>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
+              <i className="fa-solid ${icon}"></i>
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-2xl font-bold truncate">{L.${camel(name)}_title}</h1>
+              <p className={\`text-sm \${muted}\`}>{L.${camel(name)}_subtitle}</p>
+            </div>
+          </div>${headerFilterUI(cfg)}
         </div>
 
-        <MasterDetail config={p.Config} />
+        <MasterDetail config={${hfEnabled ? "FilteredConfig" : "p.Config"}} />
       </div>
     </>
   );

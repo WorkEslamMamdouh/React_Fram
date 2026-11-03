@@ -12,6 +12,7 @@ import DynamicGridFilter from './DynamicGridFilter';
 import { displayDate } from "../../dateUtils";
 
 const SearchModal = lazy(() => import("./SearchModal"));
+const DynamicSelect = lazy(() => import("./DynamicSelect"));
 
 // ============================================================
 // TYPES
@@ -709,6 +710,21 @@ const InputControl: React.FC<{
 
   if (!isEdit && column.InsertTemplate) {
     return <>{column.InsertTemplate(value, onChange)}</>;
+  }
+
+  if (inputType === "selectSearch" && column.selectConfig) {
+    return (
+      <Suspense fallback={<div className={`${baseClass} ${themeClass}`}>...</div>}>
+        <DynamicSelect
+          config={column.selectConfig}
+          value={value}
+          onChange={(v) => onChange(v)}
+          disabled={getDisabledState()}
+          error={!!error}
+          className=""
+        />
+      </Suspense>
+    );
   }
 
   if (inputType === "select" || column.type === "select") {
@@ -1849,6 +1865,57 @@ export default function DynamicGrid({
                           )}
                           {visibleColumns.map((col, cIdx) => {
                             const value = row[col.field];
+                            if (col.inlineToggle) {
+                              return (
+                                <td key={`${col.field}_${uniqueKey}`} className="p-3 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!value && value !== 0 && value !== "0"}
+                                    onChange={async (e) => {
+                                      const newVal = e.target.checked;
+                                      const cfg = col.inlineToggle!;
+                                      try {
+                                        if (cfg.confirmBeforeChange !== false) {
+                                          const ok = await Sys.Confirm(
+                                            newVal ? `Approve record ${row[keyColumn]}?` : `Unapprove record ${row[keyColumn]}?`,
+                                            newVal ? `اعتماد السجل رقم ${row[keyColumn]}؟` : `إلغاء اعتماد السجل رقم ${row[keyColumn]}؟`,
+                                            { danger: !newVal }
+                                          );
+                                          if (!ok) return;
+                                        }
+                                        const trType = newVal ? cfg.approveTrType : cfg.unapproveTrType;
+                                        const dbField = col.NameDataBase || col.field;
+                                        const updateData: any = { [keyColumn]: row[keyColumn], [dbField]: newVal ? 1 : 0 };
+                                        const req: any = {
+                                          compCode: (row as any).CompCode || 1,
+                                          branchCode: (row as any).BranchCode || 1,
+                                          keyTrType: trType || "",
+                                          masterKeyColumn: keyColumn,
+                                          runProcessTrans: !!trType,
+                                          master: { tableName, keyColumn, data: updateData },
+                                        };
+                                        const res = await SQL.UpdateMasterDetail(req, null, null);
+                                        if (res?.IsSuccess) {
+                                          const index = data.findIndex(r => r[keyColumn] === row[keyColumn]);
+                                          if (index !== -1) {
+                                            const newData = [...data];
+                                            newData[index] = { ...row, [col.field]: newVal ? 1 : 0 };
+                                            setData(newData);
+                                          }
+                                          Sys.ShowMessage("Updated", "تم التحديث", "success");
+                                        } else {
+                                          Sys.ShowMessage(res?.ErrorMessage || "Failed", res?.ErrorMessage || "فشل", "error");
+                                        }
+                                      } catch (err: any) {
+                                        console.error(err);
+                                        Sys.ShowMessage(err?.message || "Error", err?.message || "خطأ", "error");
+                                      }
+                                    }}
+                                    className="w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+                                  />
+                                </td>
+                              );
+                            }
                             if (col.itemTemplate) {
                               return (
                                 <td key={`${col.field}_${uniqueKey}`} className="p-3">

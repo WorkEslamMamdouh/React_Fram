@@ -261,6 +261,88 @@ export default function SetupTab({ fields }: SetupTabProps) {
         )}
       </div>
 
+      {/* Header Filter */}
+      <div className={sectionCls}>
+        <div className={headingCls}><i className="fa-solid fa-calendar-days text-cyan-400" />{t("Header Filter (date range)", "فلتر الهيدر (مدى تاريخ)")}</div>
+        <label className="flex items-center gap-2 text-sm cursor-pointer mb-2">
+          <input type="checkbox" className={checkCls} checked={config.headerFilter.enabled} onChange={(e) => updateScreen({ headerFilter: { ...config.headerFilter, enabled: e.target.checked } })} />
+          <span className={isDark ? "text-gray-300" : "text-gray-700"}>{t("Enable required date-range filter in the header", "تفعيل فلتر تاريخ إجباري في الهيدر")}</span>
+        </label>
+        {config.headerFilter.enabled && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label className={labelCls}>{t("Field", "الحقل")}</label>
+              <select className={inputCls} value={config.headerFilter.field} onChange={(e) => updateScreen({ headerFilter: { ...config.headerFilter, field: e.target.value } })}>
+                <option value="">--</option>
+                {fields.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>{t("Label Arabic", "اسم عربي")}</label>
+              <input className={inputCls} dir="rtl" value={config.headerFilter.labelAr} onChange={(e) => updateScreen({ headerFilter: { ...config.headerFilter, labelAr: e.target.value } })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Label English", "اسم انجليزي")}</label>
+              <input className={inputCls} value={config.headerFilter.labelEn} onChange={(e) => updateScreen({ headerFilter: { ...config.headerFilter, labelEn: e.target.value } })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("From default", "قيمة من الافتراضية")}</label>
+              <select className={inputCls} value={config.headerFilter.fromDefault} onChange={(e) => updateScreen({ headerFilter: { ...config.headerFilter, fromDefault: e.target.value as any } })}>
+                <option value="monthStart">{t("Start of month", "أول الشهر")}</option>
+                <option value="yearStart">{t("Start of fiscal year", "أول السنة المالية")}</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>{t("To default", "قيمة إلى الافتراضية")}</label>
+              <select className={inputCls} value={config.headerFilter.toDefault} onChange={(e) => updateScreen({ headerFilter: { ...config.headerFilter, toDefault: e.target.value as any } })}>
+                <option value="today">{t("Today", "النهارده")}</option>
+                <option value="yearEnd">{t("End of fiscal year", "آخر السنة المالية")}</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Inline Status */}
+      <div className={sectionCls}>
+        <div className={headingCls}><i className="fa-solid fa-square-check text-emerald-400" />{t("Inline Status Checkbox", "مربع حالة داخل الجريد")}</div>
+        <label className="flex items-center gap-2 text-sm cursor-pointer mb-2">
+          <input type="checkbox" className={checkCls} checked={config.inlineStatus.enabled} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, enabled: e.target.checked } })} />
+          <span className={isDark ? "text-gray-300" : "text-gray-700"}>{t("Render a checkbox in each row and call ProcessTrans when toggled", "اعرض مربع اعتماد في كل صف وبعت ProcessTrans لما يتغير")}</span>
+        </label>
+        {config.inlineStatus.enabled && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div>
+              <label className={labelCls}>{t("Column", "العمود")}</label>
+              <select className={inputCls} value={config.inlineStatus.field} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, field: e.target.value } })}>
+                <option value="">--</option>
+                {fields.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>{t("Approve TrType", "TrType للاعتماد")}</label>
+              <input className={inputCls} value={config.inlineStatus.approveTrType} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, approveTrType: e.target.value } })} placeholder="Approve" />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Unapprove TrType", "TrType لإلغاء الاعتماد")}</label>
+              <input className={inputCls} value={config.inlineStatus.unapproveTrType} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, unapproveTrType: e.target.value } })} placeholder="Unapprove" />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Approve permission", "صلاحية الاعتماد")}</label>
+              <input className={inputCls} value={config.inlineStatus.approvePermission} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, approvePermission: e.target.value } })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Unapprove permission", "صلاحية إلغاء الاعتماد")}</label>
+              <input className={inputCls} value={config.inlineStatus.unapprovePermission} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, unapprovePermission: e.target.value } })} />
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer md:col-span-3">
+              <input type="checkbox" className={checkCls} checked={config.inlineStatus.confirmBeforeChange} onChange={(e) => updateScreen({ inlineStatus: { ...config.inlineStatus, confirmBeforeChange: e.target.checked } })} />
+              <span className={isDark ? "text-gray-300" : "text-gray-700"}>{t("Confirm before toggle", "تأكيد قبل التغيير")}</span>
+            </label>
+          </div>
+        )}
+      </div>
+
       {/* Permissions */}
       <div className={sectionCls}>
         <div className={headingCls}><i className="fa-solid fa-shield-halved text-red-400" />{t("Permissions", "الصلاحيات")}</div>

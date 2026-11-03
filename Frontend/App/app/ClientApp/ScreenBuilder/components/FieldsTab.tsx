@@ -112,6 +112,14 @@ export default function FieldsTab({ target, detailIdx, searchFunctions, columnMe
                 </td>
                 <td className="px-1.5 py-1">
                   {f.inputType === "select" && <input className={`${cellInput} w-28`} value={f.options} onChange={(e) => updateField(i, { options: e.target.value }, target, detailIdx)} placeholder="0:No|1:Yes" />}
+                  {f.inputType === "selectSearch" && (
+                    <div className="flex gap-1">
+                      <input className={`${cellInput} w-20`} value={f.selectTable || ""} onChange={(e) => updateField(i, { selectTable: e.target.value }, target, detailIdx)} placeholder={t("Table", "جدول")} />
+                      <input className={`${cellInput} w-20`} value={f.selectDisplay || ""} onChange={(e) => updateField(i, { selectDisplay: e.target.value }, target, detailIdx)} placeholder={t("Display", "عرض")} />
+                      <input className={`${cellInput} w-20`} value={f.selectValue || ""} onChange={(e) => updateField(i, { selectValue: e.target.value }, target, detailIdx)} placeholder={t("Value", "قيمة")} />
+                      <input className={`${cellInput} w-24`} value={f.selectCondition || ""} onChange={(e) => updateField(i, { selectCondition: e.target.value }, target, detailIdx)} placeholder={t("Cond", "شرط")} />
+                    </div>
+                  )}
                 </td>
                 <td className="px-1.5 py-1">
                   {f.inputType === "search" && (
