@@ -220,6 +220,92 @@ ORDER BY c.column_id";
             }
         }
 
+        public class SearchFunctionColumn
+        {
+            public string field { get; set; } = "";
+            public string title { get; set; } = "";
+            public int width { get; set; } = 150;
+            public bool IsVisible { get; set; } = true;
+        }
+
+        public class AddSearchFunctionRequest
+        {
+            public string ProjectPath { get; set; } = "";
+            public string Name { get; set; } = "";             // e.g. Items  (prefix Search_ added if missing)
+            public string Title { get; set; } = "";
+            public string TableName { get; set; } = "";
+            public string KeyColumn { get; set; } = "";
+            public string ReturnField { get; set; } = "";
+            public string DisplayField { get; set; } = "";
+            public List<SearchFunctionColumn> Columns { get; set; } = new();
+            public List<string> SearchColumns { get; set; } = new();
+            public int PageSize { get; set; } = 20;
+            public string OrderBy { get; set; } = "";
+            public string OrderType { get; set; } = "ASC";
+        }
+
+        // POST api/screenbuilder/add-search-function — append a new SearchModalConfig factory
+        [HttpPost("add-search-function")]
+        public IActionResult AddSearchFunction([FromBody] AddSearchFunctionRequest req)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(req.ProjectPath)) return Ok(new { success = false, error = "projectPath missing" });
+                if (string.IsNullOrWhiteSpace(req.Name) || !Regex.IsMatch(req.Name, @"^[A-Za-z_][A-Za-z0-9_]*$"))
+                    return Ok(new { success = false, error = "اسم الدالة لازم يبدأ بحرف أو _ (English letters, numbers, _)" });
+                if (string.IsNullOrWhiteSpace(req.TableName)) return Ok(new { success = false, error = "الجدول مطلوب" });
+                if (req.Columns == null || req.Columns.Count == 0) return Ok(new { success = false, error = "لازم عمود واحد على الأقل" });
+
+                string path = Path.Combine(req.ProjectPath, "app", "ClientApp", "Shared", "G_SearchFrom.ts");
+                if (!System.IO.File.Exists(path)) return Ok(new { success = false, error = "G_SearchFrom.ts not found at " + path });
+
+                string content = System.IO.File.ReadAllText(path);
+                string fnName = req.Name.StartsWith("Search_") ? req.Name : "Search_" + req.Name;
+
+                // check duplicate
+                if (Regex.IsMatch(content, @"export\s+const\s+" + Regex.Escape(fnName) + @"\s*=\s*\("))
+                    return Ok(new { success = false, error = $"الدالة {fnName} موجودة بالفعل" });
+
+                string Esc(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine();
+                sb.AppendLine($"// ===== {fnName} — أضيفت من ScreenBuilder =====");
+                sb.AppendLine($"export const {fnName} = (_condition: string = \"\"): SearchModalConfig => {{");
+                sb.AppendLine("  return {");
+                sb.AppendLine($"    title: \"{Esc(req.Title ?? fnName)}\",");
+                sb.AppendLine($"    tableName: \"{Esc(req.TableName)}\",");
+                sb.AppendLine($"    keyColumn: \"{Esc(req.KeyColumn)}\",");
+                sb.AppendLine("    condition: _condition,");
+                sb.AppendLine("    columns: [");
+                foreach (var c in req.Columns)
+                {
+                    string vis = c.IsVisible ? "" : ", IsVisible: false";
+                    sb.AppendLine($"      {{ field: \"{Esc(c.field)}\", title: \"{Esc(c.title)}\", width: {c.width}{vis} }},");
+                }
+                sb.AppendLine("    ],");
+                sb.Append("    searchColumns: [");
+                sb.Append(string.Join(", ", (req.SearchColumns ?? new()).Select(s => "\"" + Esc(s) + "\"")));
+                sb.AppendLine("],");
+                sb.AppendLine($"    returnField: \"{Esc(req.ReturnField)}\",");
+                sb.AppendLine($"    displayField: \"{Esc(req.DisplayField)}\",");
+                sb.AppendLine($"    pageSize: {req.PageSize},");
+                sb.AppendLine($"    orderBy: \"{Esc(req.OrderBy)}\",");
+                sb.AppendLine($"    orderType: \"{(req.OrderType == "DESC" ? "DESC" : "ASC")}\"");
+                sb.AppendLine("  };");
+                sb.AppendLine("};");
+
+                // ensure trailing newline then append
+                if (!content.EndsWith("\n")) content += Environment.NewLine;
+                System.IO.File.WriteAllText(path, content + sb.ToString());
+                return Ok(new { success = true, name = fnName });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, error = ex.Message });
+            }
+        }
+
         // POST api/screenbuilder/execute-sql — run permissions SQL
         [HttpPost("execute-sql")]
         public IActionResult ExecuteSql([FromBody] ExecuteSqlRequest req)

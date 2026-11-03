@@ -10,6 +10,8 @@ import ValidationsTab from "./components/ValidationsTab";
 import PreviewTab from "./components/PreviewTab";
 import HelpPanel from "./components/HelpPanel";
 import ExamplesModal from "./components/ExamplesModal";
+import SearchBuilderModal from "./components/SearchBuilderModal";
+import { loadSearchFunctions } from "./utils/sqlApi";
 
 export default function InitalizeComponent() {
   const p = ScreenBuilder();
@@ -43,6 +45,20 @@ export default function InitalizeComponent() {
     <div className={`flex h-screen overflow-hidden ${bg}`}>
       {/* Examples */}
       {p.showExamples && <ExamplesModal onClose={() => p.setShowExamples(false)} onPick={p.handleLoadExample} />}
+
+      {/* New Search type */}
+      {p.showSearchBuilder && (
+        <SearchBuilderModal
+          connection={p.connection}
+          projectPath={p.projectPath}
+          tables={p.tables.map((tb: any) => tb.name)}
+          onClose={() => p.setShowSearchBuilder(false)}
+          onCreated={async () => {
+            const res = await loadSearchFunctions(p.projectPath);
+            if (res.success && res.functions) p.setSearchFunctions(res.functions);
+          }}
+        />
+      )}
 
       {/* Help Panel */}
       <HelpPanel activeTab={p.activeTab} isOpen={p.showHelp} onClose={() => p.setShowHelp(false)} />
@@ -112,6 +128,13 @@ export default function InitalizeComponent() {
           </button>
           <button onClick={() => p.setShowExamples(true)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${d ? "bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 border border-amber-700/50" : "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200"}`}>
             <i className="fa-solid fa-lightbulb mr-1" />{t("Examples", "أمثلة")}
+          </button>
+          <button
+            onClick={() => p.setShowSearchBuilder(true)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${d ? "bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 border border-indigo-700/50" : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"}`}
+            title={t("Add a new Search type to G_SearchFrom.ts", "إضافة نوع بحث جديد في G_SearchFrom.ts")}
+          >
+            <i className="fa-solid fa-magnifying-glass-plus mr-1" />{t("New Search", "بحث جديد")}
           </button>
 
           <div className={`w-px h-5 ${d ? "bg-gray-700" : "bg-gray-300"}`} />

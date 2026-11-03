@@ -70,6 +70,7 @@ export function ScreenBuilder() {
   const [activeTab, setActiveTab] = useState<TabId>("setup");
   const [showHelp, setShowHelp] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
+  const [showSearchBuilder, setShowSearchBuilder] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [loading, setLoading] = useState("");
 
@@ -333,6 +334,7 @@ export function ScreenBuilder() {
     activeTab, setActiveTab,
     showHelp, setShowHelp,
     showExamples, setShowExamples, handleLoadExample,
+    showSearchBuilder, setShowSearchBuilder,
     showSidebar, setShowSidebar,
     loading,
     handleConnect, handleDatabaseChange, handleLoadColumns,
