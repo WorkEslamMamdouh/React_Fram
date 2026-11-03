@@ -3,7 +3,7 @@
 import React from "react";
 import { useScreenBuilder } from "../store/useScreenBuilder";
 import { useSys } from "../../Shared/SystemUsing";
-import { INPUT_TYPES, AUTO_VALUES, VALIDATION_TYPES } from "../types/ScreenConfig";
+import { INPUT_TYPES, AUTO_VALUES, VALIDATION_TYPES, DEFAULT_PRESETS } from "../types/ScreenConfig";
 
 export default function PropertiesPanel() {
   const isDark = useSys((s) => s.IsDark);
@@ -153,9 +153,28 @@ export default function PropertiesPanel() {
           onChange={v => update({ visibleInView: v })} />
 
         <div className={section}>{t("Data", "البيانات")}</div>
-        <Field label={t("Default Value", "القيمة الافتراضية")} value={f.defaultValue}
-          onChange={v => update({ defaultValue: v })} />
-        <SelectField label={t("Auto Value", "قيمة تلقائية")} value={f.auto}
+        <div>
+          <label className={label}>{t("Default Value", "القيمة الافتراضية")}</label>
+          <div className="flex gap-1 mb-1">
+            <input className={`flex-1 ${input}`} value={f.defaultValue} onChange={e => update({ defaultValue: e.target.value })} placeholder={t("Type or pick preset →", "اكتب أو اختار ←")} />
+            <select className={`${input} w-auto`}
+              value=""
+              onChange={e => { if (e.target.value) update({ defaultValue: e.target.value }); }}>
+              <option value="">{t("⚡", "⚡")}</option>
+              {DEFAULT_PRESETS.map(p => (
+                <option key={p.value} value={p.value}>
+                  {lang === "ar" ? p.labelAr : p.labelEn}
+                </option>
+              ))}
+            </select>
+          </div>
+          {f.defaultValue && DEFAULT_PRESETS.some(p => p.value === f.defaultValue) && (
+            <p className={`text-[9px] ${isDark ? "text-blue-500/70" : "text-blue-400"}`}>
+              {DEFAULT_PRESETS.find(p => p.value === f.defaultValue)?.description}
+            </p>
+          )}
+        </div>
+        <SelectField label={t("Auto Value", "قيمة تلقائية (بتتحفظ تلقائي)")} value={f.auto}
           options={[...AUTO_VALUES]} onChange={v => update({ auto: v })} />
         <Field label={t("Formula", "معادلة")} value={f.formula}
           onChange={v => update({ formula: v })} />

@@ -206,3 +206,16 @@ export function createEmptyValidation(): ValidationConfigV4 {
 export const INPUT_TYPES = ["text", "number", "textarea", "checkbox", "date", "select", "search"] as const;
 export const AUTO_VALUES = ["", "CompCode", "BranchCode", "UserID", "FinYear"] as const;
 export const VALIDATION_TYPES = ["required", "compare", "range", "regex", "unique", "exists", "notExists", "noDuplicate", "minRows", "custom"] as const;
+
+export const DEFAULT_PRESETS: { value: string; labelEn: string; labelAr: string; description: string }[] = [
+  { value: "GetDateNow()", labelEn: "GetDateNow()", labelAr: "التاريخ الحالي", description: "Current date yyyy-MM-dd" },
+  { value: "GetDateTimeNow()", labelEn: "GetDateTimeNow()", labelAr: "التاريخ والوقت الحالي", description: "Current datetime" },
+  { value: "UserName", labelEn: "UserName", labelAr: "اسم المستخدم", description: "Logged-in user name" },
+  { value: "UserID", labelEn: "UserID", labelAr: "رقم المستخدم", description: "Logged-in user ID" },
+  { value: "CompCode", labelEn: "CompCode", labelAr: "كود الشركة", description: "Current company code" },
+  { value: "BranchCode", labelEn: "BranchCode", labelAr: "كود الفرع", description: "Current branch code" },
+  { value: "FinYear", labelEn: "FinYear", labelAr: "السنة المالية", description: "Current fiscal year" },
+  { value: "0", labelEn: "0", labelAr: "صفر", description: "Zero" },
+  { value: "true", labelEn: "true", labelAr: "صح", description: "Boolean true" },
+  { value: "false", labelEn: "false", labelAr: "غلط", description: "Boolean false" },
+];

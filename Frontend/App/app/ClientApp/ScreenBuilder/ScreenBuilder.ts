@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useSys } from "../Shared/SystemUsing";
 import { useScreenBuilder } from "./store/useScreenBuilder";
 import { parseSettingsFromTs } from "./utils/configConverter";
 import { generateHookFile, generatePageFile } from "./utils/codeGenerator";
+import { ScreenConfigV4 } from "./types/ScreenConfig";
 
 export function ScreenBuilder() {
   const IsLangEN = useSys((s) => s.IsLangEN);
   const IsDark = useSys((s) => s.IsDark);
 
   const store = useScreenBuilder();
+  const [wizardType, setWizardType] = useState<"Grid" | "MasterDetail" | null>(null);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -30,7 +32,21 @@ export function ScreenBuilder() {
 
   const handleNewScreen = useCallback((type: "Grid" | "MasterDetail") => {
     if (store.isDirty && !confirm(IsLangEN ? "Unsaved changes will be lost. Continue?" : "التغييرات هتضيع. متأكد؟")) return;
-    store.newScreen(type);
+    setWizardType(type);
+  }, [store.isDirty, IsLangEN]);
+
+  const handleWizardComplete = useCallback((config: ScreenConfigV4) => {
+    store.loadConfig(config);
+    setWizardType(null);
+  }, []);
+
+  const handleWizardCancel = useCallback(() => {
+    setWizardType(null);
+  }, []);
+
+  const handleLoadTemplate = useCallback((config: ScreenConfigV4) => {
+    if (store.isDirty && !confirm(IsLangEN ? "Unsaved changes will be lost. Continue?" : "التغييرات هتضيع. متأكد؟")) return;
+    store.loadConfig(config);
   }, [store.isDirty, IsLangEN]);
 
   const handleImport = useCallback(() => {
@@ -81,14 +97,24 @@ export function ScreenBuilder() {
     downloadFile(`page.tsx`, pageCode);
   }, [store.config]);
 
+  const handleGoBack = useCallback(() => {
+    if (store.isDirty && !confirm(IsLangEN ? "Unsaved changes will be lost. Go back?" : "التغييرات هتضيع. ترجع؟")) return;
+    store.goToWelcome();
+  }, [store.isDirty, IsLangEN]);
+
   return {
     IsLangEN,
     IsDark,
     store,
+    wizardType,
     handleNewScreen,
+    handleWizardComplete,
+    handleWizardCancel,
+    handleLoadTemplate,
     handleImport,
     handleExport,
     handleSave,
+    handleGoBack,
   };
 }
 

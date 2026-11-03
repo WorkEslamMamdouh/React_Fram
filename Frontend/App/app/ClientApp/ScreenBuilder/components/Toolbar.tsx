@@ -9,9 +9,10 @@ interface ToolbarProps {
   onExport: () => void;
   onImport: () => void;
   onNewScreen: (type: "Grid" | "MasterDetail") => void;
+  onGoBack: () => void;
 }
 
-export default function Toolbar({ onSave, onExport, onImport, onNewScreen }: ToolbarProps) {
+export default function Toolbar({ onSave, onExport, onImport, onNewScreen, onGoBack }: ToolbarProps) {
   const isDark = useSys((s) => s.IsDark);
   const lang = useSys((s) => s.lang);
   const t = (en: string, ar: string) => lang === "ar" ? ar : en;
@@ -34,6 +35,13 @@ export default function Toolbar({ onSave, onExport, onImport, onNewScreen }: Too
 
   return (
     <div className={`flex items-center gap-2 px-3 py-2 border-b ${bg}`}>
+      {/* Back to Welcome */}
+      <button className={btn} onClick={onGoBack} title={t("Back to main screen", "رجوع للشاشة الرئيسية")}>
+        <i className="fa-solid fa-home mr-1" />{t("Home", "الرئيسية")}
+      </button>
+
+      <div className={`w-px h-6 ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+
       {/* New Screen */}
       <div className="flex gap-1">
         <button className={btn} onClick={() => onNewScreen("Grid")} title={t("New Grid Screen", "شاشة جريد جديدة")}>

@@ -24,6 +24,7 @@ export interface SelectedElement {
 interface ScreenBuilderState {
   config: ScreenConfigV4;
   isDirty: boolean;
+  isEditing: boolean;
   selectedElement: SelectedElement | null;
   previewMode: PreviewMode;
   history: ScreenConfigV4[];
@@ -32,6 +33,7 @@ interface ScreenBuilderState {
   // Screen actions
   newScreen: (type: "Grid" | "MasterDetail") => void;
   loadConfig: (cfg: ScreenConfigV4) => void;
+  goToWelcome: () => void;
   updateScreen: (updates: Partial<ScreenConfigV4>) => void;
   updatePermissions: (updates: Partial<ScreenConfigV4["permissions"]>) => void;
 
@@ -109,6 +111,7 @@ export const useScreenBuilder = create<ScreenBuilderState>((set, get) => {
   return {
     config: initial,
     isDirty: false,
+    isEditing: false,
     selectedElement: null,
     previewMode: "grid",
     history: [JSON.parse(JSON.stringify(initial))],
@@ -119,6 +122,7 @@ export const useScreenBuilder = create<ScreenBuilderState>((set, get) => {
       set({
         config: cfg,
         isDirty: false,
+        isEditing: true,
         selectedElement: null,
         history: [JSON.parse(JSON.stringify(cfg))],
         historyIndex: 0,
@@ -129,6 +133,19 @@ export const useScreenBuilder = create<ScreenBuilderState>((set, get) => {
       set({
         config: cfg,
         isDirty: false,
+        isEditing: true,
+        selectedElement: null,
+        history: [JSON.parse(JSON.stringify(cfg))],
+        historyIndex: 0,
+      });
+    },
+
+    goToWelcome: () => {
+      const cfg = createEmptyScreen("Grid");
+      set({
+        config: cfg,
+        isDirty: false,
+        isEditing: false,
         selectedElement: null,
         history: [JSON.parse(JSON.stringify(cfg))],
         historyIndex: 0,
