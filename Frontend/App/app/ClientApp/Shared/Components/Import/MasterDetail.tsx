@@ -123,9 +123,23 @@ interface FieldInputProps {
   compact?: boolean;
   isDark: boolean;
   t: (en: string, ar: string) => string;
+  row?: Record<string, any>;   // الصف الحالي — عشان {row.X} في شرط selectSearch / search
 }
 
-export function FieldInput({ col, value, onChange, onSearch, disabled, error, compact, isDark, t }: FieldInputProps) {
+// يبدّل {row.X} أو {X} في النص بقيمة فعلية من row (مع تحويل آمن للنص)
+export function resolveRowPlaceholders(input: string, row?: Record<string, any>): string {
+  if (!input || !row) return input || "";
+  return input.replace(/\{row\.([A-Za-z_][A-Za-z0-9_]*)\}|\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_m, k1, k2) => {
+    const key = k1 || k2;
+    const v = row[key];
+    if (v === null || v === undefined || v === "") return "NULL";
+    if (typeof v === "number") return String(v);
+    if (typeof v === "boolean") return v ? "1" : "0";
+    return "N'" + String(v).replace(/'/g, "''") + "'";
+  });
+}
+
+export function FieldInput({ col, value, onChange, onSearch, disabled, error, compact, isDark, t, row }: FieldInputProps) {
   const type = col.inputType || col.type || "text";
   const base = `w-full border rounded-lg ${compact ? "px-2 py-1.5" : "px-3 py-2.5"} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition`;
   const theme = isDark ? "bg-gray-800/70 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900";
@@ -136,6 +150,21 @@ export function FieldInput({ col, value, onChange, onSearch, disabled, error, co
   if (col.formula || (disabled && type !== "checkbox")) {
     const shown = isEmpty(value) ? "-" : type === "date" ? String(value).substring(0, 10) : typeof value === "number" ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(value);
     return <div className={`${cls} font-semibold`}>{shown}</div>;
+  }
+
+  if (type === "selectSearch" && (col as any).selectConfig) {
+    const sc = (col as any).selectConfig as { tableName: string; displayField: string; valueField: string; condition?: string };
+    const resolved = { ...sc, condition: resolveRowPlaceholders(sc.condition || "", row) };
+    const DynamicSelect = require("./DynamicSelect").default;
+    return (
+      <DynamicSelect
+        config={resolved}
+        value={value}
+        onChange={(v: any) => onChange(v)}
+        disabled={disabled}
+        error={!!error}
+      />
+    );
   }
 
   if (type === "select") {
@@ -612,6 +641,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
                   error={errors[errKey]}
                   isDark={isDark}
                   t={t}
+                  row={master}
                 />
                 {errors[errKey] && <p className="text-red-500 text-xs mt-1">{errors[errKey]}</p>}
               </div>
@@ -639,18 +669,28 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
       />
 
       {/* ===== نافذة البحث — lazy loaded ===== */}
-      {searchTarget && searchTarget.col.searchModal && (
-        <Suspense fallback={null}>
-          <SearchModal
-            isOpen={true}
-            onClose={() => setSearchTarget(null)}
-            onSelect={onSearchSelect}
-            config={searchTarget.col.searchModal}
-            lang={lang}
-            isDark={isDark}
-          />
-        </Suspense>
-      )}
+      {searchTarget && searchTarget.col.searchModal && (() => {
+        const baseCfg: any = searchTarget.col.searchModal;
+        const contextRow = searchTarget.detail < 0
+          ? master
+          : (details[searchTarget.detail] || [])[searchTarget.rowIndex] || {};
+        const resolvedCfg = {
+          ...baseCfg,
+          condition: resolveRowPlaceholders(baseCfg.condition || "", contextRow),
+        };
+        return (
+          <Suspense fallback={null}>
+            <SearchModal
+              isOpen={true}
+              onClose={() => setSearchTarget(null)}
+              onSelect={onSearchSelect}
+              config={resolvedCfg}
+              lang={lang}
+              isDark={isDark}
+            />
+          </Suspense>
+        );
+      })()}
     </div>
   );
 }
@@ -733,6 +773,7 @@ export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewO
                               compact
                               isDark={isDark}
                               t={t}
+                              row={r}
                             />
                           </td>
                         );
