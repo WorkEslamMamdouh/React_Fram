@@ -26,6 +26,17 @@ export interface SearchModalConfig {
   orderType?: SortDirection;
 }
 
+export interface DynamicSelectConfig {
+  tableName: string;
+  displayField: string;
+  valueField: string;
+  condition?: string;
+  attributes?: string[];
+  orderBy?: string;
+  orderType?: SortDirection;
+  placeholder?: { en: string; ar: string };
+}
+
 export interface DynamicGridColumn {
   field: string;
   NameDataBase?: string;
