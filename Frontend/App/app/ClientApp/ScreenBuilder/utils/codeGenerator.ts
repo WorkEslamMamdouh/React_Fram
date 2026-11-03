@@ -554,3 +554,114 @@ function parseTotals(totals: string): string {
     return `{ masterField: ${q(mf || "")}, detailField: ${q(df || "")}, type: ${q(tp || "sum")} }`;
   }).join(", ") + "]";
 }
+
+// ============================================================
+// Generate SQL Permissions Script
+// ============================================================
+
+export function generateSqlScript(cfg: ScreenConfigV4, database: string): string {
+  const p = cfg.permissions;
+  const module = cfg.module;
+  const titleAr = cfg.titleAr || module;
+  const titleEn = cfg.titleEn || module;
+  const parentMenu = p.parentMenu || "";
+  const iconColor = cfg.iconColor || "indigo";
+  const icon = cfg.icon || "fa-table-list";
+  const rolesStr = p.roles;
+
+  return `USE [${database}]
+GO
+
+DECLARE @ModuleCode NVARCHAR(100) = N'${module}'
+DECLARE @TitleAr NVARCHAR(200) = N'${titleAr}'
+DECLARE @TitleEn NVARCHAR(200) = N'${titleEn}'
+DECLARE @ParentMenu NVARCHAR(100) = N'${parentMenu}'
+DECLARE @IconColor NVARCHAR(50) = N'${iconColor}'
+DECLARE @Icon NVARCHAR(100) = N'${icon}'
+
+DECLARE @Roles TABLE (RoleId INT)
+${rolesStr
+    ? rolesStr.split(",").map(r => `INSERT INTO @Roles VALUES (${r.trim()})`).join("\n")
+    : `INSERT INTO @Roles SELECT RoleId FROM Sys_RoleUsers WHERE IsActive = 1 GROUP BY RoleId`
+  }
+
+DECLARE @Sort INT = ISNULL((SELECT MAX(MODULE_SORT) FROM Sys_Modules WHERE MODULE_MENU = @ParentMenu), 0) + 1
+
+BEGIN TRANSACTION
+BEGIN TRY
+
+    IF NOT EXISTS (SELECT 1 FROM Sys_Modules WHERE MODULE_CODE = @ModuleCode)
+    BEGIN
+        INSERT INTO Sys_Modules (MODULE_CODE, MODULE_MENU, MODULE_DESCE, MODULE_DESCA, Icon_Color, MODULE_ICON,
+            MODULE_SORT, [EXECUTE], [CREATE], [EDIT], [DELETE], [PRINT], [VIEW], [CUSTOM], AVAILABLE)
+        VALUES (@ModuleCode, @ParentMenu, @TitleEn, @TitleAr, @IconColor, @Icon,
+            @Sort, 1, 1, 1, 1, 1, 1, 0, 1)
+    END
+
+    INSERT INTO Sys_RoleModule (RoleId, MODULE_CODE, UserID,
+        [EXECUTE], [CREATE], [EDIT], [DELETE], [PRINT], [VIEW], [CUSTOM],
+        MODULE_MENU, MODULE_DESCE, MODULE_DESCA, Icon_Color, MODULE_ICON, MODULE_SORT, IS_Show)
+    SELECT r.RoleId, @ModuleCode, 0,
+        1, 1, 1, 1, 1, 1, 0,
+        @ParentMenu, @TitleEn, @TitleAr, @IconColor, @Icon, @Sort, 1
+    FROM @Roles r
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Sys_RoleModule rm
+        WHERE rm.RoleId = r.RoleId AND rm.MODULE_CODE = @ModuleCode AND rm.UserID = 0
+    )
+
+    COMMIT TRANSACTION
+    PRINT 'Module [' + @ModuleCode + '] added successfully.'
+END TRY
+BEGIN CATCH
+    ROLLBACK TRANSACTION
+    PRINT 'Error: ' + ERROR_MESSAGE()
+END CATCH
+GO
+${cfg.processTrans ? `
+-- G_ProcessTrans branch for TrType = '${cfg.trType}'
+-- Add this inside G_ProcessTrans:
+/*
+IF @TrType = '${cfg.trType}'
+BEGIN
+    SAVE TRANSACTION SavePoint_${cfg.trType}
+    BEGIN TRY
+        -- Your logic here
+        SET @Ok = 1
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION SavePoint_${cfg.trType}
+        SET @Ok = 0
+        SET @Msg = ERROR_MESSAGE()
+    END CATCH
+END
+*/
+` : ""}`;
+}
+
+// ============================================================
+// Generate Resources.ts entries
+// ============================================================
+
+export function generateResourcesEntries(cfg: ScreenConfigV4): { en: string; ar: string } {
+  const name = camel(cfg.module || "newScreen");
+  const en = [
+    `  ${name}_title: "${cfg.titleEn || cfg.module}",`,
+    `  ${name}_subtitle: "${cfg.subEn || ""}",`,
+    `  ${name}_refresh: "Refresh",`,
+  ].join("\n");
+  const ar = [
+    `  ${name}_title: "${cfg.titleAr || cfg.module}",`,
+    `  ${name}_subtitle: "${cfg.subAr || ""}",`,
+    `  ${name}_refresh: "تحديث",`,
+  ].join("\n");
+  return { en, ar };
+}
+
+// ============================================================
+// Generate Routes.tsx entry
+// ============================================================
+
+export function generateRoutesEntry(module: string): string {
+  return `  ${module}: HomeLayout,`;
+}
