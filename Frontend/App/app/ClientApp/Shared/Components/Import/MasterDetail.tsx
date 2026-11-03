@@ -20,6 +20,7 @@
 
 import React, { useCallback, useMemo, useState, lazy, Suspense } from "react";
 import DynamicGrid from "./DynamicGrid";
+import DynamicSelect from "./DynamicSelect";
 const SearchModal = lazy(() => import("./SearchModal"));
 import { SQL } from "../../CallDataBase";
 import { Sys } from "../../SystemTools";
@@ -155,12 +156,11 @@ export function FieldInput({ col, value, onChange, onSearch, disabled, error, co
   if (type === "selectSearch" && (col as any).selectConfig) {
     const sc = (col as any).selectConfig as { tableName: string; displayField: string; valueField: string; condition?: string };
     const resolved = { ...sc, condition: resolveRowPlaceholders(sc.condition || "", row) };
-    const DynamicSelect = require("./DynamicSelect").default;
     return (
       <DynamicSelect
         config={resolved}
         value={value}
-        onChange={(v: any) => onChange(v)}
+        onChange={(v: any) => onChange(v === "" || v == null ? null : v)}
         disabled={disabled}
         error={!!error}
       />

@@ -54,9 +54,8 @@ export default function DynamicSelect({
   );
 
   useEffect(() => {
-    if (fetchedRef.current && configRef.current === configKey) return;
+    if (configRef.current === configKey && fetchedRef.current) return;
     configRef.current = configKey;
-    fetchedRef.current = true;
 
     let cancelled = false;
 
@@ -74,14 +73,13 @@ export default function DynamicSelect({
           config.orderBy || config.valueField,
           config.orderType || "ASC"
         );
-        if (!cancelled) {
-          setOptions(result.data || []);
-        }
+        if (cancelled) return;
+        setOptions(result.data || []);
+        fetchedRef.current = true;
       } catch (err: any) {
-        if (!cancelled) {
-          setLoadError(err?.message || err?.toString() || "Error");
-          setOptions([]);
-        }
+        if (cancelled) return;
+        setLoadError(err?.message || err?.toString() || "Error");
+        setOptions([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
