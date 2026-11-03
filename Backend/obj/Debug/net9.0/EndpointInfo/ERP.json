@@ -5,6 +5,37 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/admin/login": {
+      "post": {
+        "tags": [
+          "AdminAuth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "get": {
         "tags": [
@@ -423,6 +454,347 @@
         }
       }
     },
+    "/api/ScreenBuilder/connect": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/tables": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/columns": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TableRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TableRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TableRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/resources": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/search-functions": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/list-search-functions": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/save-search-function": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveSearchFunctionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveSearchFunctionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveSearchFunctionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/delete-search-function": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteSearchFunctionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteSearchFunctionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteSearchFunctionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/execute-sql": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteSqlRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteSqlRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteSqlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/save-files": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFilesRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFilesRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFilesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/ScreenBuilder/scan-screens": {
+      "post": {
+        "tags": [
+          "ScreenBuilder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Shared/PushNotification": {
       "get": {
         "tags": [
@@ -461,6 +833,20 @@
   },
   "components": {
     "schemas": {
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "nullable": true
+          },
+          "pass": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "BulkInsertRequest": {
         "type": "object",
         "properties": {
@@ -490,6 +876,28 @@
           "dataList": {
             "type": "array",
             "items": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConnectRequest": {
+        "type": "object",
+        "properties": {
+          "server": {
+            "type": "string",
+            "nullable": true
+          },
+          "user": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "database": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -538,6 +946,20 @@
         },
         "additionalProperties": false
       },
+      "DeleteSearchFunctionRequest": {
+        "type": "object",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "DetailWrapper": {
         "type": "object",
         "properties": {
@@ -548,6 +970,32 @@
             "$ref": "#/components/schemas/DeleteRequest"
           },
           "detailForeignKeyColumn": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExecuteSqlRequest": {
+        "type": "object",
+        "properties": {
+          "server": {
+            "type": "string",
+            "nullable": true
+          },
+          "user": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "database": {
+            "type": "string",
+            "nullable": true
+          },
+          "sql": {
             "type": "string",
             "nullable": true
           }
@@ -709,6 +1157,156 @@
         },
         "additionalProperties": false
       },
+      "ResourceEntry": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "en": {
+            "type": "string",
+            "nullable": true
+          },
+          "ar": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveFilesRequest": {
+        "type": "object",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "dbScriptsPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "module": {
+            "type": "string",
+            "nullable": true
+          },
+          "tsCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "tsxCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "sqlCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceEntry"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveSearchFunctionRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "tableName": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyColumn": {
+            "type": "string",
+            "nullable": true
+          },
+          "returnField": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayField": {
+            "type": "string",
+            "nullable": true
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchFunctionColumn"
+            },
+            "nullable": true
+          },
+          "searchColumns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderType": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "originalName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScanRequest": {
+        "type": "object",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchFunctionColumn": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isVisible": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "TableModel": {
         "type": "object",
         "properties": {
@@ -789,6 +1387,36 @@
           },
           "returnTotalCount": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TableRequest": {
+        "type": "object",
+        "properties": {
+          "server": {
+            "type": "string",
+            "nullable": true
+          },
+          "user": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "database": {
+            "type": "string",
+            "nullable": true
+          },
+          "table": {
+            "type": "string",
+            "nullable": true
+          },
+          "view": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

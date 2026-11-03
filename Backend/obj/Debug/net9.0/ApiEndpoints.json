@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "ERP.Controllers.AdminAuthController",
+    "Method": "Login",
+    "RelativePath": "api/admin/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "ERP.Controllers.AdminAuthController\u002BAdminLoginDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "ERP.Controllers.AuthController",
     "Method": "Login",
     "RelativePath": "api/auth/login",
@@ -207,6 +223,182 @@
       {
         "Name": "request",
         "Type": "GateWay.App.ModelUpdateMasterDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "Columns",
+    "RelativePath": "api/ScreenBuilder/columns",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BTableRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "Connect",
+    "RelativePath": "api/ScreenBuilder/connect",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BConnectRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "DeleteSearchFunction",
+    "RelativePath": "api/ScreenBuilder/delete-search-function",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BDeleteSearchFunctionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "ExecuteSql",
+    "RelativePath": "api/ScreenBuilder/execute-sql",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BExecuteSqlRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "ListSearchFunctions",
+    "RelativePath": "api/ScreenBuilder/list-search-functions",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BScanRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "Resources",
+    "RelativePath": "api/ScreenBuilder/resources",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BConnectRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "SaveFiles",
+    "RelativePath": "api/ScreenBuilder/save-files",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BSaveFilesRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "SaveSearchFunction",
+    "RelativePath": "api/ScreenBuilder/save-search-function",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BSaveSearchFunctionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "ScanScreens",
+    "RelativePath": "api/ScreenBuilder/scan-screens",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BScanRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "SearchFunctions",
+    "RelativePath": "api/ScreenBuilder/search-functions",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BScanRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GateWay.Controllers.ScreenBuilderController",
+    "Method": "Tables",
+    "RelativePath": "api/ScreenBuilder/tables",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "GateWay.Controllers.ScreenBuilderController\u002BConnectRequest",
         "IsRequired": true
       }
     ],
