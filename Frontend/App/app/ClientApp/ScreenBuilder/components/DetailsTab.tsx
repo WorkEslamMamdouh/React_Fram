@@ -41,7 +41,7 @@ export default function DetailsTab({ connection, tables, searchFunctions, column
     }
   };
 
-  if (config.screenType !== "MasterDetail") {
+  if (config.screenType === "Grid") {
     return (
       <div className="flex items-center justify-center h-64">
         <div className={`text-center ${isDark ? "text-gray-500" : "text-gray-400"}`}>

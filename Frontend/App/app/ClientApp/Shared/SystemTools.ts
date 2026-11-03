@@ -7,6 +7,7 @@ import { BaseResponse } from "./Entities";
 // Components (lazy imports for client-side only)
 // =======================
 import { ShowMessage, MessageContainer, MessageType } from './Components/ShowMessage';
+import { ShowAlert, ShowConfirm, DialogContainer } from './Components/DialogModal';
 import { ErrorInput, ErrorInputField, useErrorInput, ErrorTextArea, ErrorSelect } from './Components/ErrorInput';
 
 // =======================
@@ -150,7 +151,20 @@ export async function CallApi<T extends BaseResponse<any>>(
   const key = `${options.controller}_${options.action}_${JSON.stringify(options.data)}`;
 
   if (pendingRequests.has(key)) {
-    return pendingRequests.get(key)!;
+    // نفس الطلب شغال بالفعل: نستنى نتيجته، بس لازم ننادي callbacks بتاعة الطلب ده كمان
+    // (وإلا اللي بيستنى onSuccess — زي SQL.Select — هيفضل مستني على طول)
+    return pendingRequests.get(key)!.then(
+      (res: T) => {
+        options.onSuccess?.(res);
+        options.onFinally?.();
+        return res;
+      },
+      (err: any) => {
+        options.onError?.(err);
+        options.onFinally?.();
+        throw err;
+      }
+    );
   }
 
   const requestPromise = (async (): Promise<T> => {
@@ -360,6 +374,11 @@ export const Sys = {
   // Messages
   ShowMessage,
   MessageContainer,
+
+  // Dialogs (بدل alert / confirm)
+  Alert: ShowAlert,
+  Confirm: ShowConfirm,
+  DialogContainer,
   
   // Error Input
   ErrorInput,

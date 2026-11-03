@@ -170,7 +170,15 @@ export const useTranslate = () => {
     // ===== SalesInvoice =====
     SalesInvoice_title: "Sales Invoices",
     SalesInvoice_subtitle: "Sales invoices and their items",
-    SalesInvoice_refresh: "Refresh"
+    SalesInvoice_refresh: "Refresh",
+    // ===== costCenterTree =====
+    costCenterTree_title: "Cost Centers",
+    costCenterTree_subtitle: "Cost centers tree",
+    costCenterTree_refresh: "Refresh",
+    // ===== cashTypesDemo =====
+    cashTypesDemo_title: "Cash Types",
+    cashTypesDemo_subtitle: "",
+    cashTypesDemo_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -332,6 +340,14 @@ export const useTranslate = () => {
     // ===== SalesInvoice =====
     SalesInvoice_title: "فواتير المبيعات",
     SalesInvoice_subtitle: "فواتير البيع والأصناف بتاعتها",
-    SalesInvoice_refresh: "تحديث"
+    SalesInvoice_refresh: "تحديث",
+    // ===== costCenterTree =====
+    costCenterTree_title: "مراكز التكلفة",
+    costCenterTree_subtitle: "شجرة مراكز التكلفة",
+    costCenterTree_refresh: "تحديث",
+    // ===== cashTypesDemo =====
+    cashTypesDemo_title: "أنواع النقدية",
+    cashTypesDemo_subtitle: "",
+    cashTypesDemo_refresh: "تحديث"
   }
 };

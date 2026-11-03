@@ -46,7 +46,7 @@ const newUid = () => "r" + ++uid;
 // ======================================================================
 
 // صف فاضي بالقيم الافتراضية
-function emptyRow(columns: MasterDetailColumn[]): Row {
+export function emptyRow(columns: MasterDetailColumn[]): Row {
   const row: Row = { __uid: newUid() };
   for (const c of columns) {
     if (c.DefaultValue !== undefined && c.DefaultValue !== null) row[c.field] = c.DefaultValue;
@@ -69,7 +69,7 @@ function applyFormulas(row: Row, columns: MasterDetailColumn[]): Row {
 }
 
 // بيحسب كل حاجة: صفوف التفاصيل ← المجاميع في الماستر ← حسابات الماستر
-function recalc(master: Row, details: Row[][], config: MasterDetailConfig): { master: Row; details: Row[][] } {
+export function recalc(master: Row, details: Row[][], config: MasterDetailConfig): { master: Row; details: Row[][] } {
   const newDetails = details.map((rows, i) => rows.map((r) => applyFormulas(r, config.details[i]?.columns || [])));
   let m = { ...master };
   config.details.forEach((d, i) => {
@@ -83,7 +83,7 @@ function recalc(master: Row, details: Row[][], config: MasterDetailConfig): { ma
 }
 
 // صف تفاصيل فاضي = مفيهوش ولا قيمة في الحقول اللي بتتكتب
-function isBlankRow(row: Row, columns: MasterDetailColumn[]): boolean {
+export function isBlankRow(row: Row, columns: MasterDetailColumn[]): boolean {
   return columns
     .filter((c) => c.editable !== false && !c.formula && c.IsSave !== false)
     .every((c) => isEmpty(row[c.field]) || row[c.field] === false || (c.DefaultValue !== undefined && row[c.field] === c.DefaultValue));
@@ -100,7 +100,7 @@ function toDbValue(c: MasterDetailColumn, v: any): any {
 }
 
 // الصف اللي بيتبعت للخادم: الأعمدة اللي IsSave بس
-function buildSaveRow(row: Row, columns: MasterDetailColumn[], skip: string[]): Row {
+export function buildSaveRow(row: Row, columns: MasterDetailColumn[], skip: string[]): Row {
   const out: Row = {};
   for (const c of columns) {
     if (c.IsSave === false || skip.includes(c.field)) continue;
@@ -125,7 +125,7 @@ interface FieldInputProps {
   t: (en: string, ar: string) => string;
 }
 
-function FieldInput({ col, value, onChange, onSearch, disabled, error, compact, isDark, t }: FieldInputProps) {
+export function FieldInput({ col, value, onChange, onSearch, disabled, error, compact, isDark, t }: FieldInputProps) {
   const type = col.inputType || col.type || "text";
   const base = `w-full border rounded-lg ${compact ? "px-2 py-1.5" : "px-3 py-2.5"} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition`;
   const theme = isDark ? "bg-gray-800/70 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900";
@@ -317,7 +317,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
     async (row: Row) => {
       const id = row?.[config.keyColumn];
       if (isEmpty(id)) return;
-      if (!confirm(t(`Delete record ${id} and all its details?`, `حذف السجل رقم ${id} وكل تفاصيله؟`))) return;
+      if (!(await Sys.Confirm(`Delete record ${id} and all its details?`, `حذف السجل رقم ${id} وكل تفاصيله؟`, { danger: true }))) return;
       const request: any = {
         compCode: config.compCode,
         branchCode: config.branchCode,
@@ -621,97 +621,22 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
       </div>
 
       {/* ===== التفاصيل ===== */}
-      {config.details.length > 0 && (
-        <div className={`rounded-2xl border shadow-lg ${card}`}>
-          {config.details.length > 1 && (
-            <div className={`flex gap-1 px-3 pt-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-              {config.details.map((d, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveTab(i)}
-                  className={`px-4 py-2 rounded-t-xl text-sm font-semibold ${activeTab === i ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : muted}`}
-                >
-                  {d.title} ({(details[i] || []).length})
-                </button>
-              ))}
-            </div>
-          )}
-
-          {config.details.map((d, di) => {
-            if (di !== activeTab) return null;
-            const rows = details[di] || [];
-            const cols = d.columns.filter((c) => c.IsVisibleDisplayInGrid !== false);
-            const sumFields = new Set((d.totals || []).filter((x) => (x.type || "sum") === "sum").map((x) => x.detailField));
-            return (
-              <div key={di} className="p-3">
-                {config.details.length === 1 && <h3 className="font-bold mb-2">{d.title}</h3>}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className={isDark ? "bg-gray-800" : "bg-gray-100"}>
-                        <th className="p-2 w-10">#</th>
-                        {cols.map((c) => (
-                          <th key={c.field} className="p-2 text-start font-semibold whitespace-nowrap" style={{ minWidth: c.width || 120 }}>
-                            {c.title}
-                            {c.IsRequired && c.editable !== false && !c.formula && <span className="text-red-500 mx-1">*</span>}
-                          </th>
-                        ))}
-                        <th className="p-2 w-12"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((r, ri) => (
-                        <tr key={r.__uid || ri} className={`border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
-                          <td className={`p-2 text-center ${muted}`}>{ri + 1}</td>
-                          {cols.map((c) => {
-                            const errKey = `d${di}.${ri}.${c.field}`;
-                            return (
-                              <td key={c.field} className="p-1 align-top">
-                                <FieldInput
-                                  col={c}
-                                  value={r[c.field]}
-                                  onChange={(v) => setDetailField(di, ri, c.field, v)}
-                                  onSearch={() => setSearchTarget({ col: c, detail: di, rowIndex: ri })}
-                                  disabled={viewOnly || c.editable === false}
-                                  error={errors[errKey]}
-                                  compact
-                                  isDark={isDark}
-                                  t={t}
-                                />
-                              </td>
-                            );
-                          })}
-                          <td className="p-1 text-center">
-                            {!viewOnly && <button onClick={() => removeRow(di, ri)} title={t("Delete row", "حذف الصف")} className="px-2 py-1 rounded-lg text-red-600 hover:bg-red-50">🗑️</button>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    {sumFields.size > 0 && rows.length > 0 && (
-                      <tfoot>
-                        <tr className={`font-bold ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                          <td className="p-2 text-center">Σ</td>
-                          {cols.map((c) => (
-                            <td key={c.field} className="p-2">
-                              {sumFields.has(c.field) ? round(rows.reduce((s, x) => s + n(x[c.field]), 0)).toLocaleString() : ""}
-                            </td>
-                          ))}
-                          <td></td>
-                        </tr>
-                      </tfoot>
-                    )}
-                  </table>
-                </div>
-                {!viewOnly && (
-                  <button onClick={() => addRow(di)} className="mt-3 px-4 py-2 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 font-semibold hover:bg-blue-50 w-full">
-                    ➕ {t("Add row", "إضافة صف")}
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <DetailsEditor
+        configs={config.details}
+        allRows={details}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        viewOnly={viewOnly}
+        errors={errors}
+        onChange={setDetailField}
+        onSearch={(c, di, ri) => setSearchTarget({ col: c, detail: di, rowIndex: ri })}
+        onAddRow={addRow}
+        onRemoveRow={removeRow}
+        isDark={isDark}
+        t={t}
+        card={card}
+        muted={muted}
+      />
 
       {/* ===== نافذة البحث — lazy loaded ===== */}
       {searchTarget && searchTarget.col.searchModal && (
@@ -726,6 +651,121 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
           />
         </Suspense>
       )}
+    </div>
+  );
+}
+// #endregion
+// ======================================================================
+// #region محرر التفاصيل (مشترك بين الماستر ديتيل وشاشة الشجرة)
+// ======================================================================
+export interface DetailsEditorProps {
+  configs: MasterDetailConfig["details"];
+  allRows: Row[][];
+  activeTab: number;
+  setActiveTab: (i: number) => void;
+  viewOnly: boolean;
+  errors: Record<string, string>;
+  onChange: (d: number, i: number, field: string, value: any) => void;
+  onSearch: (col: MasterDetailColumn, d: number, i: number) => void;
+  onAddRow: (d: number) => void;
+  onRemoveRow: (d: number, i: number) => void;
+  isDark: boolean;
+  t: (en: string, ar: string) => string;
+  card: string;
+  muted: string;
+}
+
+export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewOnly, errors, onChange, onSearch, onAddRow, onRemoveRow, isDark, t, card, muted }: DetailsEditorProps) {
+  if (configs.length === 0) return null;
+  return (
+    <div className={`rounded-2xl border shadow-lg ${card}`}>
+      {configs.length > 1 && (
+        <div className={`flex gap-1 px-3 pt-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+          {configs.map((d, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveTab(i)}
+              className={`px-4 py-2 rounded-t-xl text-sm font-semibold ${activeTab === i ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : muted}`}
+            >
+              {d.title} ({(allRows[i] || []).length})
+            </button>
+          ))}
+        </div>
+      )}
+
+      {configs.map((d, di) => {
+        if (di !== activeTab) return null;
+        const rows = allRows[di] || [];
+        const cols = d.columns.filter((c) => c.IsVisibleDisplayInGrid !== false);
+        const sumFields = new Set((d.totals || []).filter((x) => (x.type || "sum") === "sum").map((x) => x.detailField));
+        return (
+          <div key={di} className="p-3">
+            {configs.length === 1 && <h3 className="font-bold mb-2">{d.title}</h3>}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className={isDark ? "bg-gray-800" : "bg-gray-100"}>
+                    <th className="p-2 w-10">#</th>
+                    {cols.map((c) => (
+                      <th key={c.field} className="p-2 text-start font-semibold whitespace-nowrap" style={{ minWidth: c.width || 120 }}>
+                        {c.title}
+                        {c.IsRequired && c.editable !== false && !c.formula && <span className="text-red-500 mx-1">*</span>}
+                      </th>
+                    ))}
+                    <th className="p-2 w-12"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, ri) => (
+                    <tr key={r.__uid || ri} className={`border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+                      <td className={`p-2 text-center ${muted}`}>{ri + 1}</td>
+                      {cols.map((c) => {
+                        const errKey = `d${di}.${ri}.${c.field}`;
+                        return (
+                          <td key={c.field} className="p-1 align-top">
+                            <FieldInput
+                              col={c}
+                              value={r[c.field]}
+                              onChange={(v) => onChange(di, ri, c.field, v)}
+                              onSearch={() => onSearch(c, di, ri)}
+                              disabled={viewOnly || c.editable === false}
+                              error={errors[errKey]}
+                              compact
+                              isDark={isDark}
+                              t={t}
+                            />
+                          </td>
+                        );
+                      })}
+                      <td className="p-1 text-center">
+                        {!viewOnly && <button onClick={() => onRemoveRow(di, ri)} title={t("Delete row", "حذف الصف")} className="px-2 py-1 rounded-lg text-red-600 hover:bg-red-50">🗑️</button>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                {sumFields.size > 0 && rows.length > 0 && (
+                  <tfoot>
+                    <tr className={`font-bold ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                      <td className="p-2 text-center">Σ</td>
+                      {cols.map((c) => (
+                        <td key={c.field} className="p-2">
+                          {sumFields.has(c.field) ? round(rows.reduce((s, x) => s + n(x[c.field]), 0)).toLocaleString() : ""}
+                        </td>
+                      ))}
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+            {!viewOnly && (
+              <button onClick={() => onAddRow(di)} className="mt-3 px-4 py-2 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 font-semibold hover:bg-blue-50 w-full">
+                ➕ {t("Add row", "إضافة صف")}
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

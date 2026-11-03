@@ -775,7 +775,6 @@ C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\staticwebassets.build.json.cache
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\staticwebassets.development.json
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\staticwebassets.build.endpoints.json
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\swae.build.ex.cache
-C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\ERP.csproj.Up2Date
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\ERP.dll
 C:\PC\Work\React_Fram\Backend\obj\Debug\net9.0\refint\ERP.dll
@@ -874,3 +873,11 @@ E:\ExternalWork\React_Fram\Backend\obj\Debug\net9.0\refint\ERP.dll
 E:\ExternalWork\React_Fram\Backend\obj\Debug\net9.0\ERP.pdb
 E:\ExternalWork\React_Fram\Backend\obj\Debug\net9.0\ERP.genruntimeconfig.cache
 E:\ExternalWork\React_Fram\Backend\obj\Debug\net9.0\ref\ERP.dll
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\appsettings.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\eslam-197ff-firebase-adminsdk-s5d5j-61b161c435.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.staticwebassets.endpoints.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.exe
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.deps.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.runtimeconfig.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.dll
+C:\Users\ServerStitch\AppData\Local\Temp\claude\C--PC-Work-React-Fram\52834f99-9d27-4260-b68b-269649f13838\scratchpad\bld\ERP.pdb

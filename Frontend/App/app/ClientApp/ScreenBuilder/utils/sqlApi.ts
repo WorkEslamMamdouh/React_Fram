@@ -56,6 +56,20 @@ export async function executeSql(conn: SqlConnection, sql: string): Promise<{ su
   return post("/execute-sql", { ...conn, sql });
 }
 
+export interface SaveFilesInput {
+  projectPath: string;
+  dbScriptsPath?: string;
+  module: string;
+  tsCode: string;
+  tsxCode: string;
+  sqlCode?: string;
+  resources: { key: string; en: string; ar: string }[];
+}
+
+export async function saveFiles(input: SaveFilesInput): Promise<{ success: boolean; existed?: boolean; messages?: string[]; error?: string }> {
+  return post("/save-files", input);
+}
+
 export async function scanScreens(projectPath: string): Promise<{ success: boolean; screens?: ScannedScreen[]; error?: string }> {
   return post("/scan-screens", { projectPath });
 }

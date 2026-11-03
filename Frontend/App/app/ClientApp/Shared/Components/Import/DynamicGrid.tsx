@@ -1422,7 +1422,7 @@ export default function DynamicGrid({
   };
 
   const handleDelete = async (row: any) => {
-    if (!confirm(t(`Are you sure you want to delete record ${row[keyColumn]}?`, `هل أنت متأكد من حذف السجل رقم ${row[keyColumn]}؟`))) return;
+    if (!(await Sys.Confirm(`Are you sure you want to delete record ${row[keyColumn]}?`, `هل أنت متأكد من حذف السجل رقم ${row[keyColumn]}؟`, { danger: true }))) return;
     try {
       const request = {
         compCode,
@@ -1453,7 +1453,7 @@ export default function DynamicGrid({
       return;
     }
     
-    if (!confirm(t(`Delete ${selectedRows.length} selected record(s)?`, `حذف ${selectedRows.length} سجل؟`))) return;
+    if (!(await Sys.Confirm(`Delete ${selectedRows.length} selected record(s)?`, `حذف ${selectedRows.length} سجل؟`, { danger: true }))) return;
     
     let successCount = 0;
     let errorCount = 0;

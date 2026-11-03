@@ -6,7 +6,7 @@ import { FilterFieldType } from "../../Shared/Components/Import/AdvancedFilter";
 
 export interface ScreenConfigV4 {
   version: 4;
-  screenType: "Grid" | "MasterDetail";
+  screenType: ScreenType;
   module: string;
   table: string;
   view: string;
@@ -29,7 +29,34 @@ export interface ScreenConfigV4 {
   details: DetailConfigV4[];
   validations: ValidationConfigV4[];
   gridFilter: GridFilterConfigV4 | null;
+  tree: TreeSettingsV4;
   meta: ScreenMeta;
+}
+
+export type ScreenType = "Grid" | "MasterDetail" | "Tree";
+
+// إعدادات شاشة الشجرة (زي شجرة الحسابات / مراكز التكلفة)
+export interface TreeSettingsV4 {
+  codeColumn: string;      // كود العقدة  CC_CODE
+  parentColumn: string;    // كود الأب    PARENT_ACC
+  titleColumn: string;     // الاسم عربي  CC_DESCA
+  titleColumnEn: string;   // الاسم انجليزي CC_DESCL
+  levelColumn: string;     // المستوى     CC_LEVEL
+  leafColumn: string;      // نهائي/تفصيلي DETAIL
+  activeColumn: string;    // فعال        CC_ACTIVE
+  autoCode: boolean;       // كود الابن = كود الأب + مسلسل
+  codeDigits: number;      // خانات المسلسل
+  codeSeparator: string;   // فاصل بين كود الأب والمسلسل
+  searchColumns: string;   // أعمدة البحث مفصولة بفاصلة (فاضي = الكود والاسم)
+  treePageSize: number;    // عدد العقد في كل تحميل
+}
+
+export function createEmptyTree(): TreeSettingsV4 {
+  return {
+    codeColumn: "", parentColumn: "", titleColumn: "", titleColumnEn: "",
+    levelColumn: "", leafColumn: "", activeColumn: "",
+    autoCode: true, codeDigits: 2, codeSeparator: "", searchColumns: "", treePageSize: 50,
+  };
 }
 
 export interface PermissionsConfig {
@@ -67,6 +94,7 @@ export interface FieldConfigV4 {
   dateDisplayFormat?: string;
   dateMode?: "date" | "datetime";
   align?: "left" | "center" | "right";
+  noSave?: boolean;       // عمود محسوب في القاعدة أو موجود في الـ View بس → مابيتحفظش
 }
 
 export interface DetailConfigV4 {
@@ -153,7 +181,7 @@ export function createEmptyField(fieldName: string = ""): FieldConfigV4 {
   };
 }
 
-export function createEmptyScreen(type: "Grid" | "MasterDetail" = "Grid"): ScreenConfigV4 {
+export function createEmptyScreen(type: ScreenType = "Grid"): ScreenConfigV4 {
   return {
     version: 4,
     screenType: type,
@@ -165,7 +193,7 @@ export function createEmptyScreen(type: "Grid" | "MasterDetail" = "Grid"): Scree
     titleEn: "",
     subAr: "",
     subEn: "",
-    icon: "fa-table-list",
+    icon: type === "Tree" ? "fa-sitemap" : "fa-table-list",
     iconColor: "indigo",
     pageSize: 10,
     orderBy: "",
@@ -182,7 +210,23 @@ export function createEmptyScreen(type: "Grid" | "MasterDetail" = "Grid"): Scree
     details: [],
     validations: [],
     gridFilter: null,
+    tree: createEmptyTree(),
     meta: { lastModified: new Date().toISOString(), modifiedBy: "", source: "web" },
+  };
+}
+
+// بيكمّل أي إعدادات ناقصة (شاشات قديمة اتحفظت قبل إضافة خاصية جديدة)
+export function normalizeConfig(cfg: ScreenConfigV4): ScreenConfigV4 {
+  const base = createEmptyScreen(cfg.screenType || "Grid");
+  return {
+    ...base,
+    ...cfg,
+    permissions: { ...base.permissions, ...(cfg.permissions || {}) },
+    tree: { ...createEmptyTree(), ...(cfg.tree || {}) },
+    fields: cfg.fields || [],
+    listFields: cfg.listFields || [],
+    details: cfg.details || [],
+    validations: cfg.validations || [],
   };
 }
 

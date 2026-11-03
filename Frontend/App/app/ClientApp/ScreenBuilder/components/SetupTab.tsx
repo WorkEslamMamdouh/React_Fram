@@ -15,6 +15,22 @@ const ICON_COLORS = [
   { value: "teal", label: "Teal", cls: "bg-teal-500" },
 ];
 
+const SCREEN_TYPES = [
+  { key: "Grid" as const, icon: "fa-table-list", en: "Grid", ar: "جريد", hintEn: "One table, add/edit in a popup", hintAr: "جدول واحد، إضافة وتعديل في نافذة" },
+  { key: "MasterDetail" as const, icon: "fa-layer-group", en: "Master Detail", ar: "ماستر ديتيل", hintEn: "Header + rows (like an invoice)", hintAr: "رأس + صفوف (زي الفاتورة)" },
+  { key: "Tree" as const, icon: "fa-sitemap", en: "Tree", ar: "شجرة", hintEn: "Parent / child (chart of accounts)", hintAr: "أب وأبناء (زي شجرة الحسابات)" },
+];
+
+const TREE_COLS = [
+  { key: "codeColumn", en: "Code column", ar: "عمود الكود", hintEn: "unique node code, e.g. CC_CODE", hintAr: "كود العقدة (ميتكررش) مثلاً CC_CODE", required: true },
+  { key: "parentColumn", en: "Parent column", ar: "عمود الأب", hintEn: "holds the parent code, e.g. PARENT_ACC", hintAr: "فيه كود الأب مثلاً PARENT_ACC", required: true },
+  { key: "titleColumn", en: "Name (Arabic)", ar: "الاسم عربي", hintEn: "shown in the tree, e.g. CC_DESCA", hintAr: "اللي بيظهر في الشجرة مثلاً CC_DESCA", required: true },
+  { key: "titleColumnEn", en: "Name (English)", ar: "الاسم انجليزي", hintEn: "optional, e.g. CC_DESCL", hintAr: "اختياري مثلاً CC_DESCL", required: false },
+  { key: "levelColumn", en: "Level column", ar: "عمود المستوى", hintEn: "filled automatically = parent level + 1", hintAr: "بيتملي لوحده = مستوى الأب + 1", required: false },
+  { key: "leafColumn", en: "Detail / leaf column", ar: "عمود نهائي (تفصيلي)", hintEn: "bit: 1 = final node with no children", hintAr: "bit: 1 = عقدة نهائية مالهاش أبناء", required: false },
+  { key: "activeColumn", en: "Active column", ar: "عمود فعال", hintEn: "inactive nodes appear faded", hintAr: "العقد الموقوفة بتظهر باهتة", required: false },
+];
+
 interface SetupTabProps {
   fields: string[];
 }
@@ -41,24 +57,94 @@ export default function SetupTab({ fields }: SetupTabProps) {
       {/* Screen Type */}
       <div className={sectionCls}>
         <div className={headingCls}><i className="fa-solid fa-display text-blue-400" />{t("Screen Type", "نوع الشاشة")}</div>
-        <div className="flex gap-2">
-          {(["Grid", "MasterDetail"] as const).map((st) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {SCREEN_TYPES.map((st) => (
             <button
-              key={st}
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition border-2 ${
-                config.screenType === st
-                  ? "border-blue-500 bg-blue-600/10 text-blue-400"
+              key={st.key}
+              className={`px-4 py-3 rounded-xl text-sm font-medium transition border-2 text-start ${
+                config.screenType === st.key
+                  ? "border-blue-500 bg-blue-600/10 text-blue-500"
                   : isDark ? "border-gray-700 text-gray-400 hover:border-gray-600" : "border-gray-200 text-gray-500 hover:border-gray-300"
               }`}
-              onClick={() => updateScreen({ screenType: st })}
+              onClick={() => updateScreen({ screenType: st.key, ...(st.key === "Tree" && config.icon === "fa-table-list" ? { icon: "fa-sitemap", orderType: "ASC" as const } : {}) })}
             >
-              <i className={`fa-solid ${st === "Grid" ? "fa-table-list" : "fa-layer-group"} mr-2`} />
-              {st === "Grid" ? t("Grid", "جريد") : t("Master Detail", "ماستر ديتيل")}
+              <div className="flex items-center gap-2 font-semibold">
+                <i className={`fa-solid ${st.icon}`} />
+                {t(st.en, st.ar)}
+              </div>
+              <div className={`text-[11px] mt-1 font-normal ${isDark ? "text-gray-500" : "text-gray-400"}`}>{t(st.hintEn, st.hintAr)}</div>
             </button>
           ))}
         </div>
       </div>
 
+      {/* Tree Settings */}
+      {config.screenType === "Tree" && (
+        <div className={sectionCls}>
+          <div className={headingCls}>
+            <i className="fa-solid fa-sitemap text-emerald-400" />
+            {t("Tree Settings", "إعدادات الشجرة")}
+            <span className={`text-[11px] font-normal ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+              {t("— auto-filled when you load columns, change if needed", "— بتتملي لوحدها لما تحمّل الأعمدة، غيّرها لو محتاج")}
+            </span>
+          </div>
+          {fields.length === 0 && (
+            <div className="mb-3 px-3 py-2 rounded-lg text-xs bg-amber-500/10 text-amber-600 border border-amber-500/30">
+              <i className="fa-solid fa-circle-info mx-1" />
+              {t("Pick a table from the sidebar and press Load Columns first.", "اختار الجدول من القايمة الجانبية ودوس تحميل الأعمدة الأول.")}
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {TREE_COLS.map((c) => (
+              <div key={c.key}>
+                <label className={labelCls}>
+                  {t(c.en, c.ar)} {c.required && <span className="text-red-500">*</span>}
+                  <span className={`block text-[10px] font-normal ${isDark ? "text-gray-500" : "text-gray-400"}`}>{t(c.hintEn, c.hintAr)}</span>
+                </label>
+                <select
+                  className={`${inputCls} ${c.required && !(config.tree as any)[c.key] ? "border-red-400" : ""}`}
+                  value={(config.tree as any)[c.key] || ""}
+                  onChange={(e) => updateScreen({ tree: { ...config.tree, [c.key]: e.target.value } })}
+                >
+                  <option value="">{c.required ? t("-- choose --", "-- اختار --") : t("-- none --", "-- مفيش --")}</option>
+                  {fields.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
+            <label className="flex items-center gap-2 text-sm cursor-pointer sm:col-span-4">
+              <input type="checkbox" className={checkCls} checked={config.tree.autoCode} onChange={(e) => updateScreen({ tree: { ...config.tree, autoCode: e.target.checked } })} />
+              <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                {t("Auto code: child code = parent code + serial", "كود تلقائي: كود الابن = كود الأب + مسلسل")}
+              </span>
+            </label>
+            <div>
+              <label className={labelCls}>{t("Serial digits", "خانات المسلسل")}</label>
+              <input className={inputCls} type="number" min={1} max={8} value={config.tree.codeDigits} onChange={(e) => updateScreen({ tree: { ...config.tree, codeDigits: Number(e.target.value) || 2 } })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Separator", "فاصل")}</label>
+              <input className={inputCls} value={config.tree.codeSeparator} maxLength={3} placeholder={t("none", "مفيش")} onChange={(e) => updateScreen({ tree: { ...config.tree, codeSeparator: e.target.value } })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Nodes per load", "عقد في كل تحميل")}</label>
+              <input className={inputCls} type="number" min={10} max={500} value={config.tree.treePageSize} onChange={(e) => updateScreen({ tree: { ...config.tree, treePageSize: Number(e.target.value) || 50 } })} />
+            </div>
+            <div>
+              <label className={labelCls}>{t("Example", "مثال")}</label>
+              <div className={`${inputCls} font-mono text-xs`}>
+                01 → 01{config.tree.codeSeparator}{"1".padStart(config.tree.codeDigits || 2, "0")}
+              </div>
+            </div>
+            <div className="sm:col-span-4">
+              <label className={labelCls}>{t("Search columns (comma-separated, empty = code + name)", "أعمدة البحث (مفصولة بفاصلة، فاضي = الكود والاسم)")}</label>
+              <input className={inputCls} value={config.tree.searchColumns} placeholder={[config.tree.codeColumn, config.tree.titleColumn, config.tree.titleColumnEn].filter(Boolean).join(", ")} onChange={(e) => updateScreen({ tree: { ...config.tree, searchColumns: e.target.value } })} />
+            </div>
+          </div>
+        </div>
+      )}
       {/* Screen Info */}
       <div className={sectionCls}>
         <div className={headingCls}><i className="fa-solid fa-info-circle text-indigo-400" />{t("Screen Info", "معلومات الشاشة")}</div>

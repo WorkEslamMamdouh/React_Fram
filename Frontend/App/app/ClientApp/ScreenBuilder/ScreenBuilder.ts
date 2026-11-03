@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useSys } from "../Shared/SystemUsing";
+import { Sys } from "../Shared/SystemTools";
 import { useScreenBuilder } from "./store/useScreenBuilder";
 import { parseSettingsFromTs, convertV3toV4 } from "./utils/configConverter";
 import {
@@ -13,7 +14,29 @@ import {
   loadResources, scanScreens, loadSearchFunctions,
   sqlTypeToInputType, getKnownTitle, detectAutoValue, detectDefaultValue,
 } from "./utils/sqlApi";
-import { FieldConfigV4, createEmptyField, createEmptyScreen } from "./types/ScreenConfig";
+import { FieldConfigV4, createEmptyField, createEmptyScreen, ScreenType, TreeSettingsV4, ScreenConfigV4 } from "./types/ScreenConfig";
+
+// بيخمّن أعمدة الشجرة من أسماء الأعمدة (CC_CODE / PARENT_ACC / CC_DESCA ...)
+export function detectTreeColumns(names: string[], keyColumn: string): Partial<TreeSettingsV4> {
+  const find = (...res: RegExp[]) => {
+    for (const re of res) {
+      const hit = names.find((n) => re.test(n) && n !== keyColumn);
+      if (hit) return hit;
+    }
+    return "";
+  };
+  const parentColumn = find(/^parent/i, /_parent$/i, /parent/i);
+  const codeColumn = find(/^(?!.*parent).*_CODE$/i, /^(?!.*parent).*Code$/, /^Code$/i, /^(?!.*parent).*(No|Num)$/i);
+  return {
+    parentColumn,
+    codeColumn: codeColumn && !/^(CompCode|BranchCode)$/i.test(codeColumn) ? codeColumn : find(/^(?!Comp|Branch|.*parent).*code/i),
+    titleColumn: find(/DESCA$/i, /NameA$/i, /_AR$/i, /DescA/i, /Name$/i, /Desc/i),
+    titleColumnEn: find(/DESCL$/i, /DESCE$/i, /NameE$/i, /NameL$/i, /_EN$/i),
+    levelColumn: find(/level/i, /lvl/i),
+    leafColumn: find(/^DETAIL$/i, /IsDetail/i, /IsLeaf/i, /_DETAIL$/i),
+    activeColumn: find(/ACTIVE$/i, /^IsActive$/i),
+  };
+}
 
 const LS_KEY = "screenbuilder_connection";
 const LS_PROJECT = "screenbuilder_projectpath";
@@ -46,6 +69,7 @@ export function ScreenBuilder() {
   // UI state
   const [activeTab, setActiveTab] = useState<TabId>("setup");
   const [showHelp, setShowHelp] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [loading, setLoading] = useState("");
 
@@ -87,7 +111,7 @@ export function ScreenBuilder() {
       }
     } else {
       setIsConnected(false);
-      alert(res.error || "Connection failed");
+      Sys.Alert("Connection failed:\n" + (res.error || ""), "فشل الاتصال:\n" + (res.error || ""), "error");
     }
   }, [connection]);
 
@@ -118,7 +142,7 @@ export function ScreenBuilder() {
     const res = await loadColumns(connection, table, view || undefined);
     setLoading("");
     if (!res.success || !res.columns) {
-      alert(res.error || "Failed to load columns");
+      Sys.Alert("Failed to load columns:\n" + (res.error || ""), "فشل تحميل الأعمدة:\n" + (res.error || ""), "error");
       return;
     }
     return res.columns;
@@ -164,8 +188,9 @@ export function ScreenBuilder() {
       if (col.isIdentity || col.isComputed) {
         f.inForm = false;
       }
-      if (col.notInDb) {
+      if (col.isComputed || col.notInDb) {
         f.inForm = false;
+        f.noSave = true;
       }
 
       f.order = fields.length + 1;
@@ -178,13 +203,34 @@ export function ScreenBuilder() {
 
   // Main column load handler
   const handleColumnsLoaded = useCallback((columns: SqlColumn[], table: string, view: string) => {
-    const fields = buildFieldsFromColumns(columns);
+    const built = buildFieldsFromColumns(columns);
+    // دمج زي الديسك توب: الحقول المحفوظة بتفضل بإعداداتها، الجديدة بتتضاف مقفولة
+    const prev = useScreenBuilder.getState().config;
+    let fields = built;
+    if (prev.fields.length > 0 && prev.table.toLowerCase() === table.toLowerCase()) {
+      const byName = new Map(built.map((b) => [b.field.toLowerCase(), b]));
+      const kept = prev.fields.filter((e) => byName.has(e.field.toLowerCase()) || !!e.formula).map((e) => ({ ...e, noSave: byName.get(e.field.toLowerCase())?.noSave || e.noSave || (!byName.has(e.field.toLowerCase()) && !!e.formula) }));
+      const keptNames = new Set(kept.map((k) => k.field.toLowerCase()));
+      const added = built.filter((b) => !keptNames.has(b.field.toLowerCase())).map((b) => ({ ...b, inGrid: false, inForm: false, search: false, inFilter: false }));
+      fields = [...kept, ...added];
+      const missing = prev.fields.filter((e) => !byName.has(e.field.toLowerCase()) && !e.formula && !e.noSave).map((e) => e.field);
+      Sys.ShowMessage(
+        `Merged with saved settings: ${added.length} new column(s)` + (missing.length ? `, not in table: ${missing.join(", ")}` : ""),
+        `اتدمجت مع الإعدادات المحفوظة: ${added.length} عمود جديد` + (missing.length ? `، مش موجودين في الجدول: ${missing.join("، ")}` : ""),
+        missing.length ? "warning" : "info"
+      );
+    }
     const keyCol = columns.find(c => c.isIdentity)?.name || columns.find(c => c.isPK)?.name || columns[0]?.name || "";
 
-    store.updateScreen({ table, view, keyColumn: keyCol });
-    // Replace fields
     const state = useScreenBuilder.getState();
     const newConfig = { ...state.config, fields, table, view, keyColumn: keyCol };
+    if (newConfig.screenType === "Tree") {
+      const guess = detectTreeColumns(columns.map((c) => c.name), keyCol);
+      const tree = { ...newConfig.tree };
+      for (const [k, v] of Object.entries(guess)) if (v && !(tree as any)[k]) (tree as any)[k] = v;
+      newConfig.tree = tree;
+      if (!newConfig.orderBy && tree.codeColumn) { newConfig.orderBy = tree.codeColumn; newConfig.orderType = "ASC"; }
+    }
     store.loadConfig(newConfig);
     setActiveTab("fields");
   }, [buildFieldsFromColumns]);
@@ -201,12 +247,12 @@ export function ScreenBuilder() {
       }
       setActiveTab("setup");
     } catch {
-      alert("Failed to parse screen settings");
+      Sys.Alert("Failed to read the screen settings", "مقدرتش أقرا إعدادات الشاشة", "error");
     }
   }, []);
 
-  const handleNewScreen = useCallback((type: "Grid" | "MasterDetail") => {
-    if (store.isDirty && !confirm(IsLangEN ? "Unsaved changes will be lost. Continue?" : "التغييرات هتضيع. متأكد؟")) return;
+  const handleNewScreen = useCallback(async (type: ScreenType) => {
+    if (store.isDirty && !(await Sys.Confirm("Unsaved changes will be lost. Continue?", "التغييرات اللي ما اتحفظتش هتضيع. متأكد؟", { danger: true }))) return;
     const cfg = createEmptyScreen(type);
     store.loadConfig(cfg);
     setActiveTab("setup");
@@ -225,7 +271,7 @@ export function ScreenBuilder() {
         store.loadConfig(v4);
         setActiveTab("setup");
       } else {
-        alert(IsLangEN ? "No settings found in file" : "مفيش إعدادات في الملف");
+        Sys.Alert("No ScreenBuilder settings found in this file", "مفيش إعدادات ScreenBuilder في الملف ده", "warning");
       }
     };
     input.click();
@@ -247,6 +293,15 @@ export function ScreenBuilder() {
       downloadFile(`Add_${name}_Module.sql`, generateSqlScript(cfg, connection.database));
     }
   }, [store.config, connection.database]);
+
+  // تحميل مثال جاهز
+  const handleLoadExample = useCallback(async (cfg: ScreenConfigV4) => {
+    if (store.isDirty && !(await Sys.Confirm("Unsaved changes will be lost. Continue?", "التغييرات اللي ما اتحفظتش هتضيع. متأكد؟", { danger: true }))) return;
+    store.loadConfig(cfg);
+    setShowExamples(false);
+    setActiveTab("setup");
+    Sys.ShowMessage("Example loaded — check each tab, then Preview & Save", "المثال اتحمّل — لف على التابات وبعدين المعاينة والحفظ", "success");
+  }, [store.isDirty]);
 
   // Load project search functions
   const handleLoadProject = useCallback(async () => {
@@ -273,10 +328,11 @@ export function ScreenBuilder() {
     connection, setConnection, isConnected, setIsConnected,
     databases, setDatabases, tables, setTables,
     searchFunctions, setSearchFunctions,
-    resources, columnMeta,
+    resources, setResources, columnMeta,
     projectPath, setProjectPath,
     activeTab, setActiveTab,
     showHelp, setShowHelp,
+    showExamples, setShowExamples, handleLoadExample,
     showSidebar, setShowSidebar,
     loading,
     handleConnect, handleDatabaseChange, handleLoadColumns,

@@ -67,6 +67,7 @@ useEffect(() => {
           <div>
             {children}
             <Sys.MessageContainer />
+            <Sys.DialogContainer />
           </div>
         </Routes>
       </div>

@@ -4,7 +4,7 @@
 
 import {
   ScreenConfigV4, FieldConfigV4, DetailConfigV4,
-  ValidationConfigV4, createEmptyScreen,
+  ValidationConfigV4, createEmptyScreen, createEmptyTree, TreeSettingsV4,
 } from "../types/ScreenConfig";
 
 // ============================================================
@@ -41,6 +41,7 @@ export interface GridScreenSettingsV3 {
   ListFields: GridFieldSettingsV3[];
   Details: MdDetailSettingsV3[];
   Validations: ValidationSettingsV3[];
+  Tree?: TreeSettingsV4;           // جديد: إعدادات الشجرة (الأداة الديسك توب بتتجاهلها)
 }
 
 export interface GridFieldSettingsV3 {
@@ -186,6 +187,7 @@ export function convertV3toV4(v3: GridScreenSettingsV3): ScreenConfigV4 {
   cfg.listFields = (v3.ListFields || []).map(fieldV3toV4);
   cfg.details = (v3.Details || []).map(detailV3toV4);
   cfg.validations = (v3.Validations || []).map(validationV3toV4);
+  cfg.tree = { ...createEmptyTree(), ...(v3.Tree || {}) };
   cfg.meta = { lastModified: new Date().toISOString(), modifiedBy: "", source: "desktop" };
   return cfg;
 }
@@ -282,6 +284,7 @@ export function convertV4toV3(v4: ScreenConfigV4): GridScreenSettingsV3 {
     ListFields: v4.listFields.map(fieldV4toV3),
     Details: v4.details.map(detailV4toV3),
     Validations: v4.validations.map(validationV4toV3),
+    ...(v4.screenType === "Tree" ? { Tree: v4.tree } : {}),
   };
 }
 

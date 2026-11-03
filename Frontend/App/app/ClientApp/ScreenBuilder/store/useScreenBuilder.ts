@@ -6,7 +6,7 @@ import { create } from "zustand";
 import {
   ScreenConfigV4, FieldConfigV4, DetailConfigV4, ValidationConfigV4,
   GridFilterConfigV4, createEmptyScreen, createEmptyField,
-  createEmptyDetail, createEmptyValidation,
+  createEmptyDetail, createEmptyValidation, normalizeConfig, ScreenType,
 } from "../types/ScreenConfig";
 
 // ============================================================
@@ -31,7 +31,7 @@ interface ScreenBuilderState {
   historyIndex: number;
 
   // Screen actions
-  newScreen: (type: "Grid" | "MasterDetail") => void;
+  newScreen: (type: ScreenType) => void;
   loadConfig: (cfg: ScreenConfigV4) => void;
   goToWelcome: () => void;
   updateScreen: (updates: Partial<ScreenConfigV4>) => void;
@@ -129,7 +129,8 @@ export const useScreenBuilder = create<ScreenBuilderState>((set, get) => {
       });
     },
 
-    loadConfig: (cfg) => {
+    loadConfig: (raw) => {
+      const cfg = normalizeConfig(raw);
       set({
         config: cfg,
         isDirty: false,

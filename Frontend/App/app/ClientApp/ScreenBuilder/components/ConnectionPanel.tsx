@@ -20,6 +20,8 @@ interface ConnectionPanelProps {
   setDatabases: (d: string[]) => void;
   tables: { name: string; type: string }[];
   setTables: (t: { name: string; type: string }[]) => void;
+  projectPath: string;
+  setProjectPath: (p: string) => void;
 }
 
 const LS_KEY = "screenbuilder_connection";
@@ -29,32 +31,40 @@ export default function ConnectionPanel(props: ConnectionPanelProps) {
   const lang = useSys((s) => s.lang);
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
 
-  const { connection, setConnection, isConnected, setIsConnected, databases, setDatabases, tables, setTables } = props;
+  const { connection, setConnection, isConnected, setIsConnected, databases, setDatabases, tables, setTables, projectPath, setProjectPath } = props;
 
   const [collapsed, setCollapsed] = useState(false);
   const [loading, setLoading] = useState("");
   const [error, setError] = useState("");
   const [selectedTable, setSelectedTable] = useState("");
   const [selectedView, setSelectedView] = useState("");
-  const [projectPath, setProjectPath] = useState("");
   const [scannedScreens, setScannedScreens] = useState<{ name: string; screenType: string; table: string; hasSettings: boolean; settingsJson: string }[]>([]);
 
-  useEffect(() => {
+  const saveToStorage = useCallback((conn: SqlConnection, _path?: string) => {
     try {
-      const saved = localStorage.getItem(LS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setConnection(parsed);
-        if (parsed.projectPath) setProjectPath(parsed.projectPath);
-      }
+      localStorage.setItem(LS_KEY, JSON.stringify(conn));
     } catch {}
   }, []);
 
-  const saveToStorage = useCallback((conn: SqlConnection, path?: string) => {
+  // اتصال تلقائي بالإعدادات المحفوظة (زي الديسك توب: تفتح تلاقي كل حاجة جاهزة)
+  useEffect(() => {
+    let saved: any = null;
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ ...conn, projectPath: path || projectPath }));
+      saved = JSON.parse(localStorage.getItem(LS_KEY) || "null");
     } catch {}
-  }, [projectPath]);
+    if (saved?.projectPath && !projectPath) setProjectPath(saved.projectPath);
+    if (!saved?.server || !saved?.user || !saved?.password || isConnected) return;
+    (async () => {
+      setLoading("connect");
+      const res = await testConnection(saved);
+      setLoading("");
+      if (!res.success || !res.databases) return;
+      setDatabases(res.databases);
+      setIsConnected(true);
+      if (saved.database && res.databases.includes(saved.database)) await handleDbChange(saved.database, saved);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateConn = (key: keyof SqlConnection, val: string) => {
     const next = { ...connection, [key]: val };
@@ -76,9 +86,8 @@ export default function ConnectionPanel(props: ConnectionPanelProps) {
     }
   };
 
-  const handleDbChange = async (db: string) => {
-    updateConn("database", db);
-    const conn = { ...connection, database: db };
+  const handleDbChange = async (db: string, base?: SqlConnection) => {
+    const conn = { ...(base || connection), database: db };
     setConnection(conn);
     setLoading("tables");
     setError("");

@@ -9,6 +9,7 @@ import DetailsTab from "./components/DetailsTab";
 import ValidationsTab from "./components/ValidationsTab";
 import PreviewTab from "./components/PreviewTab";
 import HelpPanel from "./components/HelpPanel";
+import ExamplesModal from "./components/ExamplesModal";
 
 export default function InitalizeComponent() {
   const p = ScreenBuilder();
@@ -22,12 +23,13 @@ export default function InitalizeComponent() {
   const tabActive = d ? "text-blue-400 bg-gray-800 border-b-2 border-blue-400" : "text-blue-600 bg-blue-50 border-b-2 border-blue-600";
 
   const isMD = p.store.config.screenType === "MasterDetail";
+  const isTree = p.store.config.screenType === "Tree";
 
   const tabs: { id: TabId; icon: string; en: string; ar: string; show: boolean }[] = [
     { id: "setup", icon: "fa-gear", en: "Setup", ar: "الإعداد", show: true },
     { id: "fields", icon: "fa-table-columns", en: "Fields", ar: "الحقول", show: true },
     { id: "list", icon: "fa-list", en: "List", ar: "القائمة", show: isMD },
-    { id: "details", icon: "fa-layer-group", en: "Details", ar: "التفاصيل", show: isMD },
+    { id: "details", icon: "fa-layer-group", en: isTree ? "Node Details" : "Details", ar: isTree ? "تفاصيل العقدة" : "التفاصيل", show: isMD || isTree },
     { id: "validations", icon: "fa-shield-check", en: "Validations", ar: "التحققات", show: true },
     { id: "preview", icon: "fa-code", en: "Preview & Save", ar: "المعاينة والحفظ", show: true },
   ];
@@ -39,6 +41,9 @@ export default function InitalizeComponent() {
 
   return (
     <div className={`flex h-screen overflow-hidden ${bg}`}>
+      {/* Examples */}
+      {p.showExamples && <ExamplesModal onClose={() => p.setShowExamples(false)} onPick={p.handleLoadExample} />}
+
       {/* Help Panel */}
       <HelpPanel activeTab={p.activeTab} isOpen={p.showHelp} onClose={() => p.setShowHelp(false)} />
 
@@ -48,7 +53,7 @@ export default function InitalizeComponent() {
           <ConnectionPanel
             onColumnsLoaded={p.handleColumnsLoaded}
             onScreenLoaded={p.handleScreenLoaded}
-            onResourcesLoaded={() => {}}
+            onResourcesLoaded={p.setResources}
             onSearchFunctionsLoaded={p.setSearchFunctions}
             connection={p.connection}
             setConnection={p.setConnection}
@@ -58,6 +63,8 @@ export default function InitalizeComponent() {
             setDatabases={p.setDatabases}
             tables={p.tables}
             setTables={p.setTables}
+            projectPath={p.projectPath}
+            setProjectPath={p.setProjectPath}
           />
         </div>
       )}
@@ -78,6 +85,8 @@ export default function InitalizeComponent() {
           <span className={`px-2 py-0.5 rounded text-xs font-bold ${
             isMD
               ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+              : isTree
+              ? "bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"
               : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
           }`}>
             {p.store.config.screenType}
@@ -97,6 +106,12 @@ export default function InitalizeComponent() {
           </button>
           <button onClick={() => p.handleNewScreen("MasterDetail")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${d ? "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700" : "bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200"}`}>
             <i className="fa-solid fa-layer-group mr-1" />{t("M/D", "م/ت")}
+          </button>
+          <button onClick={() => p.handleNewScreen("Tree")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${d ? "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700" : "bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200"}`}>
+            <i className="fa-solid fa-sitemap mr-1" />{t("Tree", "شجرة")}
+          </button>
+          <button onClick={() => p.setShowExamples(true)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${d ? "bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 border border-amber-700/50" : "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200"}`}>
+            <i className="fa-solid fa-lightbulb mr-1" />{t("Examples", "أمثلة")}
           </button>
 
           <div className={`w-px h-5 ${d ? "bg-gray-700" : "bg-gray-300"}`} />
@@ -158,7 +173,7 @@ export default function InitalizeComponent() {
               columnMeta={p.columnMeta}
             />
           )}
-          {p.activeTab === "details" && isMD && (
+          {p.activeTab === "details" && (isMD || isTree) && (
             <DetailsTab
               connection={p.connection}
               tables={p.tables}
@@ -171,7 +186,7 @@ export default function InitalizeComponent() {
             <ValidationsTab allFields={allFields} />
           )}
           {p.activeTab === "preview" && (
-            <PreviewTab connection={p.connection} database={p.connection.database} />
+            <PreviewTab connection={p.connection} database={p.connection.database} projectPath={p.projectPath} />
           )}
         </div>
 

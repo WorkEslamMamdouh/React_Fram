@@ -75,7 +75,7 @@ function InitializeEvents() {
     function test() {    
 
 
-        alert(100)
+        Sys.Alert("100", "100", "info");
     }
 
 
