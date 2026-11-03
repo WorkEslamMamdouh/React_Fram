@@ -178,7 +178,11 @@ export const useTranslate = () => {
     // ===== cashTypesDemo =====
     cashTypesDemo_title: "Cash Types",
     cashTypesDemo_subtitle: "",
-    cashTypesDemo_refresh: "Refresh"
+    cashTypesDemo_refresh: "Refresh",
+    // ===== cost =====
+    cost_Center_title: "Cost_Center",
+    cost_Center_subtitle: "",
+    cost_Center_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -348,6 +352,10 @@ export const useTranslate = () => {
     // ===== cashTypesDemo =====
     cashTypesDemo_title: "أنواع النقدية",
     cashTypesDemo_subtitle: "",
-    cashTypesDemo_refresh: "تحديث"
+    cashTypesDemo_refresh: "تحديث",
+    // ===== cost =====
+    cost_Center_title: "Cost_Center",
+    cost_Center_subtitle: "",
+    cost_Center_refresh: "تحديث"
   }
 };

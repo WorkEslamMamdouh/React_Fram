@@ -59,6 +59,7 @@ useEffect(() => {
     Admin: AdminLayout,
     ScreenBuilder: AdminLayout,
     Home: HomeLayout,
+    Cost_Center: HomeLayout,
     CashTypesDemo: HomeLayout,
     CostCenterTree: HomeLayout,
     SalesInvoice: HomeLayout,
