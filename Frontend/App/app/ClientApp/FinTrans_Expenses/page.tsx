@@ -1,8 +1,8 @@
 "use client";
 
 // =====================================================================================
-//  📄 page.tsx   ←  ملف الشكل (HTML) بس — شاشة المصروفات
-//  اتعمل أوتوماتيك من برنامج CreatePageReact — كل حاجة جاية من FinTrans_Expenses.ts عن طريق p.
+//  ðŸ“„ page.tsx   â†  Ù…Ù„Ù Ø§Ù„Ø´ÙƒÙ„ (HTML) Ø¨Ø³ â€” Ø´Ø§Ø´Ø© Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª
+//  Ø§ØªØ¹Ù…Ù„ Ø£ÙˆØªÙˆÙ…Ø§ØªÙŠÙƒ Ù…Ù† Ø¨Ø±Ù†Ø§Ù…Ø¬ CreatePageReact â€” ÙƒÙ„ Ø­Ø§Ø¬Ø© Ø¬Ø§ÙŠØ© Ù…Ù† FinTrans_Expenses.ts Ø¹Ù† Ø·Ø±ÙŠÙ‚ p.
 // =====================================================================================
 
 import { useMemo } from "react";
@@ -12,7 +12,7 @@ import { useSys } from "../Shared/SystemUsing";
 import DynamicGrid from "../Shared/Components/Import/DynamicGrid";
 
 // =======================
-// نقطة البداية (نفس شاشة Login)
+// Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© (Ù†ÙØ³ Ø´Ø§Ø´Ø© Login)
 // =======================
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -37,7 +37,7 @@ type Props = _ReturnType & {
 };
 
 // =======================
-// الشاشة
+// Ø§Ù„Ø´Ø§Ø´Ø©
 // =======================
 function FinTrans_ExpensesPage(p: Props) {
   const L = p.Lang;
@@ -51,8 +51,8 @@ function FinTrans_ExpensesPage(p: Props) {
     ? "bg-gray-800 border-gray-600 text-gray-200 hover:border-blue-500"
     : "bg-white border-gray-300 text-gray-700 hover:border-blue-600";
 
-  // 👇 أي عمود نوعه select بيظهر في الجدول كشارة فيها اسم الاختيار
-  //    لازم useMemo عشان الجدول ميعيدش التحميل على طول
+  // ðŸ‘‡ Ø£ÙŠ Ø¹Ù…ÙˆØ¯ Ù†ÙˆØ¹Ù‡ select Ø¨ÙŠØ¸Ù‡Ø± ÙÙŠ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ÙƒØ´Ø§Ø±Ø© ÙÙŠÙ‡Ø§ Ø§Ø³Ù… Ø§Ù„Ø§Ø®ØªÙŠØ§Ø±
+  //    Ù„Ø§Ø²Ù… useMemo Ø¹Ø´Ø§Ù† Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ù…ÙŠØ¹ÙŠØ¯Ø´ Ø§Ù„ØªØ­Ù…ÙŠÙ„ Ø¹Ù„Ù‰ Ø·ÙˆÙ„
   const columns = useMemo(
     () =>
       p.grid.Columns.map((col) =>
@@ -68,24 +68,8 @@ function FinTrans_ExpensesPage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ العنوان ============ */}
-        <div className={`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${card}`}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-              <i className="fa-solid fa-table-list"></i>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold truncate">{L.FinTrans_Expenses_title}</h1>
-              <p className={`text-sm ${muted}`}>{L.FinTrans_Expenses_subtitle}</p>
-            </div>
-          </div>
-
-          <button onClick={p.RefreshGrid} className={`px-4 py-2 rounded-xl border-2 font-medium transition ${btnSecondary}`}>
-            <i className="fa-solid fa-rotate mx-1"></i> {L.FinTrans_Expenses_refresh}
-          </button>
-        </div>
-
-        {/* ============ الجدول ============ */}
+        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
+        {/* ============ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ============ */}
         <DynamicGrid
           key={p.gridKey}
           tableName={p.grid.TableName}
@@ -116,7 +100,7 @@ function FinTrans_ExpensesPage(p: Props) {
 }
 
 // =====================================================================================
-//  شارة الاختيار جوه الجدول (للأعمدة اللي نوعها select)
+//  Ø´Ø§Ø±Ø© Ø§Ù„Ø§Ø®ØªÙŠØ§Ø± Ø¬ÙˆÙ‡ Ø§Ù„Ø¬Ø¯ÙˆÙ„ (Ù„Ù„Ø£Ø¹Ù…Ø¯Ø© Ø§Ù„Ù„ÙŠ Ù†ÙˆØ¹Ù‡Ø§ select)
 // =====================================================================================
 function OptionBadge({ value, options }: { value: any; options: { value: any; label: string }[] }) {
   if (value === null || value === undefined || value === "") return <span>-</span>;

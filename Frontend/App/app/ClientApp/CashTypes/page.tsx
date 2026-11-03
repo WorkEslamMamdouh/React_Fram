@@ -1,8 +1,8 @@
 "use client";
 
 // =====================================================================================
-//  📄 page.tsx   ←  ملف الشكل (HTML) بس — شاشة أنواع الماليات
-//  كل حاجة جاية من  CashTypes.ts  عن طريق  p.
+//  ðŸ“„ page.tsx   â†  Ù…Ù„Ù Ø§Ù„Ø´ÙƒÙ„ (HTML) Ø¨Ø³ â€” Ø´Ø§Ø´Ø© Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ù…Ø§Ù„ÙŠØ§Øª
+//  ÙƒÙ„ Ø­Ø§Ø¬Ø© Ø¬Ø§ÙŠØ© Ù…Ù†  CashTypes.ts  Ø¹Ù† Ø·Ø±ÙŠÙ‚  p.
 // =====================================================================================
 
 import { CashTypes } from "./CashTypes";
@@ -11,7 +11,7 @@ import { useSys } from "../Shared/SystemUsing";
 import DynamicGrid from "../Shared/Components/Import/DynamicGrid";
 
 // =======================
-// نقطة البداية (نفس شاشة Login)
+// Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© (Ù†ÙØ³ Ø´Ø§Ø´Ø© Login)
 // =======================
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -36,7 +36,7 @@ type Props = _ReturnType & {
 };
 
 // =======================
-// الشاشة
+// Ø§Ù„Ø´Ø§Ø´Ø©
 // =======================
 function CashTypesPage(p: Props) {
   const L = p.Lang;
@@ -55,24 +55,8 @@ function CashTypesPage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ العنوان ============ */}
-        <div className={`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${card}`}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-              <i className="fa-solid fa-money-bill-wave"></i>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold truncate">{L.ct_title}</h1>
-              <p className={`text-sm ${muted}`}>{L.ct_subtitle}</p>
-            </div>
-          </div>
-
-          <button onClick={p.RefreshGrid} className={`px-4 py-2 rounded-xl border-2 font-medium transition ${btnSecondary}`}>
-            <i className="fa-solid fa-rotate mx-1"></i> {L.ct_refresh}
-          </button>
-        </div>
-
-        {/* ============ الجدول ============ */}
+        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
+        {/* ============ Ø§Ù„Ø¬Ø¯ÙˆÙ„ ============ */}
         <DynamicGrid
           key={p.gridKey}
           tableName={p.grid.TableName}
@@ -85,7 +69,7 @@ function CashTypesPage(p: Props) {
           compCode={p.grid.CompCode}
           branchCode={p.grid.BranchCode}
           keyTrType={p.grid.TrType}               // 'CashBox'
-          runProcessTrans={p.grid.RunProcessTrans} // شغّل G_ProcessTrans
+          runProcessTrans={p.grid.RunProcessTrans} // Ø´ØºÙ‘Ù„ G_ProcessTrans
           height="calc(100vh - 140px)"
           enableInsert={true}
           enableUpdate={true}

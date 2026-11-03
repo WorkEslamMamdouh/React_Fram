@@ -43,58 +43,11 @@ function SalesApprovalPage(p: Props) {
     <>
       {p.stylesheet}
       <div className="p-2 md:p-4 space-y-4">
-        <div className={`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${card}`}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-              <i className="fa-solid fa-check-double"></i>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold truncate">{L.salesApproval_title}</h1>
-              <p className={`text-sm ${muted}`}>{L.salesApproval_subtitle}</p>
-            </div>
-          </div>
-          <div className="flex items-end gap-2 flex-wrap">
-            <div>
-              <label className={`text-[11px] block ${muted}`}>{IsLangEN ? "Date" : "تاريخ"} ({IsLangEN ? "From" : "من"})</label>
-              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={`px-2 py-1.5 rounded-lg border text-sm ${d ? "bg-gray-800 border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-800"}`} />
-            </div>
-            <div>
-              <label className={`text-[11px] block ${muted}`}>{IsLangEN ? "Date" : "تاريخ"} ({IsLangEN ? "To" : "إلى"})</label>
-              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={`px-2 py-1.5 rounded-lg border text-sm ${d ? "bg-gray-800 border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-800"}`} />
-            </div>
-            {(!fromDate || !toDate) && (
-              <span className="text-[11px] text-amber-500 self-center">{IsLangEN ? "Filter required" : "الفلتر مطلوب"}</span>
-            )}
-          </div>
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+          
           <button onClick={p.RefreshGrid} className={`px-4 py-2 rounded-xl border-2 font-medium transition ${btnSecondary}`}>
             <i className="fa-solid fa-rotate mx-1"></i> {L.salesApproval_refresh}
           </button>
         </div>
-
-        <DynamicGrid
-          key={p.gridKey}
-          tableName={p.grid.TableName}
-          keyColumn={p.grid.KeyColumn}
-          columns={p.grid.Columns}
-          condition={p.grid.Condition + headerFilterClause}
-          orderBy={p.grid.KeyColumn}
-          orderType="DESC"
-          pageSize={15}
-          compCode={p.grid.CompCode}
-          branchCode={p.grid.BranchCode}
-          keyTrType={p.grid.TrType}
-          runProcessTrans={p.grid.RunProcessTrans}
-          height="calc(100vh - 140px)"
-          enableInsert={false}
-          enableUpdate={false}
-          enableDelete={false}
-          enableSearch={true}
-          enableExport={true}
-          enableSort={true}
-          enableAdvancedFilter={true}
-          filterFields={p.grid.FilterFields}
-        />
-      </div>
-    </>
   );
 }

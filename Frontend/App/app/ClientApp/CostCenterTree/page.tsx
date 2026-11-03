@@ -32,16 +32,6 @@ function CostCenterTreePage(p: Props) {
     <>
       {p.stylesheet}
       <div className="p-2 md:p-4 space-y-4">
-        <div className={`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex items-center gap-3 ${card}`}>
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-            <i className="fa-solid fa-sitemap"></i>
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-bold truncate">{L.costCenterTree_title}</h1>
-            <p className={`text-sm ${muted}`}>{L.costCenterTree_subtitle}</p>
-          </div>
-        </div>
-
         <TreeScreen config={p.Config} />
       </div>
     </>

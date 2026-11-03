@@ -1,9 +1,9 @@
 "use client";
 
 // =====================================================================================
-//  📄 page.tsx   ←  ملف الشكل (HTML) بس — شاشة فواتير المبيعات
-//  اتعمل أوتوماتيك من برنامج CreatePageReact — كل حاجة جاية من SalesInvoice.ts عن طريق p.
-//  والشغل كله (القائمة + الفورم + التفاصيل + الحفظ) في <MasterDetail />
+//  ðŸ“„ page.tsx   â†  Ù…Ù„Ù Ø§Ù„Ø´ÙƒÙ„ (HTML) Ø¨Ø³ â€” Ø´Ø§Ø´Ø© ÙÙˆØ§ØªÙŠØ± Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª
+//  Ø§ØªØ¹Ù…Ù„ Ø£ÙˆØªÙˆÙ…Ø§ØªÙŠÙƒ Ù…Ù† Ø¨Ø±Ù†Ø§Ù…Ø¬ CreatePageReact â€” ÙƒÙ„ Ø­Ø§Ø¬Ø© Ø¬Ø§ÙŠØ© Ù…Ù† SalesInvoice.ts Ø¹Ù† Ø·Ø±ÙŠÙ‚ p.
+//  ÙˆØ§Ù„Ø´ØºÙ„ ÙƒÙ„Ù‡ (Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© + Ø§Ù„ÙÙˆØ±Ù… + Ø§Ù„ØªÙØ§ØµÙŠÙ„ + Ø§Ù„Ø­ÙØ¸) ÙÙŠ <MasterDetail />
 // =====================================================================================
 
 import { SalesInvoice } from "./SalesInvoice";
@@ -12,7 +12,7 @@ import { useSys } from "../Shared/SystemUsing";
 import MasterDetail from "../Shared/Components/Import/MasterDetail";
 
 // =======================
-// نقطة البداية (نفس شاشة Login)
+// Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© (Ù†ÙØ³ Ø´Ø§Ø´Ø© Login)
 // =======================
 export default function InitalizeComponent() {
   const Lang = useTranslate();
@@ -37,7 +37,7 @@ type Props = _ReturnType & {
 };
 
 // =======================
-// الشاشة
+// Ø§Ù„Ø´Ø§Ø´Ø©
 // =======================
 function SalesInvoicePage(p: Props) {
   const L = p.Lang;
@@ -51,18 +51,8 @@ function SalesInvoicePage(p: Props) {
       {p.stylesheet}
 
       <div className="p-2 md:p-4 space-y-4">
-        {/* ============ العنوان ============ */}
-        <div className={`rounded-2xl border shadow-xl backdrop-blur-xl p-4 md:p-5 flex items-center gap-3 ${card}`}>
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg">
-            <i className="fa-solid fa-file-invoice-dollar"></i>
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-bold truncate">{L.SalesInvoice_title}</h1>
-            <p className={`text-sm ${muted}`}>{L.SalesInvoice_subtitle}</p>
-          </div>
-        </div>
-
-        {/* ============ الماستر ديتيل (القائمة + الفورم) ============ */}
+        {/* ============ Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ============ */}
+        {/* ============ Ø§Ù„Ù…Ø§Ø³ØªØ± Ø¯ÙŠØªÙŠÙ„ (Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© + Ø§Ù„ÙÙˆØ±Ù…) ============ */}
         <MasterDetail config={p.Config} />
       </div>
     </>
