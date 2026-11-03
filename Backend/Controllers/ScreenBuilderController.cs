@@ -228,10 +228,9 @@ ORDER BY c.column_id";
             public bool IsVisible { get; set; } = true;
         }
 
-        public class AddSearchFunctionRequest
+        public class SearchFunctionDto
         {
-            public string ProjectPath { get; set; } = "";
-            public string Name { get; set; } = "";             // e.g. Items  (prefix Search_ added if missing)
+            public string Name { get; set; } = "";
             public string Title { get; set; } = "";
             public string TableName { get; set; } = "";
             public string KeyColumn { get; set; } = "";
@@ -244,9 +243,183 @@ ORDER BY c.column_id";
             public string OrderType { get; set; } = "ASC";
         }
 
-        // POST api/screenbuilder/add-search-function — append a new SearchModalConfig factory
-        [HttpPost("add-search-function")]
-        public IActionResult AddSearchFunction([FromBody] AddSearchFunctionRequest req)
+        public class SaveSearchFunctionRequest : SearchFunctionDto
+        {
+            public string ProjectPath { get; set; } = "";
+            public string OriginalName { get; set; } = "";   // for rename: current fn name before edit
+        }
+
+        public class DeleteSearchFunctionRequest
+        {
+            public string ProjectPath { get; set; } = "";
+            public string Name { get; set; } = "";
+        }
+
+        // ---------- helpers for search functions ----------
+
+        private static string SearchFromPath(string projectPath) =>
+            Path.Combine(projectPath, "app", "ClientApp", "Shared", "G_SearchFrom.ts");
+
+        private static string EscJs(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+        private static string BuildSearchBlock(string fnName, SearchFunctionDto cfg)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"// ===== {fnName} — managed by ScreenBuilder =====");
+            sb.AppendLine($"export const {fnName} = (_condition: string = \"\"): SearchModalConfig => {{");
+            sb.AppendLine("  return {");
+            sb.AppendLine($"    title: \"{EscJs(cfg.Title ?? fnName)}\",");
+            sb.AppendLine($"    tableName: \"{EscJs(cfg.TableName)}\",");
+            sb.AppendLine($"    keyColumn: \"{EscJs(cfg.KeyColumn)}\",");
+            sb.AppendLine("    condition: _condition,");
+            sb.AppendLine("    columns: [");
+            foreach (var c in cfg.Columns)
+            {
+                string vis = c.IsVisible ? "" : ", IsVisible: false";
+                sb.AppendLine($"      {{ field: \"{EscJs(c.field)}\", title: \"{EscJs(c.title)}\", width: {c.width}{vis} }},");
+            }
+            sb.AppendLine("    ],");
+            sb.Append("    searchColumns: [");
+            sb.Append(string.Join(", ", (cfg.SearchColumns ?? new()).Select(s => "\"" + EscJs(s) + "\"")));
+            sb.AppendLine("],");
+            sb.AppendLine($"    returnField: \"{EscJs(cfg.ReturnField)}\",");
+            sb.AppendLine($"    displayField: \"{EscJs(cfg.DisplayField)}\",");
+            sb.AppendLine($"    pageSize: {cfg.PageSize},");
+            sb.AppendLine($"    orderBy: \"{EscJs(cfg.OrderBy)}\",");
+            sb.AppendLine($"    orderType: \"{(cfg.OrderType == "DESC" ? "DESC" : "ASC")}\"");
+            sb.AppendLine("  };");
+            sb.AppendLine("};");
+            return sb.ToString();
+        }
+
+        // Finds the full block for a function (comment banner + export const ... };)
+        // returns (startIndex, length) or (-1, 0) if not found.
+        private static (int start, int length) FindSearchBlock(string content, string fnName)
+        {
+            var m = Regex.Match(content, @"export\s+const\s+" + Regex.Escape(fnName) + @"\s*=\s*\(", RegexOptions.Multiline);
+            if (!m.Success) return (-1, 0);
+            int start = m.Index;
+            // walk back to include a preceding banner comment line "// ===== fnName ..."
+            int lineStart = content.LastIndexOf('\n', Math.Max(0, start - 1));
+            if (lineStart >= 0)
+            {
+                var prevSegment = content.Substring(0, lineStart);
+                var bannerMatch = Regex.Match(prevSegment, @"(?m)^[ \t]*//\s*={2,}\s*" + Regex.Escape(fnName) + @"\b.*$", RegexOptions.RightToLeft);
+                if (bannerMatch.Success && prevSegment.Length - bannerMatch.Index - bannerMatch.Length < 4)
+                    start = bannerMatch.Index;
+            }
+            // walk forward: find the closing "};" of the arrow function
+            int braceDepth = 0;
+            int i = m.Index;
+            int end = -1;
+            bool entered = false;
+            while (i < content.Length)
+            {
+                char c = content[i];
+                if (c == '{') { braceDepth++; entered = true; }
+                else if (c == '}')
+                {
+                    braceDepth--;
+                    if (entered && braceDepth == 0)
+                    {
+                        // consume trailing ';' and newline
+                        int j = i + 1;
+                        while (j < content.Length && (content[j] == ';' || content[j] == '\r' || content[j] == '\n' || content[j] == ' ' || content[j] == '\t'))
+                        {
+                            j++;
+                            if (content[j - 1] == '\n') break;
+                        }
+                        end = j;
+                        break;
+                    }
+                }
+                i++;
+            }
+            if (end < 0) return (-1, 0);
+            return (start, end - start);
+        }
+
+        // Extracts a JS-ish string/number value for a known key inside a function block.
+        private static string ExtractStringProp(string block, string key)
+        {
+            var m = Regex.Match(block, @"\b" + Regex.Escape(key) + @"\s*:\s*""((?:[^""\\]|\\.)*)""");
+            return m.Success ? Regex.Unescape(m.Groups[1].Value) : "";
+        }
+        private static int ExtractIntProp(string block, string key, int def = 0)
+        {
+            var m = Regex.Match(block, @"\b" + Regex.Escape(key) + @"\s*:\s*(\d+)");
+            return m.Success ? int.Parse(m.Groups[1].Value) : def;
+        }
+
+        private static SearchFunctionDto ParseBlock(string fnName, string block)
+        {
+            var dto = new SearchFunctionDto
+            {
+                Name = fnName,
+                Title = ExtractStringProp(block, "title"),
+                TableName = ExtractStringProp(block, "tableName"),
+                KeyColumn = ExtractStringProp(block, "keyColumn"),
+                ReturnField = ExtractStringProp(block, "returnField"),
+                DisplayField = ExtractStringProp(block, "displayField"),
+                PageSize = ExtractIntProp(block, "pageSize", 20),
+                OrderBy = ExtractStringProp(block, "orderBy"),
+                OrderType = ExtractStringProp(block, "orderType") == "DESC" ? "DESC" : "ASC",
+            };
+            // columns array
+            var colsMatch = Regex.Match(block, @"columns\s*:\s*\[(.*?)\]", RegexOptions.Singleline);
+            if (colsMatch.Success)
+            {
+                foreach (Match c in Regex.Matches(colsMatch.Groups[1].Value, @"\{\s*field\s*:\s*""((?:[^""\\]|\\.)*)""\s*,\s*title\s*:\s*""((?:[^""\\]|\\.)*)""\s*,\s*width\s*:\s*(\d+)\s*(?:,\s*IsVisible\s*:\s*(true|false))?\s*\}"))
+                {
+                    dto.Columns.Add(new SearchFunctionColumn
+                    {
+                        field = Regex.Unescape(c.Groups[1].Value),
+                        title = Regex.Unescape(c.Groups[2].Value),
+                        width = int.Parse(c.Groups[3].Value),
+                        IsVisible = c.Groups[4].Value != "false",
+                    });
+                }
+            }
+            // searchColumns array
+            var scMatch = Regex.Match(block, @"searchColumns\s*:\s*\[([^\]]*)\]");
+            if (scMatch.Success)
+            {
+                foreach (Match s in Regex.Matches(scMatch.Groups[1].Value, @"""((?:[^""\\]|\\.)*)"""))
+                    dto.SearchColumns.Add(Regex.Unescape(s.Groups[1].Value));
+            }
+            return dto;
+        }
+
+        // POST api/screenbuilder/list-search-functions — returns all parsed configs
+        [HttpPost("list-search-functions")]
+        public IActionResult ListSearchFunctions([FromBody] ScanRequest req)
+        {
+            try
+            {
+                var list = new List<SearchFunctionDto>();
+                string path = SearchFromPath(req.ProjectPath);
+                if (System.IO.File.Exists(path))
+                {
+                    string content = System.IO.File.ReadAllText(path);
+                    foreach (Match m in Regex.Matches(content, @"export\s+const\s+(\w+)\s*=\s*\("))
+                    {
+                        string name = m.Groups[1].Value;
+                        var (start, len) = FindSearchBlock(content, name);
+                        if (start < 0) continue;
+                        list.Add(ParseBlock(name, content.Substring(start, len)));
+                    }
+                }
+                return Ok(new { success = true, functions = list });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, error = ex.Message });
+            }
+        }
+
+        // POST api/screenbuilder/save-search-function — create or update
+        [HttpPost("save-search-function")]
+        public IActionResult SaveSearchFunction([FromBody] SaveSearchFunctionRequest req)
         {
             try
             {
@@ -256,49 +429,56 @@ ORDER BY c.column_id";
                 if (string.IsNullOrWhiteSpace(req.TableName)) return Ok(new { success = false, error = "الجدول مطلوب" });
                 if (req.Columns == null || req.Columns.Count == 0) return Ok(new { success = false, error = "لازم عمود واحد على الأقل" });
 
-                string path = Path.Combine(req.ProjectPath, "app", "ClientApp", "Shared", "G_SearchFrom.ts");
-                if (!System.IO.File.Exists(path)) return Ok(new { success = false, error = "G_SearchFrom.ts not found at " + path });
+                string path = SearchFromPath(req.ProjectPath);
+                if (!System.IO.File.Exists(path)) return Ok(new { success = false, error = "G_SearchFrom.ts not found" });
 
                 string content = System.IO.File.ReadAllText(path);
                 string fnName = req.Name.StartsWith("Search_") ? req.Name : "Search_" + req.Name;
+                string original = string.IsNullOrWhiteSpace(req.OriginalName) ? fnName : req.OriginalName;
+                string block = BuildSearchBlock(fnName, req);
 
-                // check duplicate
-                if (Regex.IsMatch(content, @"export\s+const\s+" + Regex.Escape(fnName) + @"\s*=\s*\("))
-                    return Ok(new { success = false, error = $"الدالة {fnName} موجودة بالفعل" });
-
-                string Esc(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
-
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine();
-                sb.AppendLine($"// ===== {fnName} — أضيفت من ScreenBuilder =====");
-                sb.AppendLine($"export const {fnName} = (_condition: string = \"\"): SearchModalConfig => {{");
-                sb.AppendLine("  return {");
-                sb.AppendLine($"    title: \"{Esc(req.Title ?? fnName)}\",");
-                sb.AppendLine($"    tableName: \"{Esc(req.TableName)}\",");
-                sb.AppendLine($"    keyColumn: \"{Esc(req.KeyColumn)}\",");
-                sb.AppendLine("    condition: _condition,");
-                sb.AppendLine("    columns: [");
-                foreach (var c in req.Columns)
+                // if renaming or updating existing
+                var (start, len) = FindSearchBlock(content, original);
+                if (start >= 0)
                 {
-                    string vis = c.IsVisible ? "" : ", IsVisible: false";
-                    sb.AppendLine($"      {{ field: \"{Esc(c.field)}\", title: \"{Esc(c.title)}\", width: {c.width}{vis} }},");
+                    // new name must not clash with a different existing function
+                    if (!string.Equals(original, fnName, StringComparison.Ordinal))
+                    {
+                        var (clashStart, _) = FindSearchBlock(content, fnName);
+                        if (clashStart >= 0) return Ok(new { success = false, error = $"الدالة {fnName} موجودة بالفعل" });
+                    }
+                    content = content.Substring(0, start) + block + content.Substring(start + len);
+                    System.IO.File.WriteAllText(path, content);
+                    return Ok(new { success = true, name = fnName, updated = true });
                 }
-                sb.AppendLine("    ],");
-                sb.Append("    searchColumns: [");
-                sb.Append(string.Join(", ", (req.SearchColumns ?? new()).Select(s => "\"" + Esc(s) + "\"")));
-                sb.AppendLine("],");
-                sb.AppendLine($"    returnField: \"{Esc(req.ReturnField)}\",");
-                sb.AppendLine($"    displayField: \"{Esc(req.DisplayField)}\",");
-                sb.AppendLine($"    pageSize: {req.PageSize},");
-                sb.AppendLine($"    orderBy: \"{Esc(req.OrderBy)}\",");
-                sb.AppendLine($"    orderType: \"{(req.OrderType == "DESC" ? "DESC" : "ASC")}\"");
-                sb.AppendLine("  };");
-                sb.AppendLine("};");
 
-                // ensure trailing newline then append
+                // append (new)
+                var (existingStart, _) = FindSearchBlock(content, fnName);
+                if (existingStart >= 0) return Ok(new { success = false, error = $"الدالة {fnName} موجودة بالفعل" });
                 if (!content.EndsWith("\n")) content += Environment.NewLine;
-                System.IO.File.WriteAllText(path, content + sb.ToString());
-                return Ok(new { success = true, name = fnName });
+                System.IO.File.WriteAllText(path, content + Environment.NewLine + block);
+                return Ok(new { success = true, name = fnName, updated = false });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, error = ex.Message });
+            }
+        }
+
+        // POST api/screenbuilder/delete-search-function
+        [HttpPost("delete-search-function")]
+        public IActionResult DeleteSearchFunction([FromBody] DeleteSearchFunctionRequest req)
+        {
+            try
+            {
+                string path = SearchFromPath(req.ProjectPath);
+                if (!System.IO.File.Exists(path)) return Ok(new { success = false, error = "G_SearchFrom.ts not found" });
+                string content = System.IO.File.ReadAllText(path);
+                var (start, len) = FindSearchBlock(content, req.Name);
+                if (start < 0) return Ok(new { success = false, error = "not found" });
+                content = content.Substring(0, start) + content.Substring(start + len);
+                System.IO.File.WriteAllText(path, content);
+                return Ok(new { success = true });
             }
             catch (Exception ex)
             {

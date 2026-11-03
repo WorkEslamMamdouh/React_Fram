@@ -78,8 +78,7 @@ export async function loadSearchFunctions(projectPath: string): Promise<{ succes
   return post("/search-functions", { projectPath });
 }
 
-export interface AddSearchFunctionInput {
-  projectPath: string;
+export interface SearchFunctionDto {
   name: string;
   title: string;
   tableName: string;
@@ -93,8 +92,16 @@ export interface AddSearchFunctionInput {
   orderType: "ASC" | "DESC";
 }
 
-export async function addSearchFunction(input: AddSearchFunctionInput): Promise<{ success: boolean; name?: string; error?: string }> {
-  return post("/add-search-function", input);
+export async function listSearchFunctions(projectPath: string): Promise<{ success: boolean; functions?: SearchFunctionDto[]; error?: string }> {
+  return post("/list-search-functions", { projectPath });
+}
+
+export async function saveSearchFunction(input: SearchFunctionDto & { projectPath: string; originalName?: string }): Promise<{ success: boolean; name?: string; updated?: boolean; error?: string }> {
+  return post("/save-search-function", input);
+}
+
+export async function deleteSearchFunction(projectPath: string, name: string): Promise<{ success: boolean; error?: string }> {
+  return post("/delete-search-function", { projectPath, name });
 }
 
 // Auto-detect input type from SQL type
