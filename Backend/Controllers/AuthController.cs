@@ -35,7 +35,7 @@ namespace ERP.Controllers
         {
 
 
-            var user = await db.Select("Sys_Users", " USER_CODE = N'" + Username + "' and USER_PASSWORD = N'" + Password + "'").FirstOrDefaultAsync() ;
+            var user = await db.Select("Sys_Users", " USER_CODE = N'" + Username + "' and USER_PASSWORD = N'" + Password + "' and ISNULL(USER_ACTIVE,0) = 1").FirstOrDefaultAsync() ;
           
             if (user == null)   return Ok(JsonConvert.SerializeObject(new BaseResponse(HttpStatusCode.BadRequest, "Unauthorized"))); 
                

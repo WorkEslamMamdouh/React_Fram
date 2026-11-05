@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useSys } from "../../Shared/SystemUsing";
-import { ScreenConfigV4, createEmptyScreen, createEmptyField } from "../types/ScreenConfig";
+import { ScreenConfigV5, createEmptyScreen, createEmptyField } from "../types/ScreenConfig";
 
 interface SetupWizardProps {
   screenType: "Grid" | "MasterDetail";
-  onComplete: (config: ScreenConfigV4) => void;
+  onComplete: (config: ScreenConfigV5) => void;
   onCancel: () => void;
 }
 

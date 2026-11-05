@@ -1,11 +1,321 @@
 // ============================================================
-// Code Generator — ScreenConfigV4 → .ts + page.tsx
+// Code Generator — ScreenConfigV5 → .ts + page.tsx
 // ============================================================
 
 import {
-  ScreenConfigV4, FieldConfigV4, DetailConfigV4, ValidationConfigV4,
+  ScreenConfigV5, FieldConfigV4, DetailConfigV4, ValidationConfigV4,
+  RuleV5, FilterControlV5, ActionV5, ParamMapV5,
 } from "../types/ScreenConfig";
 import { convertV4toV3 } from "./configConverter";
+
+// ---------- Phase 5 helpers ----------
+const SESSION_NAMES = ["CompCode", "BranchCode", "UserID", "FinYear", "UserName", "Today", "Now"];
+
+/** شرط نصي → تعبير JS. {session.X} بتتحول لقيمة الجلسة (template literal). {row.X}/{filter.X} بتتحل وقت التشغيل. */
+function condJs(cond: string): string {
+  if (!/\{session\.[A-Za-z]+\}/.test(cond)) return q(cond);
+  const body = cond.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${")
+    .replace(/\{session\.([A-Za-z]+)\}/g, (_m, n) => (SESSION_NAMES.includes(n) ? "${" + n + "}" : "{session." + n + "}"));
+  return "`" + body + "`";
+}
+
+/** شرط بسيط على حقل تاني → تعبير JS على r */
+function ruleJs(r: RuleV5): string {
+  const v = `r[${q(r.field)}]`;
+  const isBool = r.value === "true" || r.value === "false";
+  switch (r.op) {
+    case "empty": return `(${v} === null || ${v} === undefined || ${v} === "")`;
+    case "notEmpty": return `!(${v} === null || ${v} === undefined || ${v} === "")`;
+    case ">": case "<": case ">=": case "<=": return `Number(${v}) ${r.op} ${Number(r.value) || 0}`;
+    default: {
+      const eq = isBool
+        ? (r.value === "true" ? `(${v} === true || ${v} === 1 || ${v} === "1")` : `!(${v} === true || ${v} === 1 || ${v} === "1")`)
+        : `String(${v} ?? "") === ${q(r.value)}`;
+      return r.op === "!=" ? `!(${eq})` : eq;
+    }
+  }
+}
+
+function paramValueJs(p: ParamMapV5): string {
+  switch (p.source) {
+    case "session": return SESSION_NAMES.includes(p.value) ? p.value : q(p.value);
+    case "filter": return `(filterVals[${q(p.value)}] ?? null)`;
+    case "row": return `(row?.[${q(p.value)}] ?? null)`;
+    default: return p.value !== "" && !isNaN(Number(p.value)) ? p.value : q(p.value);
+  }
+}
+
+function dateTokenJs(tok: string): string {
+  switch (tok.trim()) {
+    case "today": return "Today";
+    case "monthStart": return `Today.substring(0, 8) + "01"`;
+    case "yearStart": return `String(FinYear) + "-01-01"`;
+    case "yearEnd": return `String(FinYear) + "-12-31"`;
+    default: return q(tok.trim());
+  }
+}
+
+function filterKindToType(k: string): string { return k; }
+
+interface Extras {
+  reactImports: string[];
+  imports: string[];
+  filterItems: string;      // محتوى مصفوفة FilterFields
+  filterDeps: string;
+  block: string;            // state + effects + functions (قبل الـ useMemo بتاعة الأعمدة)
+  formLayoutCode: string;   // "" لو مفيش تخطيط
+  hasTx: boolean;
+  hasToolbar: boolean;
+  hasExcel: boolean;        // Phase 6: الشاشة بتبعت excel لـ DynamicGrid / MasterDetail
+  hasRowActions: boolean;
+  needsGridKey: boolean;
+}
+
+/** FormLayout المسطّح من الأقسام/الصفوف/الخلايا */
+export function layoutToFormLayout(cfg: ScreenConfigV5): { kind: string; field?: string; textAr?: string; textEn?: string; span: number; spanMd: number; newRow: boolean }[] {
+  const out: any[] = [];
+  for (const s of cfg.layout.sections) {
+    let first = true;
+    if (s.titleAr || s.titleEn) {
+      out.push({ kind: "heading", textAr: s.titleAr, textEn: s.titleEn || s.titleAr, span: 12, spanMd: 12, newRow: true });
+      first = false;
+    }
+    for (const r of s.rows) {
+      let newRow = true;
+      for (const c of r.cells) {
+        if (c.kind === "button") continue;
+        if (c.field && !cfg.fields.some((f) => f.field === c.field && f.inForm)) continue;
+        const base: any = { span: c.span.lg, spanMd: c.span.md, newRow };
+        if (c.field) out.push({ kind: "field", field: c.field, ...base });
+        else if (c.kind === "divider") out.push({ kind: "divider", ...base });
+        else if (c.kind === "label" || c.kind === "heading") out.push({ kind: c.kind, textAr: c.textAr || "", textEn: c.textEn || c.textAr || "", ...base });
+        else continue;   // كنترول لسه مش مربوط بعمود
+        newRow = false;
+      }
+    }
+    void first;
+  }
+  return out;
+}
+
+/** إعدادات الإكسل (Phase 6) كـ كود بيتحط في الـ hook — بيتبعت `excel={...}` لـ DynamicGrid / MasterDetail */
+function excelConfigCode(cfg: ScreenConfigV5): string {
+  const ex = cfg.excel;
+  const isGrid = cfg.screenType === "Grid";
+  const lookupsOf = (scope: "master" | "detail") => {
+    const list = ex.keyLookups.filter((l) => (l.scope || "master") === scope && l.table && l.valueField);
+    if (!list.length) return "";
+    return "{\n" + list.map((l) => {
+      const parts = [`table: ${q(l.table)}`, `keyColumn: ${q(l.valueField)}`];
+      if (l.codeField) parts.push(`codeColumn: ${q(l.codeField)}`);
+      if (l.displayField) parts.push(`nameColumn: ${q(l.displayField)}`);
+      if (l.condition && l.condition.trim()) parts.push(`condition: ${condJs(l.condition.trim())}`);
+      return `      ${q(l.column)}: { ${parts.join(", ")} },`;
+    }).join("\n") + "\n    }";
+  };
+  const known = (names: string[], fields: FieldConfigV4[]) => names.filter((n) => fields.some((f) => f.field === n));
+  const props: string[] = ["enabled: true", `templateName: ${q(ex.templateName || cfg.module || "Template")}`];
+  const cols = known(ex.columns || [], cfg.fields);
+  if (isGrid) {
+    if (cols.length) props.push(`columns: ${JSON.stringify(cols)}`);
+    const lk = lookupsOf("master");
+    if (lk) props.push(`lookups: ${lk}`);
+    if (ex.allOrNothing) props.push("allOrNothing: true");
+    return `  // ===== Excel: تحميل نموذج / استيراد (Phase 6) — بيتبعت لـ DynamicGrid (excel={...}) =====
+  const ExcelCfg = useMemo<ExcelGridConfig>(
+    () => ({
+${props.map((p) => "      " + p + ",").join("\n")}
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [CompCode, BranchCode]
+  );`;
+  }
+  const di = Math.min(Math.max(0, ex.detailIndex ?? 0), Math.max(0, cfg.details.length - 1));
+  props.push(`mode: ${q(ex.mode || "both")}`);
+  if (di > 0) props.push(`detailIndex: ${di}`);
+  if (cols.length) props.push(`masterColumns: ${JSON.stringify(cols)}`);
+  const dcols = cfg.details[di] ? known(ex.detailColumns || [], cfg.details[di].fields) : [];
+  if (dcols.length) props.push(`detailColumns: ${JSON.stringify(dcols)}`);
+  const lk = lookupsOf("master");
+  if (lk) props.push(`lookups: ${lk}`);
+  const dlk = lookupsOf("detail");
+  if (dlk) props.push(`detailLookups: ${dlk}`);
+  return `  // ===== Excel: معاملات كتير / أصناف في الفاتورة (Phase 6) — بيتحط في Config.excel =====
+  const ExcelCfg = useMemo<ExcelMasterDetailConfig>(
+    () => ({
+${props.map((p) => "      " + p + ",").join("\n")}
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [CompCode, BranchCode]
+  );`;
+}
+
+function buildExtras(cfg: ScreenConfigV5): Extras {
+  const isGrid = cfg.screenType === "Grid";
+  const isTree = cfg.screenType === "Tree";
+  const react = new Set<string>(["useMemo"]);
+  const imports: string[] = [];
+  const lines: string[] = [];
+  if (isGrid) react.add("useState");
+
+  // ---------- الفلاتر ----------
+  const fcs: FilterControlV5[] = isTree ? [] : (cfg.filterArea || []);
+  const sourced = fcs.map((fc, i) => ({ fc, i })).filter((x) => x.fc.source && x.fc.source.table && x.fc.source.valueField && x.fc.source.displayField);
+  const needFV = isGrid && fcs.length > 0;
+  if (!isTree) imports.push(`import { FilterFieldConfig, FilterOption, ActiveFilter } from "../Shared/Components/Import/AdvancedFilter";`);
+  if (needFV) {
+    react.add("useCallback");
+    lines.push(`  // قيم الفلاتر الحالية (بتتحدّث لما اليوزر يغيّر الفلتر) — بتستخدم في الدروب داون المتسلسل والأزرار
+  const [filterVals, setFilterVals] = useState<Record<string, any>>({});
+  void filterVals;
+  const onFilterChange = useCallback((filters: ActiveFilter[]) => {
+    const m: Record<string, any> = {};
+    for (const f of filters) m[f.field] = f.type === "dateRange" ? { from: f.fromValue, to: f.toValue } : f.value;
+    setFilterVals((prev) => (JSON.stringify(prev) === JSON.stringify(m) ? prev : m));
+  }, []);`);
+  } else {
+    lines.push(`  const filterVals: Record<string, any> = {};   // الفلاتر المتسلسلة / بارامترات الفلتر متاحة في شاشات الجريد بس
+  void filterVals;`);
+  }
+  if (sourced.length) {
+    react.add("useEffect");
+    imports.push(`import { SQL } from "../Shared/CallDataBase";`);
+    lines.push(`  const SqlLit = (v: any) => (v === null || v === undefined || v === "" ? "NULL" : typeof v === "number" ? String(v) : "N'" + String(v).replace(/'/g, "''") + "'");
+  void SqlLit;`);
+    if (!react.has("useState")) react.add("useState");
+  }
+  const readyParts: string[] = [];
+  const filterDepsArr = ["IsLangEN"];
+  for (const { fc, i } of sourced) {
+    const s = fc.source!;
+    const refs = Array.from(new Set(Array.from(s.condition.matchAll(/\{filter\.([A-Za-z_][A-Za-z0-9_]*)\}/g)).map((m) => m[1])));
+    const baseCond = s.condition.replace(/\{filter\.([A-Za-z_][A-Za-z0-9_]*)\}/g, (_m, n) => "${SqlLit(filterVals[" + q(n) + "])}");
+    const tmpl = (() => {
+      const body = baseCond.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{(?!SqlLit)/g, "\\${")
+        .replace(/\{session\.([A-Za-z]+)\}/g, (_m, n) => (SESSION_NAMES.includes(n) ? "${" + n + "}" : "{session." + n + "}"));
+      return "`" + body + "`";
+    })();
+    const missing = refs.map((r) => `filterVals[${q(r)}] == null || filterVals[${q(r)}] === ""`).join(" || ");
+    const condExpr = refs.length ? `(${missing}) ? "1 = 0" : ${tmpl}` : tmpl;
+    const cols = Array.from(new Set([s.valueField, s.displayField, s.displayFieldEn].filter(Boolean)));
+    const dispExpr = s.displayFieldEn && s.displayFieldEn !== s.displayField ? `IsLangEN ? ${q(s.displayFieldEn)} : ${q(s.displayField)}` : q(s.displayField);
+    lines.push(`  // دروب داون الفلتر "${fc.field}" من ${s.table}${refs.length ? " (متسلسل مع: " + refs.join(", ") + ")" : ""}
+  const [opt_${i}, setOpt_${i}] = useState<FilterOption[]>([]);
+  const [loaded_${i}, setLoaded_${i}] = useState(false);
+  useEffect(() => {
+    let off = false;
+    SQL.Select(${q(s.table)}, ${condExpr}, ${JSON.stringify(cols)}, null, null, 0, ${q(s.orderBy || s.displayField)}, "ASC", 0, "", null, null, 1, 500, false)
+      .then((r) => {
+        if (off) return;
+        const dispField: string = ${dispExpr};
+        setOpt_${i}((r.data || []).map((x: any) => ({ value: x[${q(s.valueField)}], label: String(x[dispField] ?? "") })));
+        setLoaded_${i}(true);
+      })
+      .catch(() => { if (!off) setLoaded_${i}(true); });
+    return () => { off = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [IsLangEN, CompCode, BranchCode${refs.map((r) => `, filterVals[${q(r)}]`).join("")}]);`);
+    filterDepsArr.push(`opt_${i}`);
+    if (!refs.length) readyParts.push(`loaded_${i}`);
+  }
+  lines.push(`  const filterReady = ${readyParts.length ? readyParts.join(" && ") : "true"};   // الجريد مابيتعرضش قبل ما اختيارات الفلاتر تتحمل`);
+
+  const items = fcs.map((fc, n) => {
+    const parts = [`field: ${q(fc.field)}`, `label: t(${q(fc.labelEn || fc.field)}, ${q(fc.labelAr || fc.field)})`, `type: ${q(filterKindToType(fc.kind))}`];
+    if (fc.operator) parts.push(`operator: ${q(fc.operator)}`);
+    if (fc.required) parts.push("required: true");
+    if (sourced.some((x) => x.i === n)) parts.push(`options: opt_${n}`);
+    else if (fc.options && (fc.kind === "select" || fc.kind === "multiselect")) parts.push(`options: [${parseSelectOptions(fc.options)}]`);
+    const dv = (fc.defaultValue || "").trim();
+    if (dv) {
+      if (fc.kind === "dateRange") {
+        const [a, b] = dv.split("|");
+        parts.push(`defaultRange: { from: ${dateTokenJs(a)}, to: ${dateTokenJs(b || "today")} }`);
+      } else if (fc.kind === "date") parts.push(`defaultValue: ${dateTokenJs(dv)}`);
+      else if (SESSION_NAMES.includes(dv)) parts.push(`defaultValue: ${dv}`);
+      else parts.push(`defaultValue: ${!isNaN(Number(dv)) && fc.kind === "number" ? dv : q(dv)}`);
+    }
+    parts.push(`sortOrder: ${n + 1}`);
+    return `{ ${parts.join(", ")} },`;
+  }).join("\n");
+
+  // ---------- الإجراءات (أزرار تشغّل Stored Procedure) ----------
+  const toolbar: string[] = [];
+  const rowActs: string[] = [];
+  const acts = isTree ? [] : cfg.actions.filter((a) => a.proc);
+  if (acts.length) {
+    imports.push(`import { RunProc } from "../Shared/RunProc";`);
+    imports.push(`import { Sys } from "../Shared/SystemTools";`);
+  }
+  acts.forEach((a: ActionV5, i) => {
+    const params = a.params.map((p) => `${q(p.name)}: ${paramValueJs(p)}`).join(", ");
+    lines.push(`  async function RunAction_${i}(row?: any) {
+    void row;${a.confirm ? `
+    if (!(await Sys.Confirm(${q("Run: " + (a.labelEn || a.labelAr) + "?")}, ${q("تنفيذ: " + (a.labelAr || a.labelEn) + "؟")}))) return;` : ""}
+    const res = await RunProc(${q(a.proc)}, { ${params} });
+    if (!res.ok) { Sys.ShowMessage(res.error || "Failed", res.error || "فشل التنفيذ", "error"); return; }${a.after === "message" ? `
+    Sys.ShowMessage(${q(a.messageEn || "Done")}, ${q(a.messageAr || "تم")}, "success");` : ""}${a.after === "refresh" ? `
+    RefreshGrid();` : ""}
+  }`);
+    if (a.scope === "row" && isGrid) rowActs.push(`{ key: ${q("act_" + i)}, label: t(${q(a.labelEn || a.proc)}, ${q(a.labelAr || a.labelEn || a.proc)}), onClick: (row: any) => { void RunAction_${i}(row); } },`);
+    else toolbar.push(`{ key: ${q("act_" + i)}, label: t(${q(a.labelEn || a.proc)}, ${q(a.labelAr || a.labelEn || a.proc)}), icon: ${q(a.icon || "fa-bolt")}, onClick: () => { void RunAction_${i}(); } },`);
+  });
+
+  // ---------- الطباعة (Hooks للمرحلة 7) ----------
+  const lp = cfg.print.listPrint, tp = cfg.print.transactionPrint, ex = cfg.excel;
+  const hasList = lp.enabled && !isTree, hasTx = tp.enabled && !isTree;
+  if (hasList || hasTx) {
+    // Phase 7: الطباعة شغالة — بتفتح عارض التقارير (Shared/Reports). تعريف التقرير (الإجراء + ربط الباراميترات) بيتسجل من ScreenBuilder (تاب الطباعة) في إدارة التقارير.
+    const safeCode = (s: string) => s.replace(/[^A-Za-z0-9_\-]/g, "");
+    const lpCode = safeCode(lp.reportCode || `${cfg.module}_List`), tpCode = safeCode(tp.reportCode || `${cfg.module}_Print`);
+    imports.push(`import { openReport } from "../Shared/Reports/openReport";`);
+    lines.push(`  // ===== الطباعة (Phase 7) — تقارير Stimulsoft: عرض داخل النظام / PDF / Excel. الباراميترات متربطة في تعريف التقرير =====`);
+    if (hasList && cfg.permissions.usePermissions) {
+      imports.push(`import { usePermissions } from "../Shared/Permissions";`);
+      lines.push(`  const PrintPerm = usePermissions(ModuleCode);   // زر "طباعة القائمة" بيظهر بصلاحية PRINT بس`);
+    }
+    if (hasList) {
+      lines.push(`  function onPrintList() { openReport({ reportCode: ${q(lpCode)}, filters: filterVals, moduleCode: ModuleCode }); }   // قيم الفلاتر الحالية`);
+      toolbar.push(`{ key: "printList", label: t("Print list", "طباعة القائمة"), icon: "fa-print", onClick: () => onPrintList() },`);
+    }
+    if (hasTx) lines.push(`  function onPrintTransaction(row?: Record<string, any>) { openReport({ reportCode: ${q(tpCode)}, row, trId: row?.[KeyColumn], moduleCode: ModuleCode }); }   // CompCode, BranchCode, TrID`);
+  }
+
+  // ---------- الإكسل (Phase 6): إعدادات بتتبعت لـ DynamicGrid / MasterDetail (الأزرار والاستيراد جوّاهم) ----------
+  const hasExcel = ex.enabled && !isTree;
+  if (hasExcel) {
+    lines.push(excelConfigCode(cfg));
+    imports.push(isGrid
+      ? `import type { ExcelGridConfig } from "../Shared/Components/Excel/ExcelTypes";`
+      : `import type { ExcelMasterDetailConfig } from "../Shared/Components/Excel/ExcelTypes";`);
+  }
+  if (toolbar.length) lines.push(`  const ToolbarButtons: { key: string; label: string; icon?: string; onClick: () => void }[] = [\n${indent(toolbar.join("\n"), 4)}\n  ]${hasList && cfg.permissions.usePermissions ? '.filter((b) => b.key !== "printList" || PrintPerm.can.print)' : ""};`);
+  if (rowActs.length) {
+    imports.push(`import type { ActionButtonConfig } from "../Shared/Components/Import/DynamicGrid";`);
+    lines.push(`  const RowActions: ActionButtonConfig[] = [\n${indent(rowActs.join("\n"), 4)}\n  ];`);
+  }
+
+  const fl = layoutToFormLayout(cfg);
+  let formLayoutCode = "";
+  if (!isTree && fl.some((c) => c.kind === "field")) {
+    imports.push(`import { FormLayout } from "../Shared/Components/Import/FormLayout";`);
+    formLayoutCode = `  const FormLayoutCells: FormLayout = [\n${fl.map((c) => "    " + JSON.stringify(c) + ",").join("\n")}\n  ];`;
+  }
+
+  return {
+    reactImports: Array.from(react),
+    imports: Array.from(new Set(imports)),
+    filterItems: items,
+    filterDeps: filterDepsArr.join(", "),
+    block: lines.join("\n\n"),
+    formLayoutCode,
+    hasTx,
+    hasToolbar: toolbar.length > 0,
+    hasExcel,
+    hasRowActions: rowActs.length > 0,
+    needsGridKey: acts.length > 0 || toolbar.length > 0,
+  };
+}
 
 // ============================================================
 // Helpers
@@ -70,12 +380,12 @@ function defaultValueJs(f: FieldConfigV4): string | null {
 }
 
 // الأعمدة اللي بتستخدم نوافذ بحث (عشان الـ import)
-export function usedSearchFns(cfg: ScreenConfigV4): string[] {
+export function usedSearchFns(cfg: ScreenConfigV5): string[] {
   const all = [...cfg.fields, ...cfg.listFields, ...cfg.details.flatMap((d) => d.fields)];
   return Array.from(new Set(all.map((f) => f.searchFn).filter(Boolean)));
 }
 
-function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenConfigV4): string {
+function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenConfigV5): string {
   const props: [string, string][] = [];
   const set = (k: string, v: string) => {
     const i = props.findIndex((p) => p[0] === k);
@@ -99,7 +409,7 @@ function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenCo
       : q(ar);
     parts.push(`displayField: ${displayExpr}`);
     parts.push(`valueField: ${q(f.selectValue || "")}`);
-    if (f.selectCondition) parts.push(`condition: ${q(f.selectCondition)}`);
+    if (f.selectCondition) parts.push(`condition: ${condJs(f.selectCondition)}`);
     set("selectConfig", `{ ${parts.join(", ")} }`);
   }
   if (f.searchFn) set("searchModal", `${f.searchFn}(${f.searchCond ? q(f.searchCond) : ""})`);
@@ -112,6 +422,12 @@ function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenCo
     set("editable", "false");
     set("insertable", "false");
   }
+  if (f.readOnly) {
+    set("editable", "false");
+    set("insertable", "false");
+  }
+  if (f.visibleWhen && f.visibleWhen.field) set("visibleWhen", `(r) => ${ruleJs(f.visibleWhen)}`);
+  if (f.enabledWhen && f.enabledWhen.field) set("enabledWhen", `(r) => ${ruleJs(f.enabledWhen)}`);
   if (f.required) set("IsRequired", "true");
   if (!f.search) set("IsSearchColumn", "false");
 
@@ -178,12 +494,13 @@ function validationToCode(v: ValidationConfigV4): string {
   if (v.operator) parts.push(`  operator: ${q(v.operator)},`);
   if (v.compareTo) parts.push(`  compareTo: ${q(v.compareTo)},`);
   if (v.value) parts.push(`  value: ${q(v.value)},`);
-  if (v.min) parts.push(`  min: ${q(v.min)},`);
-  if (v.max) parts.push(`  max: ${q(v.max)},`);
+  const numOrStr = (x: string) => (x.trim() !== "" && !isNaN(Number(x)) ? String(Number(x)) : q(x));
+  if (v.min) parts.push(`  min: ${numOrStr(v.min)},`);
+  if (v.max) parts.push(`  max: ${numOrStr(v.max)},`);
   if (v.pattern) parts.push(`  pattern: ${q(v.pattern)},`);
   if (v.table) parts.push(`  table: ${q(v.table)},`);
   if (v.condition) parts.push(`  condition: ${q(v.condition)},`);
-  if (v.code) parts.push(`  code: ${q(v.code)},`);
+  if (v.code) parts.push(`  check: (ctx) => { ${v.code} },`);
   parts.push(`  messageAr: ${q(v.messageAr)},`);
   parts.push(`  messageEn: ${q(v.messageEn)},`);
   parts.push("},");
@@ -194,7 +511,7 @@ function validationToCode(v: ValidationConfigV4): string {
 // Generate .ts (logic hook)
 // ============================================================
 
-export function generateHookFile(cfg: ScreenConfigV4): string {
+export function generateHookFile(cfg: ScreenConfigV5): string {
   const name = cfg.module || "NewScreen";
   const type = cfg.screenType;
   const isGrid = type === "Grid";
@@ -204,19 +521,26 @@ export function generateHookFile(cfg: ScreenConfigV4): string {
   const searchFns = usedSearchFns(cfg);
   const hasValidations = cfg.validations.length > 0;
 
+  const extras = buildExtras(cfg);
+  const needKey = isGrid || (type === "MasterDetail" && extras.needsGridKey);
+  if (needKey && !extras.reactImports.includes("useState")) extras.reactImports.push("useState");
+
   // ---------- imports ----------
   const imports: string[] = [
-    `import { useMemo${isGrid ? ", useState" : ""} } from "react";`,
+    `import { ${extras.reactImports.join(", ")} } from "react";`,
     `import { useSys } from "../Shared/SystemUsing";`,
   ];
   if (isGrid) imports.push(`import { DynamicGridColumn } from "../Shared/Components/Import/ModelGrid";`);
-  if (type === "MasterDetail") imports.push(`import { MasterDetailColumn, MasterDetailConfig } from "../Shared/Components/Import/ModelMasterDetail";`);
+  if (type === "MasterDetail") {
+    imports.push(`import { MasterDetailColumn, MasterDetailConfig } from "../Shared/Components/Import/ModelMasterDetail";`);
+    imports.push(`import { DynamicGridColumn } from "../Shared/Components/Import/ModelGrid";`);
+  }
   if (isTree) {
     imports.push(`import { MasterDetailColumn } from "../Shared/Components/Import/ModelMasterDetail";`);
     imports.push(`import { TreeScreenConfig } from "../Shared/Components/Import/ModelTree";`);
   }
-  if (!isTree) imports.push(`import { FilterFieldConfig } from "../Shared/Components/Import/AdvancedFilter";`);
   if (hasValidations) imports.push(`import { ValidationRule } from "../Shared/Validation";`);
+  extras.imports.forEach((i) => imports.push(i));
   if (searchFns.length) imports.push(`import { ${searchFns.join(", ")} } from "../Shared/G_SearchFrom";`);
 
   // ---------- ثوابت ----------
@@ -226,6 +550,7 @@ export function generateHookFile(cfg: ScreenConfigV4): string {
     `const KeyColumn = ${q(cfg.keyColumn)};`,
     `const TrType = ${q(cfg.processTrans ? cfg.trType : "")};`,
     `const RunProcessTrans = ${cfg.processTrans};`,
+    `const ModuleCode = ${q(cfg.permissions.usePermissions ? cfg.module : "")};   // MODULE_CODE للصلاحيات (فاضي = من غير صلاحيات)`,
   ];
 
   // ---------- الشرط ----------
@@ -239,26 +564,21 @@ export function generateHookFile(cfg: ScreenConfigV4): string {
     `  const ${varName} = useMemo<${typeName}[]>(\n    () => [\n${indent(body, 6)}\n    ],\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n    [${deps}]\n  );`;
 
   const sections: string[] = [];
-  sections.push(memo(isGrid ? "Columns" : "MasterColumns", colType, cfg.fields.map((f) => fieldToColumnCode(f, md, cfg)).join("\n"), "IsLangEN"));
+  sections.push(memo(isGrid ? "Columns" : "MasterColumns", colType, cfg.fields.map((f) => fieldToColumnCode(f, md, cfg)).join("\n"), "IsLangEN, CompCode, BranchCode"));
 
   if (type === "MasterDetail") {
     const list = cfg.listFields.length ? cfg.listFields : cfg.fields.filter((f) => f.inGrid);
-    sections.push(memo("ListColumns", "DynamicGridColumn", list.map((f) => fieldToColumnCode(f, false, cfg)).join("\n"), "IsLangEN"));
+    sections.push(memo("ListColumns", "DynamicGridColumn", list.map((f) => fieldToColumnCode(f, false, cfg)).join("\n"), "IsLangEN, CompCode, BranchCode"));
   }
 
   const detailNames: string[] = [];
   cfg.details.forEach((d, i) => {
     const dn = `Detail${i + 1}Columns`;
     detailNames.push(dn);
-    sections.push(memo(dn, "MasterDetailColumn", d.fields.map((f) => fieldToColumnCode(f, true, cfg)).join("\n"), "IsLangEN"));
+    sections.push(memo(dn, "MasterDetailColumn", d.fields.map((f) => fieldToColumnCode(f, true, cfg)).join("\n"), "IsLangEN, CompCode, BranchCode"));
   });
 
-  if (!isTree) {
-    const src = isGrid ? cfg.fields : cfg.listFields.length ? cfg.listFields : cfg.fields;
-    const filt = src.filter((f) => f.inFilter && !f.auto);
-    const items = filt.map((f, i) => `{ field: ${q(f.field)}, label: t(${q(f.titleEn || f.field)}, ${q(f.titleAr || f.field)}), type: ${q(guessFilterType(f))}, sortOrder: ${i + 1} },`).join("\n");
-    sections.push(memo("FilterFields", "FilterFieldConfig", items, "IsLangEN"));
-  }
+  if (!isTree) sections.push(memo("FilterFields", "FilterFieldConfig", extras.filterItems, extras.filterDeps));
 
   if (hasValidations) sections.push(memo("Validations", "ValidationRule", cfg.validations.map(validationToCode).join("\n"), "IsLangEN"));
 
@@ -286,12 +606,14 @@ export function generateHookFile(cfg: ScreenConfigV4): string {
   let configCode = "";
   let returnObj = "";
   if (isGrid) {
+    const hasFV = cfg.filterArea.length > 0;
     returnObj = `  return {
     IsLangEN,
     IsDark,
     gridKey,
     RefreshGrid,
-    grid: { TableName, ViewName, KeyColumn, TrType, RunProcessTrans, Condition, CompCode, BranchCode, Columns, FilterFields },
+    filterReady,${hasFV ? "\n    onFilterChange," : ""}${extras.hasToolbar ? "\n    ToolbarButtons," : ""}${extras.hasRowActions ? "\n    RowActions," : ""}${extras.hasTx ? "\n    onPrintTransaction," : ""}
+    grid: { TableName, ViewName, KeyColumn, TrType, RunProcessTrans, Condition, CompCode, BranchCode, Columns, FilterFields, ModuleCode${extras.formLayoutCode ? ", FormLayoutCells" : ""}${extras.hasExcel ? ", Excel: ExcelCfg" : ""} },
   };`;
   } else if (type === "MasterDetail") {
     configCode = `  const Config = useMemo<MasterDetailConfig>(
@@ -308,15 +630,15 @@ ${detailsArr}
       orderBy: ${q(cfg.orderBy || cfg.keyColumn)},
       orderType: ${q(cfg.orderType)},
       pageSize: ${cfg.pageSize},
-      filterFields: FilterFields,
+      filterFields: FilterFields,${extras.formLayoutCode ? "\n      formLayout: FormLayoutCells," : ""}${cfg.permissions.usePermissions ? "\n      moduleCode: ModuleCode," : ""}${extras.hasTx ? "\n      onPrint: onPrintTransaction," : ""}${extras.hasExcel ? "\n      excel: ExcelCfg," : ""}
 ${commonSave}
       newTitle: t(${q("New " + (cfg.titleEn || name))}, ${q("إضافة " + (cfg.titleAr || name))}),
       editTitle: t(${q(cfg.titleEn || name)}, ${q(cfg.titleAr || name)}),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [IsLangEN, CompCode, BranchCode, MasterColumns, ListColumns${detailNames.map((d) => ", " + d).join("")}, FilterFields${hasValidations ? ", Validations" : ""}]
+    [IsLangEN, CompCode, BranchCode, MasterColumns, ListColumns${detailNames.map((d) => ", " + d).join("")}, FilterFields${hasValidations ? ", Validations" : ""}${extras.hasExcel ? ", ExcelCfg" : ""}]
   );`;
-    returnObj = `  return { IsLangEN, IsDark, Config };`;
+    returnObj = `  return { IsLangEN, IsDark, Config, filterReady${needKey ? ", gridKey" : ""}${extras.hasToolbar ? ", ToolbarButtons" : ""} };`;
   } else {
     const tr = cfg.tree;
     const opt = (k: string, v: string) => (v ? `\n      ${k}: ${q(v)},` : "");
@@ -374,12 +696,12 @@ ${sessionBlock()}
   // #endregion
 
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);
-${isGrid ? `
+${needKey ? `
   const [gridKey, setGridKey] = useState(0);
   function RefreshGrid() { setGridKey((k) => k + 1); }
 ` : ""}
   const Condition = ${conditionJs};
-
+${isTree ? "" : "\n" + extras.block + "\n"}${extras.formLayoutCode ? "\n" + extras.formLayoutCode + "\n" : ""}
   // =======================
   // #region الأعمدة
   // =======================
@@ -397,8 +719,32 @@ ${returnObj}
 // Generate page.tsx
 // ============================================================
 
+function toolbarJsx(ex: Extras): string {
+  if (!ex.hasToolbar) return "";
+  return `        <div className="flex flex-wrap items-center gap-2">
+          {p.ToolbarButtons.map((b) => (
+            <button key={b.key} onClick={b.onClick} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-erp-border-strong bg-erp-surface text-erp-text text-[13px] font-medium hover:bg-erp-surface-2 transition">
+              {b.icon && <i className={\`fa-solid \${b.icon}\`} />}
+              {b.label}
+            </button>
+          ))}
+        </div>`;
+}
+
+function gridExtraProps(cfg: ScreenConfigV5, ex: Extras): string {
+  const out: string[] = [];
+  if (cfg.permissions.usePermissions) out.push("moduleCode={p.grid.ModuleCode}");
+  if (ex.formLayoutCode) out.push("formLayout={p.grid.FormLayoutCells}");
+  if (cfg.filterArea.length > 0) out.push("onGridFilterChange={p.onFilterChange}");
+  if (cfg.filterArea.some((f) => f.required)) out.push("deferLoadUntilFilter");
+  if (ex.hasRowActions) out.push("extraActions={p.RowActions}");
+  if (ex.hasTx) out.push("enablePrint", "onPrint={(row) => p.onPrintTransaction(row)}");
+  if (ex.hasExcel) out.push("excel={p.grid.Excel}");
+  return out.length ? "\n          " + out.join("\n          ") : "";
+}
+
 // Helpers for the header date-range filter in page.tsx
-function headerFilterSessionBlock(cfg: ScreenConfigV4): string {
+function headerFilterSessionBlock(cfg: ScreenConfigV5): string {
   if (!cfg.headerFilter?.enabled) return "";
   const hf = cfg.headerFilter;
   const fromExpr = hf.fromDefault === "yearStart"
@@ -417,7 +763,7 @@ function headerFilterSessionBlock(cfg: ScreenConfigV4): string {
     : "";`;
 }
 
-function headerFilterUI(cfg: ScreenConfigV4): string {
+function headerFilterUI(cfg: ScreenConfigV5): string {
   if (!cfg.headerFilter?.enabled) return "";
   const hf = cfg.headerFilter;
   return `
@@ -436,7 +782,8 @@ function headerFilterUI(cfg: ScreenConfigV4): string {
           </div>`;
 }
 
-export function generatePageFile(cfg: ScreenConfigV4): string {
+export function generatePageFile(cfg: ScreenConfigV5): string {
+  const ex = buildExtras(cfg);
   const name = cfg.module || "NewScreen";
   const isGrid = cfg.screenType === "Grid";
   const icon = cfg.icon || "fa-table-list";
@@ -487,6 +834,8 @@ ${headerFilterSessionBlock(cfg)}
           </button>
         </div>` : ""}
 
+${toolbarJsx(ex)}
+        {p.filterReady && (
         <DynamicGrid
           key={p.gridKey}
           tableName={p.grid.TableName}
@@ -508,8 +857,9 @@ ${headerFilterSessionBlock(cfg)}
           enableExport={${cfg.permissions.export}}
           enableSort={true}
           enableAdvancedFilter={true}
-          filterFields={p.grid.FilterFields}
+          filterFields={p.grid.FilterFields}${gridExtraProps(cfg, ex)}
         />
+        )}
       </div>
     </>
   );
@@ -558,7 +908,8 @@ ${hfEnabled ? `  const FilteredConfig = useMemo(() => ({ ...p.Config, condition:
         <div className="flex items-center gap-2 flex-wrap">${headerFilterUI(cfg)}
         </div>` : ""}
 
-        <MasterDetail config={${hfEnabled ? "FilteredConfig" : "p.Config"}} />
+${toolbarJsx(ex)}
+        {p.filterReady && <MasterDetail${ex.needsGridKey ? " key={p.gridKey}" : ""} config={${hfEnabled ? "FilteredConfig" : "p.Config"}} />}
       </div>
     </>
   );
@@ -570,7 +921,7 @@ ${hfEnabled ? `  const FilteredConfig = useMemo(() => ({ ...p.Config, condition:
 // page.tsx — شاشة شجرة
 // ============================================================
 
-export function generateTreePageFile(cfg: ScreenConfigV4): string {
+export function generateTreePageFile(cfg: ScreenConfigV5): string {
   const name = cfg.module || "NewScreen";
   const icon = cfg.icon || "fa-sitemap";
   return `"use client";
@@ -642,7 +993,7 @@ function parseTotals(totals: string): string {
 // Generate SQL Permissions Script
 // ============================================================
 
-export function generateSqlScript(cfg: ScreenConfigV4, database: string): string {
+export function generateSqlScript(cfg: ScreenConfigV5, database: string): string {
   const p = cfg.permissions;
   const module = cfg.module || "NewScreen";
   const s = (v: string) => (v || "").replace(/'/g, "''");
@@ -751,7 +1102,7 @@ GO
 // Generate Resources.ts entries
 // ============================================================
 
-export function generateResourcesEntries(cfg: ScreenConfigV4): { en: string; ar: string } {
+export function generateResourcesEntries(cfg: ScreenConfigV5): { en: string; ar: string } {
   const name = camel(cfg.module || "newScreen");
   const en = [
     `  ${name}_title: "${cfg.titleEn || cfg.module}",`,

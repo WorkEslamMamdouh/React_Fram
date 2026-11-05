@@ -1337,6 +1337,8 @@ export function SalesInvoice() {
       orderType: "DESC",
       pageSize: 10,
       filterFields: FilterFields,
+      // المرحلة 6: استيراد أصناف كتير من Excel على الفاتورة المفتوحة
+      excel: { enabled: true, mode: "detailsOnly", templateName: "SalesInvoice", detailIndex: 0, detailColumns: ["ItemName", "Qty", "UnitPrice", "DiscountPrc"] },
       compCode: CompCode,
       branchCode: BranchCode,
       keyTrType: TrType,

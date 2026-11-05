@@ -2,6 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========== ERP Design Tokens (DESIGN.md section 2) ========== */
+:root {
+  --erp-canvas: #F8FAFC;
+  --erp-surface: #FFFFFF;
+  --erp-surface-2: #F1F5F9;
+  --erp-surface-3: #E2E8F0;
+  --erp-border: #E2E8F0;
+  --erp-border-strong: #CBD5E1;
+  --erp-text: #0F172A;
+  --erp-text-muted: #475569;
+  --erp-text-subtle: #94A3B8;
+  --erp-primary: #0F172A;
+  --erp-primary-hover: #1E293B;
+  --erp-on-primary: #FFFFFF;
+  --erp-accent: #0D9488;
+  --erp-accent-hover: #0F766E;
+  --erp-accent-soft: rgba(13, 148, 136, 0.10);
+  --erp-info: #06B6D4;
+  --erp-success: #10B981;
+  --erp-success-bg: #ECFDF5;
+  --erp-success-border: #A7F3D0;
+  --erp-success-text: #065F46;
+  --erp-warning: #F59E0B;
+  --erp-warning-bg: #FFFBEB;
+  --erp-warning-border: #FDE68A;
+  --erp-warning-text: #92400E;
+  --erp-danger: #F43F5E;
+  --erp-danger-bg: #FFF1F2;
+  --erp-danger-border: #FECDD3;
+  --erp-danger-text: #9F1239;
+  --erp-overlay: rgba(15, 23, 42, 0.45);
+  --erp-shadow-1: 0 1px 3px rgba(15, 23, 42, .04), 0 1px 2px -1px rgba(15, 23, 42, .04);
+  --erp-shadow-2: 0 4px 6px -1px rgba(15, 23, 42, .06);
+  --erp-shadow-3: 0 10px 15px -3px rgba(15, 23, 42, .08);
+  --erp-shadow-4: 0 20px 25px -5px rgba(15, 23, 42, .12);
+}
+
+.dark {
+  --erp-canvas: #0B1120;
+  --erp-surface: #0F172A;
+  --erp-surface-2: #1E293B;
+  --erp-surface-3: #334155;
+  --erp-border: #1E293B;
+  --erp-border-strong: #334155;
+  --erp-text: #F8FAFC;
+  --erp-text-muted: #94A3B8;
+  --erp-text-subtle: #64748B;
+  --erp-primary: #14B8A6;
+  --erp-primary-hover: #0D9488;
+  --erp-on-primary: #0B1120;
+  --erp-accent: #14B8A6;
+  --erp-accent-hover: #0D9488;
+  --erp-accent-soft: rgba(20, 184, 166, 0.12);
+  --erp-info: #06B6D4;
+  --erp-success: #10B981;
+  --erp-success-bg: rgba(16, 185, 129, 0.12);
+  --erp-success-border: rgba(16, 185, 129, 0.30);
+  --erp-success-text: #10B981;
+  --erp-warning: #F59E0B;
+  --erp-warning-bg: rgba(245, 158, 11, 0.12);
+  --erp-warning-border: rgba(245, 158, 11, 0.30);
+  --erp-warning-text: #F59E0B;
+  --erp-danger: #F43F5E;
+  --erp-danger-bg: rgba(244, 63, 94, 0.12);
+  --erp-danger-border: rgba(244, 63, 94, 0.30);
+  --erp-danger-text: #F43F5E;
+  --erp-overlay: rgba(2, 6, 23, 0.65);
+  --erp-shadow-1: none;
+  --erp-shadow-2: none;
+  --erp-shadow-3: 0 10px 15px -3px rgba(0, 0, 0, .35);
+  --erp-shadow-4: 0 20px 25px -5px rgba(0, 0, 0, .5);
+}
+
+/* Numbers: tabular figures so amounts line up in tables */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Base typography per DESIGN.md section 3 */
+html[lang="ar"] body { font-family: var(--font-cairo), var(--font-inter), sans-serif; line-height: 1.55; }
+html[lang="en"] body { font-family: var(--font-inter), var(--font-cairo), sans-serif; }
+
+/* Focus ring (accent, 2px offset) */
+.erp-focus:focus-visible { outline: 2px solid var(--erp-accent); outline-offset: 2px; }
+
+@keyframes erpSlideIn { from { transform: translateX(var(--erp-slide-from, -100%)); } to { transform: translateX(0); } }
+.erp-drawer-in { animation: erpSlideIn .2s ease-out; }
+
 /* ========== تخصيص شريط التمرير لجميع المتصفحات ========== */
 
 /* للمتصفحات التي تدعم Webkit (Chrome, Safari, Edge, Brave) */
@@ -68,7 +157,19 @@
 }
 
 .dark * {
-  scrollbar-color: #555555 #2d2d2d; 
+  scrollbar-color: #555555 #2d2d2d;
+}
+
+/* تباين: النص الأبيض فوق الأكسنت الفاتح (teal) في الغامق يتحول للون on-primary */
+.dark .bg-erp-accent.text-white,
+.dark .bg-erp-accent .text-white {
+  color: var(--erp-on-primary);
+}
+
+/* تباين: النص الأبيض فوق الأصفر (warning) غير مقروء في الوضعين */
+.bg-erp-warning.text-white,
+.bg-erp-warning .text-white {
+  color: #0F172A;
 }
 
 /* ========== إصلاح لون عنصر tspan في الوضع الداكن ========== */

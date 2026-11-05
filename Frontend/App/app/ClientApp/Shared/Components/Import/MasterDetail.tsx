@@ -21,6 +21,7 @@
 import React, { useCallback, useMemo, useState, lazy, Suspense } from "react";
 import DynamicGrid from "./DynamicGrid";
 import DynamicSelect from "./DynamicSelect";
+import { FORM_LAYOUT_GRID_CLASS, arrangeByLayout, formLayoutCellClass, formLayoutCellStyle, FormLayoutStatic } from "./FormLayout";
 const SearchModal = lazy(() => import("./SearchModal"));
 import { SQL } from "../../CallDataBase";
 import { Sys } from "../../SystemTools";
@@ -28,6 +29,11 @@ import { useSys } from "../../SystemUsing";
 import { RunValidations, SqlLiteral } from "../../Validation";
 import { MasterDetailColumn, MasterDetailConfig } from "./ModelMasterDetail";
 import { ColumnMode } from "./ModelGrid";
+import { useEffectiveModulePermissions } from "../../Permissions";
+// Phase 6: إكسل (اختياري) — بيظهر بس لو config.excel.enabled
+import { ExcelMasterBar, ExcelDetailsBar } from "../Excel/ExcelMasterDetailBars";
+// Phase 7: طباعة التقارير (اختياري) — config.report
+import { openReport } from "../../Reports/openReport";
 
 type Row = Record<string, any>;
 
@@ -142,15 +148,15 @@ export function resolveRowPlaceholders(input: string, row?: Record<string, any>)
 
 export function FieldInput({ col, value, onChange, onSearch, disabled, error, compact, isDark, t, row }: FieldInputProps) {
   const type = col.inputType || col.type || "text";
-  const base = `w-full border rounded-lg ${compact ? "px-2 py-1.5" : "px-3 py-2.5"} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition`;
-  const theme = isDark ? "bg-gray-800/70 border-gray-700 text-white" : "bg-white border-gray-300 text-gray-900";
-  const err = error ? "border-red-500 ring-1 ring-red-400" : "";
-  const dis = disabled ? "opacity-70 cursor-not-allowed bg-gray-100 dark:bg-gray-800/40" : "";
+  const base = `w-full border rounded-lg ${compact ? "px-2 h-9" : "px-3 h-10 md:h-9"} text-[13px] focus:outline-none focus:border-erp-accent focus:shadow-[0_0_0_3px_var(--erp-accent-soft)] transition ${type === "number" ? "num" : ""}`;
+  const theme = "bg-erp-surface border-erp-border-strong text-erp-text placeholder:text-erp-text-subtle";
+  const err = error ? "!border-erp-danger" : "";
+  const dis = disabled ? "opacity-80 cursor-not-allowed !bg-erp-surface-2" : "";
   const cls = `${base} ${theme} ${err} ${dis}`;
 
   if (col.formula || (disabled && type !== "checkbox")) {
     const shown = isEmpty(value) ? "-" : type === "date" ? String(value).substring(0, 10) : typeof value === "number" ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(value);
-    return <div className={`${cls} font-semibold`}>{shown}</div>;
+    return <div className={`${cls} font-semibold flex items-center`}>{shown}</div>;
   }
 
   if (type === "selectSearch" && (col as any).selectConfig) {
@@ -190,9 +196,9 @@ export function FieldInput({ col, value, onChange, onSearch, disabled, error, co
     return (
       <div className="flex gap-1">
         <input className={`${cls} flex-1`} value={value ?? ""} readOnly placeholder={col.placeholder || t("Search...", "بحث...")} onDoubleClick={onSearch} />
-        <button type="button" onClick={onSearch} className="px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm">🔍</button>
+        <button type="button" onClick={onSearch} className="px-2.5 rounded-lg bg-erp-accent hover:bg-erp-accent-hover text-white text-sm">🔍</button>
         {!isEmpty(value) && (
-          <button type="button" onClick={() => onChange(null)} className="px-2 rounded-lg bg-gray-400 hover:bg-gray-500 text-white text-xs">✕</button>
+          <button type="button" onClick={() => onChange(null)} className="px-2 rounded-lg bg-erp-surface-3 hover:bg-erp-border-strong text-erp-text text-xs">✕</button>
         )}
       </div>
     );
@@ -202,7 +208,7 @@ export function FieldInput({ col, value, onChange, onSearch, disabled, error, co
     return (
       <input
         type="checkbox"
-        className="w-5 h-5 cursor-pointer"
+        className="size-4 cursor-pointer accent-[var(--erp-accent)]"
         checked={value === true || value === 1 || value === "1"}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
@@ -242,6 +248,9 @@ export function FieldInput({ col, value, onChange, onSearch, disabled, error, co
 // ======================================================================
 type SearchTarget = { col: MasterDetailColumn; detail: number; rowIndex: number }; // detail = -1 للماستر
 
+// دوال بتتبعت لمكونات الإكسل (بدل ما هي تستورد من الملف ده وتعمل استيراد دائري)
+const excelHelpers = { emptyRow, recalc, buildSaveRow };
+
 export default function MasterDetail({ config, height = "calc(100vh - 140px)" }: { config: MasterDetailConfig; height?: string }) {
   const IsLangEN = useSys((s) => s.IsLangEN);
   const lang = useSys((s) => s.lang);
@@ -261,14 +270,23 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
   const [gridKey, setGridKey] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  const enableInsert = config.enableInsert !== false;
-  const enableUpdate = config.enableUpdate !== false;
-  const enableDelete = config.enableDelete !== false;
-  const enableView = config.enableView !== false;
-  const enablePrint = config.enablePrint !== false;
+  // ✅ صلاحيات اختيارية (config.moduleCode / config.permissions) — مش متحددين = السلوك القديم
+  const modulePerm = useEffectiveModulePermissions(config.moduleCode, config.permissions);
+  const enableInsert = config.enableInsert !== false && (modulePerm ? modulePerm.create : true);
+  const enableUpdate = config.enableUpdate !== false && (modulePerm ? modulePerm.edit : true);
+  const enableDelete = config.enableDelete !== false && (modulePerm ? modulePerm.delete : true);
+  const enableView = config.enableView !== false && (modulePerm ? modulePerm.view : true);
+  const enablePrint = config.enablePrint !== false && (modulePerm ? modulePerm.print : true);
 
-  const card = isDark ? "bg-gray-900/80 border-gray-700/60 text-gray-100" : "bg-white/90 border-gray-200 text-gray-800";
-  const muted = isDark ? "text-gray-400" : "text-gray-500";
+  // ✅ Phase 6: الإكسل (اختياري). محتاج صلاحية الإضافة. معاملات كتير في القايمة · سطور تفاصيل جوه الفورم.
+  const excelCfg = config.excel && config.excel.enabled ? config.excel : null;
+  const excelMulti = !!excelCfg && enableInsert && (excelCfg.mode === "multiTransaction" || excelCfg.mode === "both");
+  const excelDetailsIdx = excelCfg && enableInsert && (excelCfg.mode === "detailsOnly" || excelCfg.mode === "both") && config.details.length > 0
+    ? Math.min(Math.max(0, excelCfg.detailIndex ?? 0), config.details.length - 1)
+    : -1;
+
+  const card = "bg-erp-surface border-erp-border text-erp-text";
+  const muted = "text-erp-text-muted";
 
   // ---------- تحديث القيم + إعادة الحساب ----------
   const update = (m: Row, d: Row[][]) => {
@@ -297,6 +315,14 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
   const removeRow = (d: number, i: number) => {
     const nd = details.map((rows, di) => (di !== d ? rows : rows.filter((_, ri) => ri !== i)));
     update(master, nd);
+  };
+
+  // ---------- إضافة سطور للتفاصيل (من الإكسل): الصف الفاضي الأول بيتشال ثم السطور بتتضاف ----------
+  const appendDetailRows = (d: number, rows: Row[]) => {
+    if (!rows.length) return;
+    const nd = details.map((rs, di) => (di !== d ? rs : [...rs.filter((r) => !isBlankRow(r, config.details[d].columns)), ...rows.map((r) => ({ ...r, __uid: newUid() }))]));
+    update(master, nd);
+    setActiveTab(d);
   };
 
   // ---------- فتح فورم جديد ----------
@@ -504,7 +530,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
           itemTemplate: (value: any) => {
             const o = options.find((x) => String(x.value) === String(value));
             return (
-              <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+              <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-erp-accent-soft text-erp-accent">
                 {o ? o.label : isEmpty(value) ? "-" : String(value)}
               </span>
             );
@@ -519,6 +545,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
   const printRecord = useCallback(
     (row: Row) => {
       if (config.onPrint) config.onPrint(row);
+      else if (config.report?.transaction) openReport({ reportCode: config.report.transaction.reportCode, title: config.report.transaction.title, moduleCode: config.moduleCode, row, trId: row?.[config.keyColumn] });
       else Sys.ShowMessage("🖨️ Printing is coming soon", "🖨️ الطباعة هتبقى متاحة قريب", "info");
     },
     [config]
@@ -541,8 +568,11 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
     return (
       <div className="space-y-3">
         {enableInsert && (
-          <div className="flex justify-end">
-            <button onClick={openNew} className="px-5 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 shadow-md">
+          <div className="flex flex-wrap justify-end gap-2">
+            {excelMulti && excelCfg && (
+              <ExcelMasterBar config={config} excel={excelCfg} helpers={excelHelpers} onDone={() => setGridKey((k) => k + 1)} />
+            )}
+            <button onClick={openNew} className="px-5 h-11 md:h-9 rounded-lg text-white text-[13px] font-semibold bg-erp-accent hover:bg-erp-accent-hover transition-colors">
               ➕ {config.newTitle || t("New", "جديد")}
             </button>
           </div>
@@ -568,6 +598,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
           extraActions={extraActions}
           onRowDoubleClick={enableUpdate ? (row: Row) => openEdit(row) : enableView ? (row: Row) => openEdit(row, true) : undefined}
           height={height}
+          {...(config.report?.list ? { report: { list: config.report.list }, moduleCode: config.moduleCode, permissions: { print: enablePrint } } : {})}
         />
       </div>
     );
@@ -588,49 +619,33 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
   const totalFields = new Set(config.details.flatMap((d) => (d.totals || []).map((x) => x.masterField)));
 
   return (
-    <div className="space-y-4">
-      {/* ===== شريط الأزرار ===== */}
-      <div className={`rounded-2xl border shadow-lg p-3 flex flex-wrap items-center gap-2 ${card}`}>
-        <button onClick={() => setMode("list")} className={`px-4 py-2 rounded-xl border-2 font-medium ${isDark ? "border-gray-600 hover:border-blue-500" : "border-gray-300 hover:border-blue-600"}`}>
-          {IsLangEN ? "← " : "→ "}{t("Back", "رجوع")}
-        </button>
-        <h2 className="text-lg font-bold flex-1 min-w-0 truncate">
-          {isInsert ? config.newTitle || t("New", "جديد") : `${config.editTitle || t("Edit", "تعديل")} ${master[config.keyColumn] ?? ""}`}
-          {viewOnly && <span className={`mx-2 px-2 py-0.5 rounded-full text-xs font-semibold align-middle ${isDark ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-700"}`}>👁️ {t("View only", "عرض بس")}</span>}
+    <div className="space-y-4 pb-2">
+      {/* ===== العنوان ===== */}
+      <div className="flex items-center gap-2 min-w-0">
+        <h2 className="text-[22px] md:text-[28px] leading-9 font-bold text-erp-text flex-1 min-w-0 truncate">
+          {isInsert ? config.newTitle || t("New", "جديد") : `${config.editTitle || t("Edit", "تعديل")} `}
+          {!isInsert && <bdi dir="ltr" className="num">{master[config.keyColumn] ?? ""}</bdi>}
+          {viewOnly && <span className="mx-2 px-2 py-0.5 rounded-md text-[11px] font-semibold align-middle bg-erp-surface-2 text-erp-text-muted border border-erp-border">👁️ {t("View only", "عرض بس")}</span>}
         </h2>
-        {viewOnly && enablePrint && (
-          <button onClick={() => printRecord(master)} className={`px-4 py-2 rounded-xl border-2 font-medium ${isDark ? "border-gray-600 hover:border-blue-500" : "border-gray-300 hover:border-blue-600"}`}>
-            🖨️ {t("Print", "طباعة")}
-          </button>
-        )}
-        {viewOnly && enableUpdate && (
-          <button onClick={() => setViewOnly(false)} className="px-5 py-2 rounded-xl text-white font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 shadow-md">
-            ✏️ {t("Edit", "تعديل")}
-          </button>
-        )}
-        {!viewOnly && (
-          <button
-            onClick={save}
-            disabled={saving}
-            className="px-6 py-2 rounded-xl text-white font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 shadow-md disabled:opacity-50"
-          >
-            💾 {saving ? t("Saving...", "جاري الحفظ...") : t("Save", "حفظ")}
-          </button>
-        )}
       </div>
 
       {/* ===== الماستر ===== */}
-      <div className={`rounded-2xl border shadow-lg p-4 ${card}`}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {masterFields.map((c) => {
+      <div className={`rounded-xl border shadow-erp-1 p-4 md:p-5 ${card}`}>
+        <div className={config.formLayout && config.formLayout.length > 0 ? FORM_LAYOUT_GRID_CLASS : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"}>
+          {(config.formLayout && config.formLayout.length > 0
+            ? arrangeByLayout(masterFields, config.formLayout)
+            : masterFields.map((c) => ({ cell: undefined as any, col: c }))
+          ).map((item, idx) => {
+            if (!item.col) return <div key={`s${idx}`} className={formLayoutCellClass(item.cell)} style={formLayoutCellStyle(item.cell)}><FormLayoutStatic cell={item.cell} isEN={IsLangEN} /></div>;
+            const c = item.col;
             const editableNow = (isInsert ? c.insertable !== false : c.editable !== false) && !c.IsDisabledInEdit === !(!isInsert && c.IsDisabledInEdit);
             const disabled = viewOnly || !editableNow || (!isInsert && !!c.IsDisabledInEdit) || (isInsert && !!c.IsDisabledInAdd) || totalFields.has(c.field);
             const errKey = "m." + c.field;
             return (
-              <div key={c.field} className={c.inputType === "textarea" ? "sm:col-span-2" : ""}>
-                <label className={`block text-sm font-semibold mb-1 ${muted}`}>
+              <div key={c.field} className={item.cell ? formLayoutCellClass(item.cell) : c.inputType === "textarea" ? "sm:col-span-2" : ""} style={item.cell ? formLayoutCellStyle(item.cell) : undefined}>
+                <label className="block text-[13px] font-medium mb-1 text-erp-text">
                   {c.title}
-                  {c.IsRequired && !disabled && <span className="text-red-500 mx-1">*</span>}
+                  {c.IsRequired && !disabled && <span className="text-erp-danger mx-1">*</span>}
                 </label>
                 <FieldInput
                   col={c}
@@ -643,7 +658,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
                   t={t}
                   row={master}
                 />
-                {errors[errKey] && <p className="text-red-500 text-xs mt-1">{errors[errKey]}</p>}
+                {errors[errKey] && <p className="text-erp-danger text-xs mt-1">{errors[errKey]}</p>}
               </div>
             );
           })}
@@ -662,11 +677,42 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
         onSearch={(c, di, ri) => setSearchTarget({ col: c, detail: di, rowIndex: ri })}
         onAddRow={addRow}
         onRemoveRow={removeRow}
+        renderToolbar={
+          excelDetailsIdx >= 0 && excelCfg && !viewOnly
+            ? (di) => (di === excelDetailsIdx ? <ExcelDetailsBar config={config} excel={excelCfg} helpers={excelHelpers} onAppend={(rows) => appendDetailRows(di, rows)} /> : null)
+            : undefined
+        }
         isDark={isDark}
         t={t}
         card={card}
         muted={muted}
       />
+
+      {/* ===== شريط الأزرار (ثابت تحت) ===== */}
+      <div className="sticky bottom-0 z-20 -mx-4 md:-mx-6 xl:-mx-8 -mb-4 md:-mb-6 xl:-mb-8 px-4 md:px-6 xl:px-8 py-3 bg-erp-surface border-t border-erp-border flex flex-wrap items-center gap-2 justify-end">
+        <button onClick={() => setMode("list")} className="px-4 h-11 md:h-9 rounded-lg border border-erp-border bg-erp-surface text-erp-text text-[13px] font-medium hover:bg-erp-surface-2 transition-colors me-auto">
+          {IsLangEN ? "← " : "→ "}{t("Back", "رجوع")}
+        </button>
+        {enablePrint && (viewOnly || (!!config.report?.transaction && !!master[config.keyColumn])) && (
+          <button onClick={() => printRecord(master)} className="px-4 h-11 md:h-9 rounded-lg border border-erp-border bg-erp-surface text-erp-text text-[13px] font-medium hover:bg-erp-surface-2 transition-colors">
+            🖨️ {t("Print", "طباعة")}
+          </button>
+        )}
+        {viewOnly && enableUpdate && (
+          <button onClick={() => setViewOnly(false)} className="px-5 h-11 md:h-9 rounded-lg text-white text-[13px] font-semibold bg-erp-accent hover:bg-erp-accent-hover transition-colors">
+            ✏️ {t("Edit", "تعديل")}
+          </button>
+        )}
+        {!viewOnly && (
+          <button
+            onClick={save}
+            disabled={saving}
+            className="px-6 h-11 md:h-9 rounded-lg text-white text-[13px] font-semibold bg-erp-accent hover:bg-erp-accent-hover transition-colors disabled:opacity-50"
+          >
+            💾 {saving ? t("Saving...", "جاري الحفظ...") : t("Save", "حفظ")}
+          </button>
+        )}
+      </div>
 
       {/* ===== نافذة البحث — lazy loaded ===== */}
       {searchTarget && searchTarget.col.searchModal && (() => {
@@ -709,23 +755,25 @@ export interface DetailsEditorProps {
   onSearch: (col: MasterDetailColumn, d: number, i: number) => void;
   onAddRow: (d: number) => void;
   onRemoveRow: (d: number, i: number) => void;
+  /** Phase 6 (اختياري): أزرار فوق جدول التفاصيل (مثلاً استيراد من Excel) */
+  renderToolbar?: (detailIndex: number) => React.ReactNode;
   isDark: boolean;
   t: (en: string, ar: string) => string;
   card: string;
   muted: string;
 }
 
-export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewOnly, errors, onChange, onSearch, onAddRow, onRemoveRow, isDark, t, card, muted }: DetailsEditorProps) {
+export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewOnly, errors, onChange, onSearch, onAddRow, onRemoveRow, renderToolbar, isDark, t, card, muted }: DetailsEditorProps) {
   if (configs.length === 0) return null;
   return (
-    <div className={`rounded-2xl border shadow-lg ${card}`}>
+    <div className={`rounded-xl border shadow-erp-1 ${card}`}>
       {configs.length > 1 && (
-        <div className={`flex gap-1 px-3 pt-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+        <div className="flex gap-1 px-3 pt-3 border-b border-erp-border overflow-x-auto">
           {configs.map((d, i) => (
             <button
               key={i}
               onClick={() => setActiveTab(i)}
-              className={`px-4 py-2 rounded-t-xl text-sm font-semibold ${activeTab === i ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : muted}`}
+              className={`px-4 h-10 rounded-t-lg text-[13px] font-semibold whitespace-nowrap ${activeTab === i ? "bg-erp-accent text-white" : muted}`}
             >
               {d.title} ({(allRows[i] || []).length})
             </button>
@@ -740,16 +788,17 @@ export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewO
         const sumFields = new Set((d.totals || []).filter((x) => (x.type || "sum") === "sum").map((x) => x.detailField));
         return (
           <div key={di} className="p-3">
-            {configs.length === 1 && <h3 className="font-bold mb-2">{d.title}</h3>}
+            {configs.length === 1 && <h3 className="text-[15px] leading-5 font-semibold mb-2 text-erp-text">{d.title}</h3>}
+            {renderToolbar && (() => { const tb = renderToolbar(di); return tb ? <div className="flex flex-wrap justify-end gap-2 mb-2">{tb}</div> : null; })()}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={isDark ? "bg-gray-800" : "bg-gray-100"}>
+              <table className="w-full text-[13px]">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-erp-surface-2 border-b border-erp-border-strong text-[11px] uppercase tracking-[.04em] text-erp-text-muted">
                     <th className="p-2 w-10">#</th>
                     {cols.map((c) => (
                       <th key={c.field} className="p-2 text-start font-semibold whitespace-nowrap" style={{ minWidth: c.width || 120 }}>
                         {c.title}
-                        {c.IsRequired && c.editable !== false && !c.formula && <span className="text-red-500 mx-1">*</span>}
+                        {c.IsRequired && c.editable !== false && !c.formula && <span className="text-erp-danger mx-1">*</span>}
                       </th>
                     ))}
                     <th className="p-2 w-12"></th>
@@ -757,8 +806,8 @@ export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewO
                 </thead>
                 <tbody>
                   {rows.map((r, ri) => (
-                    <tr key={r.__uid || ri} className={`border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
-                      <td className={`p-2 text-center ${muted}`}>{ri + 1}</td>
+                    <tr key={r.__uid || ri} className="border-b border-erp-border hover:bg-erp-surface-2">
+                      <td className={`num p-2 text-center ${muted}`}>{ri + 1}</td>
                       {cols.map((c) => {
                         const errKey = `d${di}.${ri}.${c.field}`;
                         return (
@@ -779,17 +828,17 @@ export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewO
                         );
                       })}
                       <td className="p-1 text-center">
-                        {!viewOnly && <button onClick={() => onRemoveRow(di, ri)} title={t("Delete row", "حذف الصف")} className="px-2 py-1 rounded-lg text-red-600 hover:bg-red-50">🗑️</button>}
+                        {!viewOnly && <button onClick={() => onRemoveRow(di, ri)} title={t("Delete row", "حذف الصف")} className="px-2 min-h-[36px] rounded-lg text-erp-danger hover:bg-erp-danger-bg">🗑️</button>}
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 {sumFields.size > 0 && rows.length > 0 && (
                   <tfoot>
-                    <tr className={`font-bold ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                    <tr className="font-bold bg-erp-accent-soft text-erp-text">
                       <td className="p-2 text-center">Σ</td>
                       {cols.map((c) => (
-                        <td key={c.field} className="p-2">
+                        <td key={c.field} className="num p-2">
                           {sumFields.has(c.field) ? round(rows.reduce((s, x) => s + n(x[c.field]), 0)).toLocaleString() : ""}
                         </td>
                       ))}
@@ -800,7 +849,7 @@ export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewO
               </table>
             </div>
             {!viewOnly && (
-              <button onClick={() => onAddRow(di)} className="mt-3 px-4 py-2 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 font-semibold hover:bg-blue-50 w-full">
+              <button onClick={() => onAddRow(di)} className="mt-3 px-4 h-11 md:h-10 rounded-lg border-2 border-dashed border-erp-accent text-erp-accent font-semibold hover:bg-erp-accent-soft w-full transition-colors">
                 ➕ {t("Add row", "إضافة صف")}
               </button>
             )}

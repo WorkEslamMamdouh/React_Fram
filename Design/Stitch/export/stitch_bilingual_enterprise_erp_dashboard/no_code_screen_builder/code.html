@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'Cairo','Inter',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-primary":"#bec6e0","on-tertiary":"#ffffff","tertiary-fixed":"#acedff","tertiary-fixed-dim":"#4cd7f6","secondary-fixed":"#89f5e7","surface-container":"#e5eeff","on-surface-variant":"#45464d","on-primary":"#ffffff","outline":"#76777d","error":"#ba1a1a","surface-container-highest":"#d3e4fe","secondary":"#006a61","primary-container":"#131b2e","error-container":"#ffdad6","on-tertiary-fixed-variant":"#004e5c","on-background":"#0b1c30","on-error":"#ffffff","outline-variant":"#c6c6cd","on-secondary-fixed-variant":"#005049","surface-variant":"#d3e4fe","on-primary-fixed":"#131b2e","tertiary-container":"#001f26","on-primary-fixed-variant":"#3f465c","surface-bright":"#f8f9ff","on-secondary":"#ffffff","on-secondary-fixed":"#00201d","primary":"#000000","primary-fixed":"#dae2fd","on-error-container":"#93000a","on-surface":"#0b1c30","on-tertiary-fixed":"#001f26","on-tertiary-container":"#0090a9","surface-container-low":"#eff4ff","surface-container-lowest":"#ffffff","surface-tint":"#565e74","secondary-fixed-dim":"#6bd8cb","surface-dim":"#cbdbf5","on-primary-container":"#7c839b","tertiary":"#000000","background":"#f8f9ff","secondary-container":"#86f2e4","inverse-surface":"#213145","surface-container-high":"#dce9ff","surface":"#f8f9ff","on-secondary-container":"#006f66","inverse-on-surface":"#eaf1ff","primary-fixed-dim":"#bec6e0"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-sm":"0.5rem","margin":"1rem","space-xs":"0.25rem","gutter-desktop":"1.5rem","space-lg":"1rem","gutter":"1rem","space-xl":"1.5rem","margin-desktop":"2rem","space-md":"0.75rem"},fontFamily:{"body-sm":["Inter"],"headline-lg-mobile":["Inter"],"label-sm":["Inter"],"headline-xl-mobile":["Inter"],"body-lg":["Inter"],"label-md":["Inter"],"headline-xl":["Inter"],"tabular-mono":["Inter"],"headline-lg":["Inter"],"body-md":["Inter"],"headline-sm":["Inter"],"headline-md":["Inter"]},fontSize:{"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-lg-mobile":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"headline-xl-mobile":["22px",{"lineHeight":"28px","fontWeight":"700"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","fontWeight":"500"}],"headline-xl":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"tabular-mono":["13px",{"lineHeight":"18px","fontWeight":"500"}],"headline-lg":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-md":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-sm":["15px",{"lineHeight":"20px","fontWeight":"600"}],"headline-md":["18px",{"lineHeight":"24px","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 inset-x-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><img alt="Etqan ERP Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UR-ufqmFuwrz9F7QOu1CrwktNM35YvPhpi33zEpvyUtz-cgEviS-oNfvIYbAqvrd7_tPmIDDvz73qRa_eUUxvfj2ROYDEw85xiul8QAPzyr-pj2azsDULtgImJw-wlY9lIiTLJqVZEOPhzVnLLdFQvamW4f751lm2TbiAt4wbvZdxJwCxF1E6_pfv7cHtpZHGaA_xavxvANtViK0Ks7m4mI97eiDiOvf9qZcFrJXR0"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface leading-tight">إتقان لتخطيط الموارد</span><span class="font-label-sm text-label-sm text-on-surface-variant font-tabular-mono">Etqan Enterprise ERP</span></div><div class="h-6 w-px bg-surface-variant mx-space-xs hidden lg:block"></div><div class="hidden xl:flex items-center gap-space-sm bg-surface-container-low px-space-md py-1.5 rounded-lg"><span class="material-symbols-outlined text-secondary text-sm">apartment</span><span class="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[170px]">شركة التقنية المتطورة القابضة</span><span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span></div><div class="hidden 2xl:flex items-center gap-space-sm bg-surface-container-low px-space-md py-1.5 rounded-lg"><span class="material-symbols-outlined text-on-surface-variant text-sm">storefront</span><span class="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[150px]">فرع الرياض الرئيسي</span><span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span></div><div class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span class="font-label-sm text-label-sm font-semibold">السنة المالية: 2025</span></div></div><div class="flex-1 max-w-lg mx-space-md hidden md:block"><div class="relative flex items-center w-full"><span class="material-symbols-outlined absolute right-3 text-on-surface-variant pointer-events-none text-lg">search</span><input class="w-full h-9 pr-10 pl-16 rounded-lg bg-surface-container-low border-0 text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-secondary/30" placeholder="بحث عام في النظام... (فواتير، عملاء، تقارير)" type="text"/><div class="absolute left-2.5 flex items-center gap-1"><kbd class="px-1.5 py-0.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high rounded font-tabular-mono">Ctrl</kbd><kbd class="px-1.5 py-0.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high rounded font-tabular-mono">K</kbd></div></div></div><div class="flex items-center gap-space-sm shrink-0"><button class="flex items-center gap-1.5 px-space-md py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" type="button"><span class="material-symbols-outlined text-base">language</span><span class="font-tabular-mono">عربي / EN</span></button><button class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-xl">dark_mode</span></button><button class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-error text-on-error font-label-sm text-[10px] flex items-center justify-center font-bold font-tabular-mono">3</span></button><button class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors hidden sm:inline-flex" type="button"><span class="material-symbols-outlined text-xl">help_outline</span></button><div class="h-6 w-px bg-surface-variant mx-space-xs"></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="hidden sm:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface font-semibold">م. طارق المنصور</span><span class="font-label-sm text-label-sm text-on-surface-variant font-tabular-mono">المدير المالي - CFO</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-sm ring-1 ring-surface-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXG2s9dPM2BCvfVBTSFoAWgG5ghQr9LJ3Rh_kjtPvaepB1wOb-AzDQc0YWPDs9l431J8EOIQnmp4uIp8apEz6xaKDlg5mwhzRqWrDxRXM0fvqW6sNMGetT_SVR2KinxSsjsxY_GyDeTiHUEA3knbNZkcGil4r_cFOyPyhy0RyZnvArbICiVKzrEv0kBIHiTCWfAp6iV42qquo_j0TX-1ch-H_ckd3uebwMIhkRD_U"/></div></div></div></header><aside class="fixed right-0 top-16 bottom-0 w-72 bg-surface-container-lowest z-40 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="p-space-md flex items-center justify-between bg-surface-container-low"><div class="relative flex-1"><span class="material-symbols-outlined absolute right-2.5 top-2 text-on-surface-variant text-base">filter_list</span><input class="w-full h-8 pr-8 pl-3 bg-surface-container-lowest rounded-lg border-0 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none" placeholder="بحث في القوائم..." type="text"/></div><button class="p-1.5 mr-space-xs text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-colors" type="button"><span class="material-symbols-outlined text-lg">dock_to_right</span></button></div><div class="flex-1 overflow-y-auto px-space-md py-space-sm space-y-space-md"><div class="space-y-1"><div class="flex items-center justify-between px-space-sm py-1"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-amber-500 text-sm">star</span>قسم المفضلة</span><span class="material-symbols-outlined text-on-surface-variant text-xs">drag_indicator</span></div><nav class="space-y-0.5" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg"><a class="flex items-center px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="sales-invoices" href="#">فواتير المبيعات</a><a class="flex items-center px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="create-sales-invoice" href="#">إنشاء فاتورة مبيعات جديدة</a><a class="flex items-center px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="report-viewer" href="#">عارض ومصمم التقارير</a><a class="flex items-center px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="trial-balance" href="#">ميزان المراجعة</a></nav></div><div class="space-y-space-md"><div class="rounded-lg bg-surface-container-low p-space-xs"><div class="flex items-center justify-between px-space-sm py-2 rounded-lg font-label-md text-label-md font-semibold text-secondary"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-base">point_of_sale</span><span>المبيعات والعملاء</span></div><span class="material-symbols-outlined text-base">expand_less</span></div><nav class="pr-space-md pl-space-xs py-1 space-y-0.5" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="sales-invoices" href="#">فواتير المبيعات</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="create-sales-invoice" href="#">إنشاء فاتورة مبيعات جديدة</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="quotations" href="#">عروض الأسعار</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="sales-orders" href="#">أوامر البيع</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="customers" href="#">العملاء</a></nav></div><div class="space-y-0.5"><div class="flex items-center justify-between px-space-sm py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface cursor-pointer"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-base">insights</span><span>التقارير والمخرجات</span></div><span class="material-symbols-outlined text-base">expand_more</span></div><nav class="pr-space-md pl-space-xs space-y-0.5" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="report-viewer" href="#">عارض ومصمم التقارير</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="sales-reports" href="#">تقارير المبيعات</a><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="trial-balance" href="#">ميزان المراجعة</a></nav></div><div class="space-y-0.5"><div class="flex items-center justify-between px-space-sm py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface cursor-pointer"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-base">settings_suggest</span><span>الإعدادات وإدارة النظام</span></div><span class="material-symbols-outlined text-base">expand_more</span></div><nav class="pr-space-md pl-space-xs space-y-0.5" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg"><a class="flex items-center px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="users-permissions" href="#">إدارة المستخدمين والصلاحيات</a><a aria-current="page" class="flex items-center px-space-sm py-1.5 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg" data-path="screen-builder" href="#">مصمم الشاشات والنماذج</a></nav></div></div></div><div class="p-space-md bg-surface-container-low border-t border-surface-variant flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface-variant">متصل بالخادم السحابي</span></div><span class="font-label-sm text-label-sm text-on-surface-variant font-tabular-mono">v4.8.2 Enterprise</span></div></aside><div class="pr-72"><main class="relative pt-16 w-full min-h-screen bg-surface px-space-lg py-space-lg"><div class="flex flex-col w-full">
+<!-- Top Studio Toolbar -->
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-md p-space-md mb-space-lg flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shadow-sm shrink-0">
+<span class="material-symbols-outlined text-secondary-fixed text-xl">dashboard_customize</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">نموذج طلب صرف بضاعة</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">MIR-v2.4 Draft</span>
+</div>
+<span class="font-tabular-mono text-body-sm text-on-surface-variant truncate">Material Issue Request • INV_TRX_MIR_TBL</span>
+</div>
+</div>
+<!-- Actions & Quick Controls -->
+<div class="flex items-center gap-2 flex-wrap">
+<div class="flex items-center bg-surface-container rounded-lg p-1">
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-undo" title="تراجع (Ctrl+Z)">
+<span class="material-symbols-outlined text-lg">undo</span>
+</button>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-redo" title="إعادة (Ctrl+Y)">
+<span class="material-symbols-outlined text-lg">redo</span>
+</button>
+<div class="w-px h-4 bg-outline-variant mx-1"></div>
+<button class="p-1.5 rounded bg-surface-container-lowest text-secondary shadow-sm" id="btn-viewport-desktop">
+<span class="material-symbols-outlined text-lg">desktop_windows</span>
+</button>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface" id="btn-viewport-tablet">
+<span class="material-symbols-outlined text-lg">tablet_mac</span>
+</button>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface" id="btn-viewport-mobile">
+<span class="material-symbols-outlined text-lg">smartphone</span>
+</button>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors font-label-md text-label-md" id="btn-excel-template">
+<span class="material-symbols-outlined text-secondary text-base">table_view</span>
+<span>قالب Excel</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors font-label-md text-label-md" id="btn-print-settings">
+<span class="material-symbols-outlined text-on-surface-variant text-base">print</span>
+<span>إعدادات الطباعة</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md font-semibold" id="btn-preview">
+<span class="material-symbols-outlined text-base">visibility</span>
+<span>معاينة حية</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-on-secondary hover:bg-on-secondary-container transition-all shadow-sm font-label-md text-label-md font-bold" id="btn-publish">
+<span class="material-symbols-outlined text-base">cloud_done</span>
+<span>حفظ ونشر الشاشة</span>
+</button>
+</div>
+</div>
+<!-- Studio Main Work Area (3-Column Layout: Controls Palette | Canvas | Inspector) -->
+<div class="grid grid-cols-12 gap-space-lg items-start">
+<!-- Right Panel: Palette of Draggable Controls (3 Cols) -->
+<div class="col-span-12 xl:col-span-3 flex flex-col gap-space-md order-2 xl:order-1">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-2 border-b-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg">widgets</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">عناصر التحكم والمدخلات</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant">14 عنصر</span>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute right-2.5 top-2 text-on-surface-variant text-sm">search</span>
+<input class="w-full h-8 pr-8 pl-2.5 rounded-lg bg-surface-container-low text-on-surface text-body-sm font-body-sm focus:outline-none focus:bg-surface-container" id="control-search" placeholder="تصفية المكونات..." type="text"/>
+</div>
+<!-- Category: Input Fields -->
+<div class="flex flex-col gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-xs">edit_note</span>
+            حقول الإدخال الأساسية
+          </span>
+<div class="grid grid-cols-2 gap-2">
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="text" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">text_fields</span>
+<span class="font-label-md text-label-md">حقل نص</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="number" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">pin</span>
+<span class="font-label-md text-label-md">رقم / كمية</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="date" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">calendar_today</span>
+<span class="font-label-md text-label-md">تاريخ مفرد</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="daterange" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">date_range</span>
+<span class="font-label-md text-label-md">نطاق تاريخ</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="dropdown" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">arrow_drop_down_circle</span>
+<span class="font-label-md text-label-md">قائمة منسدلة</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="lookup" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">manage_search</span>
+<span class="font-label-md text-label-md">بحث متقدم</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="checkbox" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">check_box</span>
+<span class="font-label-md text-label-md">مربع اختيار</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="textarea" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">notes</span>
+<span class="font-label-md text-label-md">ملاحظات متعددة</span>
+</div>
+</div>
+</div>
+<!-- Category: Layout & Containers -->
+<div class="flex flex-col gap-2 pt-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-xs">view_quilt</span>
+            حاويات وهيكلة التصميم
+          </span>
+<div class="grid grid-cols-2 gap-2">
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="grid" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">grid_on</span>
+<span class="font-label-md text-label-md">جدول بيانات Grid</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="tabs" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">tab</span>
+<span class="font-label-md text-label-md">علامات تبويب</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="columns" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">view_column</span>
+<span class="font-label-md text-label-md">أعمدة مرنة</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="divider" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">horizontal_rule</span>
+<span class="font-label-md text-label-md">فاصل أقسام</span>
+</div>
+</div>
+</div>
+<!-- Category: Buttons & Actions -->
+<div class="flex flex-col gap-2 pt-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-xs">smart_button</span>
+            أزرار وإجراءات متقدمة
+          </span>
+<div class="grid grid-cols-2 gap-2">
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="custom-btn" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">touch_app</span>
+<span class="font-label-md text-label-md">زر مخصص</span>
+</div>
+<div class="draggable-pill flex items-center gap-2 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high cursor-grab active:cursor-grabbing transition-all text-on-surface group" data-type="attachment" draggable="true">
+<span class="material-symbols-outlined text-secondary text-base group-hover:scale-110 transition-transform">attach_file</span>
+<span class="font-label-md text-label-md">رفع مرفقات</span>
+</div>
+</div>
+</div>
+<!-- Quick Tips Callout -->
+<div class="p-space-sm rounded-lg bg-surface-container flex items-start gap-2 mt-2">
+<span class="material-symbols-outlined text-secondary text-base shrink-0">lightbulb</span>
+<span class="font-body-sm text-body-sm text-on-surface leading-tight">اسحب أي عنصر وأسقطه مباشرة في منطقة البناء المحددة لربط الحقل بقاعدة البيانات تلقائياً.</span>
+</div>
+</div>
+</div>
+<!-- Center Panel: Canvas Workspace (6 Cols) -->
+<div class="col-span-12 xl:col-span-6 flex flex-col gap-space-lg order-1 xl:order-2">
+<!-- Canvas Canvas Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col gap-space-lg relative min-h-[760px]" id="builder-canvas">
+<!-- Live Workspace Header Bar -->
+<div class="flex items-center justify-between bg-surface-container-low p-space-sm rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">مخطط النموذج التفاعلي (Interactive Canvas)</span>
+</div>
+<div class="flex items-center gap-2 font-tabular-mono text-label-sm text-on-surface-variant">
+<span>GRID: 12 Cols</span>
+<span>•</span>
+<span>RTL Enabled</span>
+</div>
+</div>
+<!-- ZONE 1: Filter & Search Area Drop Zone -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base">filter_alt</span>
+              منطقة شريط البحث والتصفية (Filter &amp; Query Zone)
+            </span>
+<span class="font-label-sm text-label-sm text-on-secondary-container bg-secondary-container px-2 py-0.5 rounded">اختياري</span>
+</div>
+<div class="canvas-dropzone p-space-md rounded-xl bg-surface-container-low transition-all flex flex-col gap-space-sm">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<!-- Item 1 in Filter -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md" data-field-id="fld_search_no">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">بحث برقم الطلب</span>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs text-on-surface-variant hover:text-secondary">drag_indicator</span>
+<span class="material-symbols-outlined text-xs text-error hover:text-on-error-container">delete</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>MIR-2025-000...</span>
+<span class="material-symbols-outlined text-sm">search</span>
+</div>
+</div>
+<!-- Item 2 in Filter -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md" data-field-id="fld_search_status">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">حالة الاعتماد</span>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs text-on-surface-variant hover:text-secondary">drag_indicator</span>
+<span class="material-symbols-outlined text-xs text-error hover:text-on-error-container">delete</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>الكل (معتمد / معلق)</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</div>
+</div>
+<!-- Drop Target Slot Inside Filters -->
+<div class="drop-slot rounded-lg bg-surface-container flex flex-col items-center justify-center p-3 text-center transition-all cursor-pointer hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-secondary text-lg mb-0.5">add_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">أفلت حقل تصفية إضافي هنا</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ZONE 2: Header Cards Drop Zone -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base">view_headline</span>
+              بيانات رأس الطلب الأساسية (Master Header Details)
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">3 أعمدة متناسقة</span>
+</div>
+<div class="canvas-dropzone p-space-md rounded-xl bg-surface-container-low flex flex-col gap-3">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<!-- Header Field 1: Active Selected Node -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-md flex flex-col gap-1 cursor-pointer transition-all bg-secondary/5" data-field-id="fld_doc_no" id="node-active">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    رقم الطلب (Doc No)
+                  </span>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-secondary">tune</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant hover:text-error">close</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2.5 flex items-center justify-between text-on-surface font-tabular-mono text-body-sm">
+<span>MIR-2025-0891</span>
+<span class="material-symbols-outlined text-xs text-secondary">lock</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">ربط تلقائي: SEQ_MIR_NUM</span>
+</div>
+<!-- Header Field 2 -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md" data-field-id="fld_doc_date">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">تاريخ الطلب (Issue Date)</span>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs text-on-surface-variant">drag_indicator</span>
+<span class="material-symbols-outlined text-xs text-error">close</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2.5 flex items-center justify-between text-on-surface font-tabular-mono text-body-sm">
+<span>2025-05-18</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">event</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">مطلوب • قيمة افتراضية اليوم</span>
+</div>
+<!-- Header Field 3 -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md" data-field-id="fld_department">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">القسم الطالب (Department)</span>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs text-on-surface-variant">drag_indicator</span>
+<span class="material-symbols-outlined text-xs text-error">close</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2.5 flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<span>إدارة الصيانة والتشغيل</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">apartment</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">جدول: HR_DEPTS</span>
+</div>
+<!-- Header Field 4 -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md" data-field-id="fld_warehouse">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">مستودع الصرف (Warehouse)</span>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs text-on-surface-variant">drag_indicator</span>
+<span class="material-symbols-outlined text-xs text-error">close</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2.5 flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<span>مستودع قطع الغيار - الرياض</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">warehouse</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">جدول: INV_WAREHOUSES</span>
+</div>
+<!-- Header Field 5 -->
+<div class="canvas-node group relative p-3 rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md" data-field-id="fld_cost_center">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">مركز التكلفة (Cost Center)</span>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xs text-on-surface-variant">drag_indicator</span>
+<span class="material-symbols-outlined text-xs text-error">close</span>
+</div>
+</div>
+<div class="h-8 bg-surface-container-low rounded px-2.5 flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<span>CC-4010 / أسطول النقل</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant">paid</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant">حقل شرطي إلزامي</span>
+</div>
+<!-- Drop Target Slot Inside Header -->
+<div class="drop-slot rounded-lg bg-surface-container p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-secondary text-lg mb-0.5">add_box</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">إضافة حقل رأس جديد</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">اسحب وأفلت العنصر هنا</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ZONE 3: Editable Detail Grid Builder -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-base">table_chart</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">جدول تفاصيل الأصناف (Line Items Data Grid)</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">add_column_right</span>
+<span>إضافة عمود</span>
+</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">calculate</span>
+<span>معادلات الجمع</span>
+</button>
+</div>
+</div>
+<!-- The Active Interactive Grid Canvas -->
+<div class="canvas-dropzone rounded-xl bg-surface-container-low p-2 overflow-x-auto shadow-inner">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface font-label-sm text-label-sm">
+<th class="p-2.5 rounded-r-lg w-12 text-center">#</th>
+<th class="p-2.5 min-w-[200px]">
+<div class="flex items-center justify-between">
+<span>الصنف وكود المادة (Item &amp; SKU)</span>
+<span class="material-symbols-outlined text-xs text-secondary cursor-pointer">drag_indicator</span>
+</div>
+</th>
+<th class="p-2.5 min-w-[100px]">
+<div class="flex items-center justify-between">
+<span>الوحدة (UOM)</span>
+<span class="material-symbols-outlined text-xs text-secondary cursor-pointer">drag_indicator</span>
+</div>
+</th>
+<th class="p-2.5 min-w-[120px] text-left">
+<div class="flex items-center justify-between">
+<span>الكمية المطلوبة</span>
+<span class="material-symbols-outlined text-xs text-secondary cursor-pointer">drag_indicator</span>
+</div>
+</th>
+<th class="p-2.5 min-w-[180px]">
+<div class="flex items-center justify-between">
+<span>سبب الصرف / المشروع</span>
+<span class="material-symbols-outlined text-xs text-secondary cursor-pointer">drag_indicator</span>
+</div>
+</th>
+<th class="p-2.5 rounded-l-lg w-20 text-center">إجراءات</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-body-sm font-body-sm text-on-surface">
+<!-- Row 1 -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container transition-colors">
+<td class="p-2.5 text-center font-tabular-mono text-on-surface-variant">01</td>
+<td class="p-2.5">
+<div class="flex flex-col">
+<span class="font-medium">زيت محركات اصطناعي 5W-40</span>
+<span class="font-tabular-mono text-[11px] text-on-surface-variant">SKU: ENG-OIL-5W40-01</span>
+</div>
+</td>
+<td class="p-2.5">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">برميل (Drum)</span>
+</td>
+<td class="p-2.5 text-left font-tabular-mono font-bold text-on-surface">4.00</td>
+<td class="p-2.5 text-on-surface-variant">صيانة دورية لشاحنات التوزيع</td>
+<td class="p-2.5 text-center">
+<div class="flex items-center justify-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm hover:text-secondary cursor-pointer">edit</span>
+<span class="material-symbols-outlined text-sm hover:text-error cursor-pointer">delete</span>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors">
+<td class="p-2.5 text-center font-tabular-mono text-on-surface-variant">02</td>
+<td class="p-2.5">
+<div class="flex flex-col">
+<span class="font-medium">طقم فلاتر هواء صناعي توربو</span>
+<span class="font-tabular-mono text-[11px] text-on-surface-variant">SKU: FLT-TURBO-981</span>
+</div>
+</td>
+<td class="p-2.5">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">طقم (Set)</span>
+</td>
+<td class="p-2.5 text-left font-tabular-mono font-bold text-on-surface">12.00</td>
+<td class="p-2.5 text-on-surface-variant">استبدال وقائي لمحطة التوليد</td>
+<td class="p-2.5 text-center">
+<div class="flex items-center justify-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm hover:text-secondary cursor-pointer">edit</span>
+<span class="material-symbols-outlined text-sm hover:text-error cursor-pointer">delete</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Add Column Drop Hint Inside Table -->
+<div class="p-3 my-2 rounded-lg bg-surface-container flex items-center justify-center gap-2 cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-secondary text-base">add_circle_outline</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">اسحب حقلاً هنا لإضافته كعمود في جدول تفاصيل الصرف</span>
+</div>
+</div>
+</div>
+<!-- ZONE 4: Bottom Drop Zone & Action Bar Placement -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-base">smart_button</span>
+              شريط إجراءات واعتمادات النموذج (Approval Footer Actions)
+            </span>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base">send</span>
+<span>إرسال للاعتماد المالي</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base">save</span>
+<span>حفظ كمسودة</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-error font-label-md text-label-md flex items-center gap-1.5 hover:bg-error-container">
+<span class="material-symbols-outlined text-base">cancel</span>
+<span>إلغاء الطلب</span>
+</button>
+</div>
+<!-- Drag indicator for button row -->
+<div class="px-3 py-1 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">add</span>
+<span>إسقاط زر مخصص إضافي</span>
+</div>
+</div>
+</div>
+<!-- Visual Canvas Status Watermark -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm text-secondary">check_circle</span>
+<span>النموذج متوافق مع معايير ZATCA والأنظمة المحاسبية العامة</span>
+</div>
+<span class="font-tabular-mono text-[11px] text-on-surface-variant">Schema: v4.8 • UTF-8 Arabic</span>
+</div>
+</div>
+</div>
+<!-- Left Panel: Properties & Data Binding Panel (3 Cols) -->
+<div class="col-span-12 xl:col-span-3 flex flex-col gap-space-md order-3">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md sticky top-20">
+<!-- Inspector Title Header -->
+<div class="flex items-center justify-between pb-2 border-b-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg">tune</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">خصائص العنصر المحدد</span>
+<span class="font-tabular-mono text-label-sm text-on-surface-variant">Target: fld_doc_no (Text/Seq)</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Active</span>
+</div>
+<!-- Tab Switcher for Properties -->
+<div class="flex items-center p-1 rounded-lg bg-surface-container-low">
+<button class="flex-1 py-1 text-center rounded-md bg-surface-container-lowest text-on-surface font-label-md text-label-md font-semibold shadow-sm transition-all" id="tab-btn-binding">ربط البيانات</button>
+<button class="flex-1 py-1 text-center rounded-md text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all" id="tab-btn-display">العرض واللغة</button>
+<button class="flex-1 py-1 text-center rounded-md text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all" id="tab-btn-rules">القواعد والتحقق</button>
+</div>
+<!-- Section 1: Data Binding (مصدر البيانات والربط) -->
+<div class="flex flex-col gap-space-sm" id="inspector-tab-binding">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold flex items-center justify-between">
+<span>مصدر البيانات (Data Source)</span>
+<span class="text-secondary font-tabular-mono text-[10px]">SQL / API / View</span>
+</label>
+<select class="w-full h-8 px-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container">
+<option selected="">جدول رئيسي: INV_TRX_MIR_HEADER</option>
+<option>منظور بيانات (View): VW_MATERIAL_REQUESTS</option>
+<option>واجهة برمجة تطبيقات REST API Endpoint</option>
+<option>مصفوفة ثابتة (Static Lookup Array)</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">عمود القيمة (Value Column)</label>
+<input class="w-full h-8 px-2 rounded-lg bg-surface-container-low text-on-surface font-tabular-mono text-body-sm focus:outline-none focus:bg-surface-container" type="text" value="DOC_SYS_ID"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">عمود العرض (Display)</label>
+<input class="w-full h-8 px-2 rounded-lg bg-surface-container-low text-on-surface font-tabular-mono text-body-sm focus:outline-none focus:bg-surface-container" type="text" value="DOC_CODE_FORMATTED"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">تنسيق الترقيم التلقائي (Auto-Number Rule)</label>
+<div class="flex items-center gap-1">
+<input class="flex-1 h-8 px-2 rounded-lg bg-surface-container-low text-on-surface font-tabular-mono text-body-sm focus:outline-none" type="text" value="MIR-{YYYY}-{00000}"/>
+<button class="h-8 px-2 bg-surface-container rounded-lg text-secondary hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-sm">auto_fix_high</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section 2: Labels & Multi-Language (التسمية التوضيحية ونصوص المساعدة) -->
+<div class="flex flex-col gap-space-sm pt-2" id="inspector-tab-display">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">التسميات واللغات (Localization)</span>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">التسمية بالعربية (Arabic Label)</label>
+<input class="w-full h-8 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container" type="text" value="رقم طلب الصرف"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">التسمية بالإنجليزية (English Label)</label>
+<input class="w-full h-8 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm font-tabular-mono focus:outline-none focus:bg-surface-container" type="text" value="Material Issue Request No"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">نص المساعدة والتوجيه (Tooltip / Helper Text)</label>
+<textarea class="w-full p-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container resize-none" rows="2">يتم توليد رقم المسند تلقائياً من تسلسل السنة المالية المعتمدة.</textarea>
+</div>
+</div>
+<!-- Section 3: Validation & Business Rules (الشروط وقواعد الأعمال) -->
+<div class="flex flex-col gap-space-sm pt-2" id="inspector-tab-rules">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">شروط التحقق وقواعد العمل (Business Rules)</span>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">حقل إلزامي (Required Field)</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">منع الحفظ في حال فراغ الحقل</span>
+</div>
+<input checked="" class="w-4 h-4 accent-secondary rounded cursor-pointer" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">للقراءة فقط (Read-Only)</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">تثبيت القيمة التلقائية</span>
+</div>
+<input checked="" class="w-4 h-4 accent-secondary rounded cursor-pointer" type="checkbox"/>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">صيغة الظهور الشرطي (Visible When Formula)</label>
+<span class="font-tabular-mono text-[10px] text-secondary">FX Builder</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-low font-tabular-mono text-body-sm text-on-surface flex items-center justify-between">
+<span>STATUS != 'CANCELLED'</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant cursor-pointer hover:text-secondary">code</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface font-medium">رسالة الخطأ عند عدم التحقق (Error Message)</label>
+<input class="w-full h-8 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container" type="text" value="يرجى التأكد من تسلسل رقم المستند قبل الحفظ"/>
+</div>
+</div>
+<!-- Inspector Action Buttons -->
+<div class="flex items-center gap-2 pt-2">
+<button class="flex-1 h-9 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md font-bold hover:bg-on-secondary-container transition-colors">
+            تطبيق التغييرات
+          </button>
+<button class="h-9 px-3 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-base">refresh</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Interactive Feedback Modal Simulation (Hidden by default, triggered on preview) -->
+<div class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4" id="preview-modal">
+<div class="bg-surface-container-lowest rounded-2xl shadow-xl max-w-3xl w-full p-space-lg flex flex-col gap-space-md animate-in fade-in zoom-in duration-200">
+<div class="flex items-center justify-between pb-2 border-b-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-2xl">preview</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">معاينة الشاشة التشغيلية - تجربة المستخدم</span>
+<span class="font-tabular-mono text-label-sm text-on-surface-variant">Live Runtime Simulation • Material Issue Request</span>
+</div>
+</div>
+<button class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" id="close-preview">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-4">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">رقم الطلب</label>
+<input class="w-full h-8 px-2 rounded bg-surface-container-lowest text-on-surface font-tabular-mono text-body-sm" readonly="" type="text" value="MIR-2025-0891"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">تاريخ الطلب</label>
+<input class="w-full h-8 px-2 rounded bg-surface-container-lowest text-on-surface font-tabular-mono text-body-sm" type="date" value="2025-05-18"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">القسم الطالب</label>
+<select class="w-full h-8 px-2 rounded bg-surface-container-lowest text-on-surface font-body-sm text-body-sm">
+<option>إدارة الصيانة والتشغيل</option>
+<option>قسم التوريدات اللوجستية</option>
+</select>
+</div>
+</div>
+<div class="rounded-lg bg-surface-container-lowest p-3">
+<span class="font-label-md text-label-md text-on-surface font-semibold mb-2 block">عناصر الصرف المطلوبة:</span>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container text-body-sm font-body-sm">
+<span>زيت محركات اصطناعي 5W-40 (4.00 برميل)</span>
+<span class="font-tabular-mono text-secondary font-bold">جاهز للصرف فوراً</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-end gap-2 pt-2">
+<button class="px-4 py-2 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md font-bold" id="close-preview-btn">
+          إغلاق المعاينة والعودة للمصمم
+        </button>
+</div>
+</div>
+</div>
+<!-- Notification Toast -->
+<div class="fixed bottom-6 left-6 bg-primary-container text-on-primary px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50" id="toast">
+<span class="material-symbols-outlined text-secondary-fixed text-xl">check_circle</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold" id="toast-title">تم بنجاح!</span>
+<span class="font-body-sm text-body-sm text-on-primary-container" id="toast-msg">تم نشر قالب الشاشة وحفظ مخطط البيانات بنجاح.</span>
+</div>
+</div>
+<!-- Interactive Client-side Script -->
+<script>
+    (function initNoCodeBuilder() {
+      // Elements
+      const btnPreview = document.getElementById('btn-preview');
+      const previewModal = document.getElementById('preview-modal');
+      const closePreview = document.getElementById('close-preview');
+      const closePreviewBtn = document.getElementById('close-preview-btn');
+      const btnPublish = document.getElementById('btn-publish');
+      const toast = document.getElementById('toast');
+      const toastTitle = document.getElementById('toast-title');
+      const toastMsg = document.getElementById('toast-msg');
+
+      // Toast helper
+      function showToast(title, msg) {
+        if (!toast) return;
+        toastTitle.textContent = title;
+        toastMsg.textContent = msg;
+        toast.classList.remove('translate-y-24', 'opacity-0');
+        setTimeout(() => {
+          toast.classList.add('translate-y-24', 'opacity-0');
+        }, 3200);
+      }
+
+      // Preview Modal triggers
+      if (btnPreview && previewModal) {
+        btnPreview.addEventListener('click', () => {
+          previewModal.classList.remove('hidden');
+          previewModal.classList.add('flex');
+        });
+      }
+
+      function hidePreview() {
+        if (previewModal) {
+          previewModal.classList.add('hidden');
+          previewModal.classList.remove('flex');
+        }
+      }
+
+      if (closePreview) closePreview.addEventListener('click', hidePreview);
+      if (closePreviewBtn) closePreviewBtn.addEventListener('click', hidePreview);
+
+      // Publish button
+      if (btnPublish) {
+        btnPublish.addEventListener('click', () => {
+          showToast('تم النشر والتعميم!', 'تم تحديث نموذج طلب صرف بضاعة ونشره على أذونات المستخدمين.');
+        });
+      }
+
+      // Undo / Redo micro-actions
+      const btnUndo = document.getElementById('btn-undo');
+      const btnRedo = document.getElementById('btn-redo');
+      if (btnUndo) {
+        btnUndo.addEventListener('click', () => {
+          showToast('تراجع (Undo)', 'تم التراجع عن آخر تعديل في موضع حقل العرض.');
+        });
+      }
+      if (btnRedo) {
+        btnRedo.addEventListener('click', () => {
+          showToast('إعادة (Redo)', 'تمت إعادة الإجراء السابق في المخطط.');
+        });
+      }
+
+      // Tab switcher inside inspector
+      const tabBtnBinding = document.getElementById('tab-btn-binding');
+      const tabBtnDisplay = document.getElementById('tab-btn-display');
+      const tabBtnRules = document.getElementById('tab-btn-rules');
+
+      const secBinding = document.getElementById('inspector-tab-binding');
+      const secDisplay = document.getElementById('inspector-tab-display');
+      const secRules = document.getElementById('inspector-tab-rules');
+
+      function switchTab(activeBtn, targetSec) {
+        [tabBtnBinding, tabBtnDisplay, tabBtnRules].forEach(btn => {
+          btn.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm', 'font-semibold');
+          btn.classList.add('text-on-surface-variant');
+        });
+        activeBtn.classList.add('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm', 'font-semibold');
+        activeBtn.classList.remove('text-on-surface-variant');
+
+        [secBinding, secDisplay, secRules].forEach(sec => sec.classList.add('hidden'));
+        targetSec.classList.remove('hidden');
+      }
+
+      if (tabBtnBinding && tabBtnDisplay && tabBtnRules) {
+        tabBtnBinding.addEventListener('click', () => switchTab(tabBtnBinding, secBinding));
+        tabBtnDisplay.addEventListener('click', () => switchTab(tabBtnDisplay, secDisplay));
+        tabBtnRules.addEventListener('click', () => switchTab(tabBtnRules, secRules));
+      }
+
+      // Viewport Switcher Micro-interactions
+      const vBtns = [
+        document.getElementById('btn-viewport-desktop'),
+        document.getElementById('btn-viewport-tablet'),
+        document.getElementById('btn-viewport-mobile')
+      ];
+      vBtns.forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          vBtns.forEach(b => {
+            b.classList.remove('bg-surface-container-lowest', 'text-secondary', 'shadow-sm');
+            b.classList.add('text-on-surface-variant');
+          });
+          btn.classList.add('bg-surface-container-lowest', 'text-secondary', 'shadow-sm');
+          btn.classList.remove('text-on-surface-variant');
+        });
+      });
+
+      // Drag and Drop Simulator
+      const draggables = document.querySelectorAll('.draggable-pill');
+      const dropzones = document.querySelectorAll('.canvas-dropzone, .drop-slot');
+
+      draggables.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', item.dataset.type || 'field');
+          item.classList.add('opacity-50');
+        });
+        item.addEventListener('dragend', () => {
+          item.classList.remove('opacity-50');
+        });
+      });
+
+      dropzones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('bg-secondary/10');
+        });
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('bg-secondary/10');
+        });
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('bg-secondary/10');
+          const controlType = e.dataTransfer.getData('text/plain');
+          showToast('تمت إضافة عنصر جديد!', 'تم إسقاط عنصر (' + controlType + ') بنجاح في منطقة التصميم.');
+        });
+      });
+
+      // Field selection on canvas nodes
+      const nodes = document.querySelectorAll('.canvas-node');
+      nodes.forEach(node => {
+        node.addEventListener('click', () => {
+          nodes.forEach(n => n.classList.remove('bg-secondary/5', 'shadow-md'));
+          node.classList.add('bg-secondary/5', 'shadow-md');
+          const fldId = node.getAttribute('data-field-id') || 'fld_element';
+          showToast('تم تحديد الحقل', 'يتم الآن تحرير إعدادات: ' + fldId);
+        });
+      });
+
+      // Component Search Filter
+      const searchInput = document.getElementById('control-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const val = e.target.value.toLowerCase().trim();
+          draggables.forEach(pill => {
+            const txt = pill.textContent.toLowerCase();
+            if (txt.includes(val)) {
+              pill.classList.remove('hidden');
+            } else {
+              pill.classList.add('hidden');
+            }
+          });
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>

@@ -1,8 +1,8 @@
-// =====================================================================================
+﻿// =====================================================================================
 //  أمثلة جاهزة في ScreenBuilder — دوس على مثال وهيتحمّل بكل إعداداته
 // =====================================================================================
 
-import { createEmptyField, createEmptyScreen, FieldConfigV4, ScreenConfigV4 } from "../types/ScreenConfig";
+import { createEmptyField, createEmptyScreen, FieldConfigV4, ScreenConfigV5 } from "../types/ScreenConfig";
 
 function f(field: string, titleAr: string, titleEn: string, extra: Partial<FieldConfigV4> = {}): FieldConfigV4 {
   return { ...createEmptyField(field), titleAr, titleEn, ...extra };
@@ -19,7 +19,7 @@ export interface ScreenExample {
   descAr: string;
   stepsEn: string[];
   stepsAr: string[];
-  build: () => ScreenConfigV4;
+  build: () => ScreenConfigV5;
 }
 
 export const EXAMPLES: ScreenExample[] = [
@@ -94,7 +94,7 @@ export const EXAMPLES: ScreenExample[] = [
     stepsAr: ["حمّل المثال", "حمّل أعمدة D_A_CashTypes عشان تتطابق مع القاعدة", "المعاينة والحفظ"],
     build: () => {
       const c = createEmptyScreen("Grid");
-      c.module = "CashTypesDemo";
+      c.module = "CashTypesBuilderDemo";   // اسم مختلف عن شاشة CashTypesDemo الحقيقية
       c.table = "D_A_CashTypes";
       c.view = "D_A_CashTypes";
       c.keyColumn = "CashTypeID";
@@ -108,6 +108,14 @@ export const EXAMPLES: ScreenExample[] = [
         f("ChargePrc", "نسبة العمولة", "Charge %", { inputType: "number", defaultValue: "0" }),
         f("CashAccCode", "حساب النقدية", "Cash account"),
         f("IsActive", "فعال", "Active", { inputType: "checkbox", defaultValue: "true" }),
+      ];
+      // Phase 5: منطقة فلتر — دروب داون الفرع من Sys_Branch بشرط الشركة الحالية + فلتر فعال/غير فعال
+      c.filterArea = [
+        { id: "flt_branch", field: "BranchCode", kind: "select", labelAr: "الفرع", labelEn: "Branch", required: false, defaultValue: "", options: "",
+          source: { table: "Sys_Branch", valueField: "BranchCode", displayField: "BranchDescA", displayFieldEn: "BranchDescE", condition: "CompCode = {session.CompCode}", orderBy: "BranchCode" },
+          span: { base: 12, md: 6, lg: 4 } },
+        { id: "flt_active", field: "IsActive", kind: "select", labelAr: "الحالة", labelEn: "Status", required: false, defaultValue: "", options: "1=فعال=Active;0=غير فعال=Inactive", span: { base: 12, md: 6, lg: 4 } },
+        { id: "flt_desc", field: "Description", kind: "text", labelAr: "الوصف", labelEn: "Description", required: false, defaultValue: "", options: "", span: { base: 12, md: 6, lg: 4 } },
       ];
       return c;
     },

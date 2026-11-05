@@ -725,6 +725,33 @@ namespace GateWay.App
                 : "*";
 
             string query = BuildSelectQuery(item, whereClause, columns);
+
+            // ✅ العدد الإجمالي كمان مع الأعمدة المحددة (الدروب داون الكبير بيعتمد عليه في الـ infinite scroll)
+            if (item.ReturnTotalCount)
+            {
+                string countQuery = $@"
+        SELECT COUNT(*) as TotalCount FROM {item.NameTable}
+        {whereClause}
+        OPTION (RECOMPILE)";
+
+                var totalCountTask = ExecuteScalarAsync(countQuery, parameters);
+                var dataTask = ExecuteQueryUltraFast(query, parameters);
+                await Task.WhenAll(totalCountTask, dataTask);
+
+                var rows = await dataTask;
+                if (rows.Count > 0)
+                {
+                    var totalCount = Convert.ToInt32(await totalCountTask ?? rows.Count);
+                    var withMeta = new List<Dictionary<string, object>>
+                    {
+                        new Dictionary<string, object> { ["__TotalCount"] = totalCount, ["__IsMetaData"] = true }
+                    };
+                    withMeta.AddRange(rows);
+                    return withMeta;
+                }
+                return rows;
+            }
+
             return await ExecuteQueryUltraFast(query, parameters);
         }
 
@@ -1007,6 +1034,7 @@ namespace GateWay.App
             key.Append($"_{item.IsPage}_{item.PageNumber}_{item.PageSize}");
             key.Append($"_{item.Top}");
             key.Append($"_{item.SearchValue ?? ""}");
+            key.Append($"_{item.ReturnTotalCount}");
 
             if (item.SelectedColumns != null)
                 key.Append($"_{string.Join(",", item.SelectedColumns)}");

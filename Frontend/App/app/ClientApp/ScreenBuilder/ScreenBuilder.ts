@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useSys } from "../Shared/SystemUsing";
@@ -14,7 +14,9 @@ import {
   loadResources, scanScreens, loadSearchFunctions,
   sqlTypeToInputType, getKnownTitle, detectAutoValue, detectDefaultValue,
 } from "./utils/sqlApi";
-import { FieldConfigV4, createEmptyField, createEmptyScreen, ScreenType, TreeSettingsV4, ScreenConfigV4 } from "./types/ScreenConfig";
+import { FieldConfigV4, createEmptyField, createEmptyScreen, ScreenType, TreeSettingsV4, ScreenConfigV5, normalizeConfig, autoLayout, deriveFilterArea, pruneLayout } from "./types/ScreenConfig";
+import { SERVER_CONNECTION, projectInfo } from "./utils/sqlApi";
+import { useDbMeta } from "./utils/dbMeta";
 
 // بيخمّن أعمدة الشجرة من أسماء الأعمدة (CC_CODE / PARENT_ACC / CC_DESCA ...)
 export function detectTreeColumns(names: string[], keyColumn: string): Partial<TreeSettingsV4> {
@@ -41,7 +43,8 @@ export function detectTreeColumns(names: string[], keyColumn: string): Partial<T
 const LS_KEY = "screenbuilder_connection";
 const LS_PROJECT = "screenbuilder_projectpath";
 
-export type TabId = "setup" | "fields" | "list" | "details" | "validations" | "preview";
+export type TabId = "design" | "setup" | "fields" | "list" | "details" | "validations" | "print" | "preview";
+const LS_DRAFT = "screenbuilder_draft_v5";
 
 export function ScreenBuilder() {
   const IsLangEN = useSys((s) => s.IsLangEN);
@@ -54,7 +57,8 @@ export function ScreenBuilder() {
       const saved = localStorage.getItem(LS_KEY);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return { server: ".", user: "sa", password: "", database: "" };
+    // server فاضي = الباك إند يستخدم ConnectionStrings:cs (نفس قاعدة البرنامج)
+    return { server: "", user: "", password: "", database: "" };
   });
   const [isConnected, setIsConnected] = useState(false);
   const [databases, setDatabases] = useState<string[]>([]);
@@ -67,7 +71,11 @@ export function ScreenBuilder() {
   });
 
   // UI state
-  const [activeTab, setActiveTab] = useState<TabId>("setup");
+  const [activeTab, setActiveTab] = useState<TabId>("design");
+  const [dbScriptsPath, setDbScriptsPath] = useState("");
+  const [showOpen, setShowOpen] = useState(false);
+  const [showSave, setShowSave] = useState(false);
+  const [draft, setDraft] = useState<string>("");
   const [showHelp, setShowHelp] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
   const [showSearchBuilder, setShowSearchBuilder] = useState(false);
@@ -232,21 +240,25 @@ export function ScreenBuilder() {
       newConfig.tree = tree;
       if (!newConfig.orderBy && tree.codeColumn) { newConfig.orderBy = tree.codeColumn; newConfig.orderType = "ASC"; }
     }
+    // Phase 5: تخطيط الفورم والفلاتر
+    const sameTable = prev.table.toLowerCase() === table.toLowerCase() && prev.layout.sections.length > 0;
+    if (sameTable) {
+      newConfig.layout = pruneLayout(prev.layout, new Set(fields.map((f) => f.field)));
+      newConfig.filterArea = (prev.filterArea || []).filter((x) => !x.field || fields.some((f) => f.field === x.field));
+    } else {
+      newConfig.layout = autoLayout({ fields });
+      newConfig.filterArea = deriveFilterArea({ screenType: newConfig.screenType, fields, listFields: newConfig.listFields });
+    }
     store.loadConfig(newConfig);
-    setActiveTab("fields");
+    setActiveTab("design");
   }, [buildFieldsFromColumns]);
 
   // Screen load from scanned
   const handleScreenLoaded = useCallback((settingsJson: string) => {
     try {
       const parsed = JSON.parse(settingsJson);
-      if (parsed.version === 4) {
-        store.loadConfig(parsed);
-      } else {
-        const v4 = convertV3toV4(parsed);
-        store.loadConfig(v4);
-      }
-      setActiveTab("setup");
+      store.loadConfig(parsed.version === 4 || parsed.version === 5 ? normalizeConfig(parsed) : normalizeConfig(convertV3toV4(parsed)));
+      setActiveTab("design");
     } catch {
       Sys.Alert("Failed to read the screen settings", "مقدرتش أقرا إعدادات الشاشة", "error");
     }
@@ -256,7 +268,7 @@ export function ScreenBuilder() {
     if (store.isDirty && !(await Sys.Confirm("Unsaved changes will be lost. Continue?", "التغييرات اللي ما اتحفظتش هتضيع. متأكد؟", { danger: true }))) return;
     const cfg = createEmptyScreen(type);
     store.loadConfig(cfg);
-    setActiveTab("setup");
+    setActiveTab("design");
   }, [store.isDirty, IsLangEN]);
 
   const handleImportFile = useCallback(() => {
@@ -270,7 +282,7 @@ export function ScreenBuilder() {
       const { v4 } = parseSettingsFromTs(text);
       if (v4) {
         store.loadConfig(v4);
-        setActiveTab("setup");
+        setActiveTab("design");
       } else {
         Sys.Alert("No ScreenBuilder settings found in this file", "مفيش إعدادات ScreenBuilder في الملف ده", "warning");
       }
@@ -296,11 +308,11 @@ export function ScreenBuilder() {
   }, [store.config, connection.database]);
 
   // تحميل مثال جاهز
-  const handleLoadExample = useCallback(async (cfg: ScreenConfigV4) => {
+  const handleLoadExample = useCallback(async (cfg: ScreenConfigV5) => {
     if (store.isDirty && !(await Sys.Confirm("Unsaved changes will be lost. Continue?", "التغييرات اللي ما اتحفظتش هتضيع. متأكد؟", { danger: true }))) return;
     store.loadConfig(cfg);
     setShowExamples(false);
-    setActiveTab("setup");
+    setActiveTab("design");
     Sys.ShowMessage("Example loaded — check each tab, then Preview & Save", "المثال اتحمّل — لف على التابات وبعدين المعاينة والحفظ", "success");
   }, [store.isDirty]);
 
@@ -324,7 +336,62 @@ export function ScreenBuilder() {
     }
   }, [buildFieldsFromColumns]);
 
+  // ===== Phase 5 =====
+  const db = useDbMeta(connection, isConnected, tables);
+
+  // اتصال بإعدادات السيرفر نفسه (من غير باسورد في المتصفح)
+  const handleConnectServer = useCallback(async () => {
+    setLoading("Connecting...");
+    try {
+      const res = await testConnection(SERVER_CONNECTION);
+      if (!res.success) { Sys.Alert("Connection failed:\n" + (res.error || ""), "فشل الاتصال:\n" + (res.error || ""), "error"); return; }
+      const newConn = { ...SERVER_CONNECTION, database: res.currentDatabase || "" };
+      setConnection(newConn);
+      setDatabases(res.databases || []);
+      setIsConnected(true);
+      const [tRes, rRes] = await Promise.all([loadTables(newConn), loadResources(newConn)]);
+      if (tRes.success) setTables([...(tRes.tables || []).map((x) => ({ name: x.name, type: "U" })), ...(tRes.views || []).map((v) => ({ name: v.name, type: "V" }))]);
+      if (rRes.success && rRes.resources) setResources(rRes.resources);
+    } catch (e: any) {
+      Sys.Alert("Connection failed:\n" + String(e?.message || e), "فشل الاتصال:\n" + String(e?.message || e), "error");
+    } finally { setLoading(""); }
+  }, []);
+
+  // تحميل أعمدة جدول (من لوحة الخصائص)
+  const loadTableColumns = useCallback(async (table: string, view: string) => {
+    const cols = await handleLoadColumns(table, view);
+    if (cols) handleColumnsLoaded(cols, table, view);
+  }, [handleLoadColumns, handleColumnsLoaded]);
+
+  // مسار المشروع تلقائي (لو مش متحدد)
+  useEffect(() => {
+    projectInfo().then((r) => {
+      if (r.success) {
+        if (r.projectPath) setProjectPath((cur) => cur || r.projectPath!);
+        if (r.dbScriptsPath) setDbScriptsPath(r.dbScriptsPath);
+      }
+    }).catch(() => { });
+  }, []);
+
+  // مسودة تلقائية في localStorage (كل ثانيتين بعد آخر تعديل)
+  useEffect(() => {
+    try { const d = localStorage.getItem(LS_DRAFT); if (d) setDraft(d); } catch { }
+    let timer: any;
+    const unsub = useScreenBuilder.subscribe((state, prev) => {
+      if (state.config === prev.config || !state.isDirty) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => { try { localStorage.setItem(LS_DRAFT, JSON.stringify(state.config)); } catch { } }, 2000);
+    });
+    return () => { unsub(); clearTimeout(timer); };
+  }, []);
+  const restoreDraft = useCallback(() => {
+    try { const cfg = normalizeConfig(JSON.parse(draft)); store.loadConfig(cfg); setDraft(""); } catch { Sys.Alert("Draft is corrupted", "المسودة تالفة", "error"); }
+  }, [draft]);
+  const discardDraft = useCallback(() => { try { localStorage.removeItem(LS_DRAFT); } catch { } setDraft(""); }, []);
+
   return {
+    db, dbScriptsPath, showOpen, setShowOpen, showSave, setShowSave, draft, restoreDraft, discardDraft,
+    handleConnectServer, loadTableColumns,
     IsLangEN, IsDark, store,
     connection, setConnection, isConnected, setIsConnected,
     databases, setDatabases, tables, setTables,

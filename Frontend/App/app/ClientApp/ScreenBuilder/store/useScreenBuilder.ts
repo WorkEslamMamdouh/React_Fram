@@ -1,10 +1,10 @@
-// ============================================================
+﻿// ============================================================
 // Screen Builder — Zustand Store with Undo/Redo
 // ============================================================
 
 import { create } from "zustand";
 import {
-  ScreenConfigV4, FieldConfigV4, DetailConfigV4, ValidationConfigV4,
+  ScreenConfigV5, FieldConfigV4, DetailConfigV4, ValidationConfigV4,
   GridFilterConfigV4, createEmptyScreen, createEmptyField,
   createEmptyDetail, createEmptyValidation, normalizeConfig, ScreenType,
 } from "../types/ScreenConfig";
@@ -16,26 +16,29 @@ import {
 export type PreviewMode = "grid" | "create" | "edit" | "view";
 
 export interface SelectedElement {
-  type: "field" | "listField" | "filter" | "validation" | "detail" | "detailField" | "screen";
+  type: "field" | "listField" | "filter" | "validation" | "detail" | "detailField" | "screen" | "cell" | "filterCtl" | "action" | "section";
   index: number;
   detailIndex?: number;
+  id?: string;      // Phase 5: cell / filterCtl / action / section id
 }
 
 interface ScreenBuilderState {
-  config: ScreenConfigV4;
+  config: ScreenConfigV5;
   isDirty: boolean;
   isEditing: boolean;
   selectedElement: SelectedElement | null;
   previewMode: PreviewMode;
-  history: ScreenConfigV4[];
+  history: ScreenConfigV5[];
   historyIndex: number;
 
   // Screen actions
   newScreen: (type: ScreenType) => void;
-  loadConfig: (cfg: ScreenConfigV4) => void;
+  loadConfig: (cfg: ScreenConfigV5) => void;
   goToWelcome: () => void;
-  updateScreen: (updates: Partial<ScreenConfigV4>) => void;
-  updatePermissions: (updates: Partial<ScreenConfigV4["permissions"]>) => void;
+  updateScreen: (updates: Partial<ScreenConfigV5>) => void;
+  updatePermissions: (updates: Partial<ScreenConfigV5["permissions"]>) => void;
+  /** Phase 5: أي تعديل على الكونفج (بيدخل في الـ undo/redo). selectId = يحدد العنصر بعد التعديل */
+  mutate: (fn: (cfg: ScreenConfigV5) => ScreenConfigV5, select?: SelectedElement | null) => void;
 
   // Field actions
   addField: (target?: "fields" | "listFields", detailIdx?: number) => void;
@@ -71,7 +74,7 @@ interface ScreenBuilderState {
 // Helper: push to history
 // ============================================================
 
-function pushHistory(state: ScreenBuilderState, newConfig: ScreenConfigV4): Partial<ScreenBuilderState> {
+function pushHistory(state: ScreenBuilderState, newConfig: ScreenConfigV5): Partial<ScreenBuilderState> {
   const history = state.history.slice(0, state.historyIndex + 1);
   history.push(JSON.parse(JSON.stringify(newConfig)));
   if (history.length > 50) history.shift();
@@ -83,14 +86,14 @@ function pushHistory(state: ScreenBuilderState, newConfig: ScreenConfigV4): Part
   };
 }
 
-function getFieldArray(config: ScreenConfigV4, target: "fields" | "listFields" = "fields", detailIdx?: number): FieldConfigV4[] {
+function getFieldArray(config: ScreenConfigV5, target: "fields" | "listFields" = "fields", detailIdx?: number): FieldConfigV4[] {
   if (detailIdx != null && detailIdx >= 0 && config.details[detailIdx]) {
     return config.details[detailIdx].fields;
   }
   return target === "listFields" ? config.listFields : config.fields;
 }
 
-function setFieldArray(config: ScreenConfigV4, arr: FieldConfigV4[], target: "fields" | "listFields" = "fields", detailIdx?: number): ScreenConfigV4 {
+function setFieldArray(config: ScreenConfigV5, arr: FieldConfigV4[], target: "fields" | "listFields" = "fields", detailIdx?: number): ScreenConfigV5 {
   const c = { ...config };
   if (detailIdx != null && detailIdx >= 0 && c.details[detailIdx]) {
     c.details = c.details.map((d, i) => i === detailIdx ? { ...d, fields: arr } : d);
@@ -157,6 +160,12 @@ export const useScreenBuilder = create<ScreenBuilderState>((set, get) => {
       const state = get();
       const newConfig = { ...state.config, ...updates };
       set(pushHistory(state, newConfig));
+    },
+
+    mutate: (fn, select) => {
+      const state = get();
+      const next = fn(JSON.parse(JSON.stringify(state.config)));
+      set({ ...pushHistory(state, next), ...(select !== undefined ? { selectedElement: select } : {}) });
     },
 
     updatePermissions: (updates) => {

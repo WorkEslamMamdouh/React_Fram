@@ -67,11 +67,11 @@ export function ShowConfirm(messageEn: string, messageAr: string, options: Confi
 }
 
 const STYLE: Record<DialogType, { icon: string; ring: string; grad: string; titleEn: string; titleAr: string }> = {
-  success: { icon: "fa-circle-check", ring: "ring-emerald-500/30", grad: "from-emerald-500 to-green-600", titleEn: "Success", titleAr: "تم بنجاح" },
-  error: { icon: "fa-circle-xmark", ring: "ring-red-500/30", grad: "from-red-500 to-rose-600", titleEn: "Error", titleAr: "خطأ" },
-  warning: { icon: "fa-triangle-exclamation", ring: "ring-amber-500/30", grad: "from-amber-500 to-orange-600", titleEn: "Warning", titleAr: "تنبيه" },
-  info: { icon: "fa-circle-info", ring: "ring-blue-500/30", grad: "from-blue-500 to-indigo-600", titleEn: "Information", titleAr: "معلومة" },
-  question: { icon: "fa-circle-question", ring: "ring-indigo-500/30", grad: "from-indigo-500 to-purple-600", titleEn: "Confirm", titleAr: "تأكيد" },
+  success: { icon: "fa-circle-check", ring: "ring-erp-success/30", grad: "from-erp-success to-erp-success", titleEn: "Success", titleAr: "تم بنجاح" },
+  error: { icon: "fa-circle-xmark", ring: "ring-erp-danger/30", grad: "from-erp-danger to-erp-danger", titleEn: "Error", titleAr: "خطأ" },
+  warning: { icon: "fa-triangle-exclamation", ring: "ring-erp-warning/30", grad: "from-erp-warning to-erp-warning", titleEn: "Warning", titleAr: "تنبيه" },
+  info: { icon: "fa-circle-info", ring: "ring-erp-info/30", grad: "from-erp-info to-erp-info", titleEn: "Information", titleAr: "معلومة" },
+  question: { icon: "fa-circle-question", ring: "ring-erp-accent/30", grad: "from-erp-accent to-erp-accent", titleEn: "Confirm", titleAr: "تأكيد" },
 };
 
 function DialogBox({ item, onClose }: { item: DialogItem; onClose: (v: boolean) => void }) {
@@ -102,32 +102,32 @@ function DialogBox({ item, onClose }: { item: DialogItem; onClose: (v: boolean) 
   const title = ar ? o.titleAr || st.titleAr : o.titleEn || st.titleEn;
   const okText = ar ? o.okAr || (item.kind === "confirm" ? "تأكيد" : "حسناً") : o.okEn || (item.kind === "confirm" ? "Confirm" : "OK");
   const cancelText = ar ? o.cancelAr || "إلغاء" : o.cancelEn || "Cancel";
-  const okCls = o.danger ? "bg-gradient-to-r from-red-500 to-rose-600" : `bg-gradient-to-r ${st.grad}`;
+  const okCls = o.danger ? "bg-erp-danger" : "bg-erp-accent";
 
   return (
     <div
       dir={ar ? "rtl" : "ltr"}
-      className={`fixed inset-0 flex items-center justify-center p-4 transition-all duration-150 ${show ? "bg-black/50 backdrop-blur-sm" : "bg-black/0"}`}
+      className={`fixed inset-0 flex items-center justify-center p-4 transition-all duration-150 ${show ? "bg-erp-overlay backdrop-blur-[2px]" : "bg-transparent"}`}
       style={{ zIndex: 2147483646 }}
       onMouseDown={(e) => { if (e.target === e.currentTarget && item.kind === "confirm") close(false); }}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className={`w-full max-w-sm rounded-2xl shadow-2xl ring-4 ${st.ring} overflow-hidden transition-all duration-150 ${show ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${isDark ? "bg-gray-900 text-gray-100" : "bg-white text-gray-800"}`}
+        className={`w-full max-w-sm rounded-xl shadow-erp-4 border border-erp-border ring-4 ${st.ring} overflow-hidden transition-all duration-150 ${show ? "opacity-100 scale-100" : "opacity-0 scale-95"} bg-erp-surface text-erp-text`}
       >
         <div className="p-6 text-center">
-          <div className={`mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br ${st.grad} flex items-center justify-center text-white text-3xl shadow-lg`}>
+          <div className={`mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br ${st.grad} flex items-center justify-center text-white text-3xl`}>
             <i className={`fa-solid ${st.icon}`} />
           </div>
           <h3 className="text-lg font-bold mb-2">{title}</h3>
-          <p className={`text-sm whitespace-pre-line ${isDark ? "text-gray-300" : "text-gray-600"}`}>{ar ? item.messageAr : item.messageEn}</p>
+          <p className={`text-sm whitespace-pre-line text-erp-text-muted`}>{ar ? item.messageAr : item.messageEn}</p>
         </div>
         <div className={`flex gap-2 px-6 pb-6 ${item.kind === "confirm" ? "" : "justify-center"}`}>
           {item.kind === "confirm" && (
             <button
               onClick={() => close(false)}
-              className={`flex-1 py-2.5 rounded-xl font-medium border transition ${isDark ? "border-gray-700 hover:bg-gray-800" : "border-gray-300 hover:bg-gray-50"}`}
+              className="flex-1 h-11 md:h-10 rounded-lg font-medium border border-erp-border bg-erp-surface text-erp-text hover:bg-erp-surface-2 transition"
             >
               {cancelText}
             </button>
@@ -135,7 +135,7 @@ function DialogBox({ item, onClose }: { item: DialogItem; onClose: (v: boolean) 
           <button
             ref={okRef}
             onClick={() => close(true)}
-            className={`${item.kind === "confirm" ? "flex-1" : "min-w-[120px]"} py-2.5 rounded-xl font-medium text-white shadow-md hover:opacity-90 transition ${okCls}`}
+            className={`${item.kind === "confirm" ? "flex-1" : "min-w-[120px]"} h-11 md:h-10 rounded-lg font-medium text-white hover:opacity-90 transition ${okCls}`}
           >
             {okText}
           </button>

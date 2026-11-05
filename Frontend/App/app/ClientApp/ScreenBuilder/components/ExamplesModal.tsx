@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useSys } from "../../Shared/SystemUsing";
-import { ScreenConfigV4 } from "../types/ScreenConfig";
+import { ScreenConfigV5 } from "../types/ScreenConfig";
 import { EXAMPLES } from "../utils/examples";
 
-export default function ExamplesModal({ onClose, onPick }: { onClose: () => void; onPick: (cfg: ScreenConfigV4) => void }) {
+export default function ExamplesModal({ onClose, onPick }: { onClose: () => void; onPick: (cfg: ScreenConfigV5) => void }) {
   const isDark = useSys((s) => s.IsDark);
   const lang = useSys((s) => s.lang);
   const ar = lang === "ar";

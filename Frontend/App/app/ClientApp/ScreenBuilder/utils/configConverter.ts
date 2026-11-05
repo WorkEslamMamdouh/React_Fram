@@ -1,10 +1,10 @@
-// ============================================================
+﻿// ============================================================
 // Config Converter — v3 (CreatePageReact) ↔ v4 (Web Builder)
 // ============================================================
 
 import {
-  ScreenConfigV4, FieldConfigV4, DetailConfigV4,
-  ValidationConfigV4, createEmptyScreen, createEmptyTree, TreeSettingsV4,
+  ScreenConfigV5, FieldConfigV4, DetailConfigV4,
+  ValidationConfigV4, createEmptyScreen, createEmptyTree, TreeSettingsV4, normalizeConfig,
 } from "../types/ScreenConfig";
 
 // ============================================================
@@ -156,7 +156,7 @@ function validationV3toV4(v: ValidationSettingsV3): ValidationConfigV4 {
   };
 }
 
-export function convertV3toV4(v3: GridScreenSettingsV3): ScreenConfigV4 {
+export function convertV3toV4(v3: GridScreenSettingsV3): ScreenConfigV5 {
   const cfg = createEmptyScreen(v3.ScreenType as any);
   cfg.module = v3.Module;
   cfg.table = v3.Table;
@@ -253,7 +253,7 @@ function validationV4toV3(v: ValidationConfigV4): ValidationSettingsV3 {
   };
 }
 
-export function convertV4toV3(v4: ScreenConfigV4): GridScreenSettingsV3 {
+export function convertV4toV3(v4: ScreenConfigV5): GridScreenSettingsV3 {
   return {
     Version: 3,
     ScreenType: v4.screenType,
@@ -295,9 +295,9 @@ export function convertV4toV3(v4: ScreenConfigV4): GridScreenSettingsV3 {
 const SETTINGS_MARKER = "// @CreatePageReact-Settings:";
 const V4_MARKER = "// @ScreenBuilder-Settings:";
 
-export function parseSettingsFromTs(tsContent: string): { v3: GridScreenSettingsV3 | null; v4: ScreenConfigV4 | null } {
+export function parseSettingsFromTs(tsContent: string): { v3: GridScreenSettingsV3 | null; v4: ScreenConfigV5 | null } {
   let v3: GridScreenSettingsV3 | null = null;
-  let v4: ScreenConfigV4 | null = null;
+  let v4: ScreenConfigV5 | null = null;
 
   const v4Idx = tsContent.lastIndexOf(V4_MARKER);
   if (v4Idx >= 0) {
@@ -319,6 +319,9 @@ export function parseSettingsFromTs(tsContent: string): { v3: GridScreenSettings
   if (!v4 && v3) {
     v4 = convertV3toV4(v3);
   }
+
+  // Phase 5: أي نسخة (v3/v4/v5) بتتحول لـ v5 كاملة (layout + filterArea + ...)
+  if (v4) v4 = normalizeConfig(v4);
 
   return { v3, v4 };
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -40,6 +40,8 @@ export interface FilterFieldConfig {
   // للـ search: تكوين نافذة البحث
   searchModal?: SearchModalConfig;
   // هل الحقل مطلوب في الفلتر؟
+  // Phase 5 (اختياري): عامل المقارنة. مش متحدد = السلوك القديم
+  operator?: '=' | 'contains' | 'starts' | '>=' | '<=' | '<>';
   required?: boolean;
   // ترتيب الظهور
   sortOrder?: number;

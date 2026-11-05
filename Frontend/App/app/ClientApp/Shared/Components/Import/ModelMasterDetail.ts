@@ -70,6 +70,19 @@ export interface MasterDetailConfig {
   enablePrint?: boolean;         // زرار "طباعة" — الافتراضي true
   onPrint?: (row: Record<string, any>) => void;   // الطباعة (لو مش متحددة بتظهر رسالة "قريباً")
 
+  // ===== Phase 7 (اختياري): تقارير الطباعة. list = "طباعة القائمة" · transaction = إجراء الطباعة في الصف وزر الطباعة في الفورم (لو onPrint مش متحددة) =====
+  report?: import("../../Reports/ReportTypes").ScreenReportConfig;
+
+  // ===== الصلاحيات (اختياري — مش متحدد = مفيش تغيير) =====
+  moduleCode?: string;          // = MODULE_CODE: بيقرا صلاحيات الشاشة من Session.CurrentPrivileges
+  permissions?: import("../../Permissions").ModulePermissions;   // أو صلاحيات جاهزة بتتطبق مباشرة
+
+  // ===== Phase 5 (اختياري): تخطيط حر لفورم الماستر (شبكة 12 عمود). مش متحدد = زي ما كان =====
+  formLayout?: import("./FormLayout").FormLayout;
+
+  // ===== Phase 6 (اختياري): تحميل نموذج Excel واستيراد معاملات/سطور. مش متحدد = مفيش تغيير. بيحتاج صلاحية الإضافة. =====
+  excel?: import("../Excel/ExcelTypes").ExcelMasterDetailConfig;
+
   // نصوص الشاشة
   newTitle?: string;             // "فاتورة جديدة"
   editTitle?: string;            // "تعديل فاتورة رقم"

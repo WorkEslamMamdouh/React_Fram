@@ -89,7 +89,7 @@ function ToastItem({ message, onClose }: { message: Message; onClose: () => void
         <p className="flex-1 text-sm font-medium">{displayText}</p>
         <button
           onClick={onClose}
-          className="hover:opacity-80 text-white font-bold text-lg"
+          className="hover:opacity-70 font-bold text-lg"
         >
           ×
         </button>

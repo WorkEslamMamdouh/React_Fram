@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Net;
@@ -6,6 +6,13 @@ using GateWay.App;
 
 namespace ERP.Controllers
 {
+    // Phase 5: tokens issued by admin login (kept in memory) so ScreenBuilder endpoints can verify them
+    public static class AdminTokenStore
+    {
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, System.DateTime> Issued = new();
+        public static bool IsValid(string token) => !string.IsNullOrWhiteSpace(token) && Issued.TryGetValue(token, out var t) && (System.DateTime.UtcNow - t).TotalHours < 24;
+    }
+
     [ApiController]
     [Route("api/admin")]
     public class AdminAuthController : ControllerBase
@@ -33,6 +40,7 @@ namespace ERP.Controllers
                 return Ok(JsonConvert.SerializeObject(new BaseResponse(HttpStatusCode.BadRequest, "Invalid admin credentials")));
 
             var model = new { Token = "admin-" + System.Guid.NewGuid().ToString("N") };
+            AdminTokenStore.Issued[model.Token] = System.DateTime.UtcNow;
             return Ok(JsonConvert.SerializeObject(new BaseResponse(model)));
         }
     }

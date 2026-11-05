@@ -188,7 +188,7 @@ export const SmartDropdown = forwardRef<SmartDropdownRef, SmartDropdownProps>((p
     return (
         <select
             ref={selectRef}
-            className={`smart-dropdown ${className}`}
+            className={`smart-dropdown ${className || "h-9 px-3 rounded-lg border border-erp-border-strong bg-erp-surface text-erp-text text-[13px] outline-none focus:border-erp-accent focus:shadow-[0_0_0_3px_var(--erp-accent-soft)] disabled:opacity-50"}`}
             disabled={disabled}
             onChange={(e) => handleChange(e.target.value)}
             value={selectedValue || "null"}

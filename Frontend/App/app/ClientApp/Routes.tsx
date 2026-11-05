@@ -76,7 +76,9 @@ useEffect(() => {
 
   };
 
-  const Layout = routes[page] || NotLayout;
+  // أي شاشة مش مكتوبة فوق (شاشات جديدة) بتتفتح جوه HomeLayout تلقائي.
+  // الصفحات اللي ليها Layout مختلف (NotLayout / LoginLayout / AdminLayout) لازم تفضل مكتوبة فوق.
+  const Layout = Object.prototype.hasOwnProperty.call(routes, page) ? routes[page] : HomeLayout;
 
   return (
     <>

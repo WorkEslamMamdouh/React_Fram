@@ -11,8 +11,27 @@ namespace GateWay.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ScreenBuilderController : ControllerBase
+    public class ScreenBuilderController : ControllerBase, Microsoft.AspNetCore.Mvc.Filters.IActionFilter
     {
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _cfg;
+        private readonly Microsoft.AspNetCore.Hosting.IWebHostEnvironment _env;
+
+        public ScreenBuilderController(Microsoft.Extensions.Configuration.IConfiguration cfg, Microsoft.AspNetCore.Hosting.IWebHostEnvironment env)
+        {
+            _cfg = cfg;
+            _env = env;
+        }
+
+        // Phase 5: every ScreenBuilder call must carry the admin token issued by api/admin/login (header X-Admin-Token)
+        public void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            string tok = Request.Headers["X-Admin-Token"].ToString();
+            if (!ERP.Controllers.AdminTokenStore.IsValid(tok))
+                context.Result = new UnauthorizedObjectResult(new { success = false, error = "Admin login required (X-Admin-Token missing or expired). Log in again from AdminLogin." });
+        }
+
+        public void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context) { }
+
         public class ConnectRequest
         {
             public string Server { get; set; } = ".";
@@ -37,8 +56,18 @@ namespace GateWay.Controllers
             public string ProjectPath { get; set; } = "";
         }
 
-        static string BuildConn(ConnectRequest r, string db = null)
+        // Empty Server = use the server's own connection (ConnectionStrings:cs) so no password travels from the browser
+        string BuildConn(ConnectRequest r, string db = null)
         {
+            if (string.IsNullOrWhiteSpace(r.Server))
+            {
+                var sb = new SqlConnectionStringBuilder(_cfg["ConnectionStrings:cs"] ?? "");
+                if (!string.IsNullOrWhiteSpace(db)) sb.InitialCatalog = db;
+                else if (!string.IsNullOrWhiteSpace(r.Database)) sb.InitialCatalog = r.Database;
+                sb.ConnectTimeout = 10;
+                sb.TrustServerCertificate = true;
+                return sb.ConnectionString;
+            }
             var b = new SqlConnectionStringBuilder
             {
                 DataSource = r.Server,
@@ -63,7 +92,8 @@ namespace GateWay.Controllers
                 using var cmd = new SqlCommand("SELECT name FROM sys.databases WHERE name NOT IN ('master','tempdb','model','msdb') ORDER BY name", con);
                 using var r = cmd.ExecuteReader();
                 while (r.Read()) dbs.Add(r.GetString(0));
-                return Ok(new { success = true, databases = dbs });
+                string currentDb = string.IsNullOrWhiteSpace(req.Server) ? new SqlConnectionStringBuilder(_cfg["ConnectionStrings:cs"] ?? "").InitialCatalog : req.Database;
+                return Ok(new { success = true, databases = dbs, currentDatabase = currentDb });
             }
             catch (Exception ex)
             {
@@ -570,7 +600,8 @@ ORDER BY c.column_id";
                 }
                 done.Add("CSS");
 
-                done.Add(UpdateRoutes(Path.Combine(clientApp, "Routes.tsx"), req.Module));
+                // Phase 5: Routes.tsx is no longer edited - any unlisted page gets HomeLayout automatically (Phase 4)
+                done.Add("Routes.tsx untouched (automatic HomeLayout)");
                 done.Add(UpdateResources(Path.Combine(clientApp, "Shared", "Resources.ts"), req.Resources ?? new()));
 
                 if (!string.IsNullOrWhiteSpace(req.SqlCode))
@@ -664,6 +695,268 @@ ORDER BY c.column_id";
             return head + nl + block + part.Substring(p + 1);
         }
 
+        // =====================================================================
+        //  Phase 5 endpoints (all parameterized / validated identifiers)
+        // =====================================================================
+        static readonly Regex IdentRx = new(@"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$", RegexOptions.Compiled);
+
+        static bool BadCondition(string c) =>
+            !string.IsNullOrWhiteSpace(c) && (c.Contains(';') || c.Contains("--") || c.Contains("/*") || Regex.IsMatch(c, @"\b(drop|delete|insert|update|alter|truncate|exec|execute|create|grant|revoke|shutdown|xp_)\b", RegexOptions.IgnoreCase));
+
+        // POST api/screenbuilder/project-info — guess the Frontend/App folder from the backend location
+        [HttpPost("project-info")]
+        public IActionResult ProjectInfo()
+        {
+            try
+            {
+                string root = _env.ContentRootPath;
+                var dir = new DirectoryInfo(root);
+                for (int i = 0; i < 5 && dir != null; i++, dir = dir.Parent)
+                {
+                    string cand = Path.Combine(dir.FullName, "Frontend", "App");
+                    if (Directory.Exists(Path.Combine(cand, "app", "ClientApp")))
+                        return Ok(new { success = true, projectPath = cand, dbScriptsPath = Path.Combine(dir.FullName, "Database") });
+                }
+                return Ok(new { success = false, error = "Frontend/App not found next to the backend" });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        // POST api/screenbuilder/procs — stored procedures list
+        [HttpPost("procs")]
+        public IActionResult Procs([FromBody] ConnectRequest req)
+        {
+            try
+            {
+                var list = new List<object>();
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                using var cmd = new SqlCommand("SELECT SCHEMA_NAME(schema_id), name FROM sys.procedures WHERE is_ms_shipped = 0 ORDER BY name", con);
+                using var r = cmd.ExecuteReader();
+                while (r.Read()) list.Add(new { schema = r.GetString(0), name = r.GetString(1) });
+                return Ok(new { success = true, procs = list });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        public class NameRequest : ConnectRequest { public string Name { get; set; } = ""; }
+
+        // POST api/screenbuilder/proc-params — parameters (sys.parameters) + first result-set columns
+        [HttpPost("proc-params")]
+        public IActionResult ProcParams([FromBody] NameRequest req)
+        {
+            try
+            {
+                if (!IdentRx.IsMatch(req.Name ?? "")) return Ok(new { success = false, error = "Invalid procedure name" });
+                var pars = new List<object>();
+                var cols = new List<object>();
+                string colsWarning = "";
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                using (var cmd = new SqlCommand(@"SELECT p.name, t.name, p.max_length, p.is_output, p.has_default_value
+FROM sys.parameters p JOIN sys.types t ON t.user_type_id = p.user_type_id
+WHERE p.object_id = OBJECT_ID(@n) AND p.parameter_id > 0 ORDER BY p.parameter_id", con))
+                {
+                    cmd.Parameters.AddWithValue("@n", req.Name);
+                    using var r = cmd.ExecuteReader();
+                    while (r.Read())
+                        pars.Add(new { name = r.GetString(0).TrimStart('@'), sqlType = r.GetString(1).ToLower(), maxLength = Convert.ToInt32(r[2]), isOutput = Convert.ToBoolean(r[3]), hasDefault = Convert.ToBoolean(r[4]) });
+                }
+                try
+                {
+                    using var cmd2 = new SqlCommand("SELECT name, system_type_name FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID(@n), NULL) WHERE is_hidden = 0 ORDER BY column_ordinal", con);
+                    cmd2.Parameters.AddWithValue("@n", req.Name);
+                    using var r2 = cmd2.ExecuteReader();
+                    while (r2.Read())
+                        cols.Add(new { name = r2.IsDBNull(0) ? "" : r2.GetString(0), sqlType = r2.IsDBNull(1) ? "" : r2.GetString(1) });
+                }
+                catch (Exception ex) { colsWarning = ex.Message; }
+                return Ok(new { success = true, parameters = pars, columns = cols, columnsWarning = colsWarning });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        public class DistinctRequest : ConnectRequest
+        {
+            public string Table { get; set; } = "";
+            public string Column { get; set; } = "";
+            public string Condition { get; set; } = "";
+            public int Top { get; set; } = 50;
+        }
+
+        // POST api/screenbuilder/distinct-values — sample of distinct values (for chips / options preview)
+        [HttpPost("distinct-values")]
+        public IActionResult DistinctValues([FromBody] DistinctRequest req)
+        {
+            try
+            {
+                if (!IdentRx.IsMatch(req.Table ?? "") || !IdentRx.IsMatch(req.Column ?? "")) return Ok(new { success = false, error = "Invalid table/column" });
+                if (BadCondition(req.Condition)) return Ok(new { success = false, error = "Condition not allowed" });
+                int top = Math.Clamp(req.Top, 1, 200);
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                using (var chk = new SqlCommand("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(@t) AND name = @c", con))
+                {
+                    chk.Parameters.AddWithValue("@t", req.Table); chk.Parameters.AddWithValue("@c", req.Column);
+                    if (Convert.ToInt32(chk.ExecuteScalar()) == 0) return Ok(new { success = false, error = "Column not found" });
+                }
+                string tbl = string.Join(".", req.Table.Split('.').Select(x => "[" + x + "]"));
+                string sql = $"SELECT DISTINCT TOP ({top}) [{req.Column}] FROM {tbl}" + (string.IsNullOrWhiteSpace(req.Condition) ? "" : $" WHERE ({req.Condition})") + $" ORDER BY [{req.Column}]";
+                var vals = new List<string>();
+                using var cmd = new SqlCommand(sql, con);
+                using var r = cmd.ExecuteReader();
+                while (r.Read()) vals.Add(r.IsDBNull(0) ? "" : Convert.ToString(r[0]) ?? "");
+                return Ok(new { success = true, values = vals });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        public class ConditionRequest : ConnectRequest { public string Table { get; set; } = ""; public string Condition { get; set; } = ""; }
+
+        // POST api/screenbuilder/validate-condition — TOP 1 with the condition (single SELECT, no ; or comments)
+        [HttpPost("validate-condition")]
+        public IActionResult ValidateCondition([FromBody] ConditionRequest req)
+        {
+            try
+            {
+                if (!IdentRx.IsMatch(req.Table ?? "")) return Ok(new { success = false, error = "Invalid table" });
+                if (BadCondition(req.Condition)) return Ok(new { success = false, error = "Condition not allowed (; -- /* or write keywords)" });
+                // placeholders {row.X} {session.X} {filter.X} are replaced by NULL/0 just to test the syntax
+                string cond = Regex.Replace(req.Condition ?? "", @"\{[A-Za-z_.]+\}", "NULL");
+                string tbl = string.Join(".", req.Table.Split('.').Select(x => "[" + x + "]"));
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                using var cmd = new SqlCommand($"SELECT TOP 1 1 FROM {tbl}" + (string.IsNullOrWhiteSpace(cond) ? "" : $" WHERE ({cond})"), con);
+                cmd.ExecuteScalar();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        public class RegisterRequest : ConnectRequest
+        {
+            public string Module { get; set; } = "";
+            public string DescA { get; set; } = "";
+            public string DescE { get; set; } = "";
+            public string Menu { get; set; } = "";
+            public string Type { get; set; } = "S";
+            public int Sort { get; set; } = 0;
+            public string Icon { get; set; } = "";
+            public string Color { get; set; } = "indigo";
+            public bool AllowCustom { get; set; } = false;
+        }
+
+        // POST api/screenbuilder/register-module — dbo.Sys_RegisterModule (menu + admin permissions)
+        [HttpPost("register-module")]
+        public IActionResult RegisterModule([FromBody] RegisterRequest req)
+        {
+            try
+            {
+                if (!Regex.IsMatch(req.Module ?? "", @"^[A-Za-z_][A-Za-z0-9_]*$")) return Ok(new { success = false, error = "Invalid module code" });
+                string type = req.Type == "M" ? "M" : "S";
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                using (var chk = new SqlCommand("SELECT OBJECT_ID('dbo.Sys_RegisterModule')", con))
+                    if (chk.ExecuteScalar() is DBNull or null) return Ok(new { success = false, error = "dbo.Sys_RegisterModule not found - run Database/Phase4_Permissions.sql first" });
+                int sort = req.Sort;
+                if (sort <= 0)
+                {
+                    using var s = new SqlCommand("SELECT ISNULL(MAX(MODULE_SORT),0)+1 FROM dbo.Sys_Modules WHERE ISNULL(MODULE_MENU,N'') = @m", con);
+                    s.Parameters.AddWithValue("@m", req.Menu ?? "");
+                    sort = Convert.ToInt32(s.ExecuteScalar());
+                }
+                using var cmd = new SqlCommand("dbo.Sys_RegisterModule", con) { CommandType = CommandType.StoredProcedure };
+                cmd.Parameters.AddWithValue("@MODULE_CODE", req.Module);
+                cmd.Parameters.AddWithValue("@MODULE_DESCA", req.DescA ?? "");
+                cmd.Parameters.AddWithValue("@MODULE_DESCE", req.DescE ?? "");
+                cmd.Parameters.AddWithValue("@MODULE_MENU", req.Menu ?? "");
+                cmd.Parameters.AddWithValue("@MODULE_TYPE", type);
+                cmd.Parameters.AddWithValue("@MODULE_SORT", sort);
+                cmd.Parameters.AddWithValue("@Url_Image", req.Icon ?? "");
+                cmd.Parameters.AddWithValue("@Icon_Color", req.Color ?? "");
+                cmd.Parameters.AddWithValue("@AllowCustom", req.AllowCustom);
+                var messages = new List<string>();
+                con.InfoMessage += (s2, e) => messages.Add(e.Message);
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true, sort, messages });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        public class ConfigRequest : ConnectRequest
+        {
+            public string Module { get; set; } = "";
+            public string Json { get; set; } = "";
+            public int Version { get; set; } = 5;
+        }
+
+        static bool ConfigTableExists(SqlConnection con)
+        {
+            using var c = new SqlCommand("SELECT OBJECT_ID('dbo.Sys_ScreenConfig')", con);
+            var o = c.ExecuteScalar();
+            return o != null && o is not DBNull;
+        }
+
+        // POST api/screenbuilder/config-save — upsert v5 JSON into Sys_ScreenConfig (skipped with a warning when the table is missing)
+        [HttpPost("config-save")]
+        public IActionResult ConfigSave([FromBody] ConfigRequest req)
+        {
+            try
+            {
+                if (!Regex.IsMatch(req.Module ?? "", @"^[A-Za-z_][A-Za-z0-9_]*$")) return Ok(new { success = false, error = "Invalid module code" });
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                if (!ConfigTableExists(con)) return Ok(new { success = false, missingTable = true, error = "Sys_ScreenConfig not found - run Database/Phase5_ScreenBuilder.sql" });
+                using var cmd = new SqlCommand(@"
+IF EXISTS (SELECT 1 FROM dbo.Sys_ScreenConfig WHERE ModuleCode = @m)
+    UPDATE dbo.Sys_ScreenConfig SET ConfigJson = @j, Version = @v, UpdatedAt = GETDATE(), UpdatedBy = @u WHERE ModuleCode = @m
+ELSE
+    INSERT INTO dbo.Sys_ScreenConfig (ModuleCode, ConfigJson, Version, UpdatedAt, UpdatedBy) VALUES (@m, @j, @v, GETDATE(), @u)", con);
+                cmd.Parameters.AddWithValue("@m", req.Module);
+                cmd.Parameters.AddWithValue("@j", req.Json ?? "");
+                cmd.Parameters.AddWithValue("@v", req.Version);
+                cmd.Parameters.AddWithValue("@u", "admin");
+                cmd.ExecuteNonQuery();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        // POST api/screenbuilder/config-list — screens stored in Sys_ScreenConfig
+        [HttpPost("config-list")]
+        public IActionResult ConfigList([FromBody] ConnectRequest req)
+        {
+            try
+            {
+                var list = new List<object>();
+                using var con = new SqlConnection(BuildConn(req));
+                con.Open();
+                if (!ConfigTableExists(con)) return Ok(new { success = true, missingTable = true, configs = list });
+                using var cmd = new SqlCommand("SELECT ModuleCode, Version, UpdatedAt, ConfigJson FROM dbo.Sys_ScreenConfig ORDER BY ModuleCode", con);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                    list.Add(new { module = r.GetString(0), version = r.IsDBNull(1) ? 0 : Convert.ToInt32(r[1]), updatedAt = r.IsDBNull(2) ? "" : Convert.ToDateTime(r[2]).ToString("s"), json = r.IsDBNull(3) ? "" : r.GetString(3) });
+                return Ok(new { success = true, configs = list });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
+        public class ReadScreenRequest { public string ProjectPath { get; set; } = ""; public string Module { get; set; } = ""; }
+
+        // POST api/screenbuilder/read-screen — raw <Module>.ts (for best-effort import of screens without a settings marker)
+        [HttpPost("read-screen")]
+        public IActionResult ReadScreen([FromBody] ReadScreenRequest req)
+        {
+            try
+            {
+                if (!Regex.IsMatch(req.Module ?? "", @"^[A-Za-z_][A-Za-z0-9_]*$")) return Ok(new { success = false, error = "Invalid module" });
+                string f = Path.Combine(Path.GetFullPath(req.ProjectPath ?? ""), "app", "ClientApp", req.Module, req.Module + ".ts");
+                if (!System.IO.File.Exists(f)) return Ok(new { success = false, error = "File not found" });
+                return Ok(new { success = true, text = System.IO.File.ReadAllText(f) });
+            }
+            catch (Exception ex) { return Ok(new { success = false, error = ex.Message }); }
+        }
+
         // POST api/screenbuilder/scan-screens — scan project for existing screens
         [HttpPost("scan-screens")]
         public IActionResult ScanScreens([FromBody] ScanRequest req)
@@ -705,7 +998,7 @@ ORDER BY c.column_id";
                         if (colonIdx >= 0) settingsJson = line.Substring(colonIdx + 1).Trim();
 
                         if (text.Contains("\"screenType\":\"Tree\"")) screenType = "Tree";
-                        else if (text.Contains("\"ScreenType\":\"MasterDetail\"")) screenType = "MasterDetail";
+                        else if (text.Contains("\"ScreenType\":\"MasterDetail\"") || text.Contains("\"screenType\":\"MasterDetail\"")) screenType = "MasterDetail";
                     }
 
                     // Extract table name

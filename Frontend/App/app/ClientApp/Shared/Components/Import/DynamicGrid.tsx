@@ -8,8 +8,23 @@ import { useSys } from "../../SystemUsing";
 import { DynamicGridColumn, DynamicGridProps, SortDirection, ColumnMode } from "../Import/ModelGrid";
 import { SearchModalConfig } from "../Import/ModelGrid";
 import AdvancedFilter, { FilterFieldConfig, ActiveFilter } from './AdvancedFilter';
-import DynamicGridFilter from './DynamicGridFilter';
+import DynamicGridFilter, {
+  GridFilterConfig,
+  buildInitialFilters,
+  loadSavedFilters,
+  firstMissingRequired,
+  isFilterActive,
+} from './DynamicGridFilter';
+import { useInfiniteSentinel } from './useInfiniteSentinel';
 import { displayDate } from "../../dateUtils";
+import { useEffectiveModulePermissions, ModulePermissions } from "../../Permissions";
+// Phase 6: إكسل (اختياري) — الكود التقيل بيتحمل لما اليوزر يدوس بس
+import ExcelGridBar from "../Excel/ExcelGridBar";
+import type { ExcelGridConfig } from "../Excel/ExcelTypes";
+import { FormLayout, FORM_LAYOUT_GRID_CLASS, arrangeByLayout, formLayoutCellClass, formLayoutCellStyle, FormLayoutStatic } from "./FormLayout";
+// Phase 7: طباعة التقارير (اختياري) — العارض بيتحمل لما اليوزر يدوس بس (Stimulsoft نفسه dynamic import جوه العارض)
+import { openReport } from "../../Reports/openReport";
+import { ScreenReportConfig, filtersToMap } from "../../Reports/ReportTypes";
 
 const SearchModal = lazy(() => import("./SearchModal"));
 const DynamicSelect = lazy(() => import("./DynamicSelect"));
@@ -55,21 +70,38 @@ export interface DynamicGridExtendedProps extends DynamicGridProps {
   filterFields?: FilterFieldConfig[];
   defaultFilters?: ActiveFilter[];
   enableAdvancedFilter?: boolean;
+  // ✅ صلاحيات اختيارية: moduleCode (= MODULE_CODE) بيقرا من Session.CurrentPrivileges، و permissions بتتطبق مباشرة.
+  //    مش متحددين = مفيش أي تغيير في السلوك. بيقفلوا (مش بيفتحوا) الإضافة/التعديل/الحذف/الطباعة.
+  moduleCode?: string;
+  permissions?: ModulePermissions;
+  // ✅ Phase 6 (اختياري): أزرار "تحميل نموذج Excel" / "استيراد من Excel" — مش متحدد = مفيش تغيير. بيحتاج صلاحية الإضافة (CREATE).
+  excel?: ExcelGridConfig;
+  // ✅ Phase 7 (اختياري): تقارير الطباعة — list = زر "طباعة القائمة" · transaction = إجراء "طباعة" في الصف. بيحتاج صلاحية PRINT. مش متحدد = مفيش تغيير.
+  report?: ScreenReportConfig;
   // ✅ تحقق إضافي قبل الحفظ (Validation.ts → ValidateRow) — يرجّع رسالة الخطأ أو null
   beforeSave?: (row: Record<string, any>, isInsert: boolean) => Promise<string | null> | string | null;
   gridFilter?: GridFilterConfig;
   onGridFilterChange?: (filters: ActiveFilter[]) => void;
   deferLoadUntilFilter?: boolean;
+  // ===== Phase 2 (كلها اختيارية) =====
+  /** "infinite" = تحميل تلقائي مع السكرول (الافتراضي) · "pages" = أرقام صفحات. اليوزر يقدر يبدّل من الفوتر (بيتحفظ) لو الشاشة ماحددتش */
+  pagingMode?: "infinite" | "pages";
+  /** اختيارات عدد الصفوف في الصفحة (الافتراضي 25/50/100) */
+  pageSizeOptions?: number[];
+  /** إظهار اختيار عدد الصفوف في الفوتر (الافتراضي true) */
+  enablePageSizeSelector?: boolean;
+  /** مفتاح حفظ الفلاتر/التفضيلات (الافتراضي: MODULE_CODE ثم اسم الجدول) */
+  filterStorageKey?: string;
+  /** حفظ آخر فلاتر لكل يوزر (الافتراضي true) */
+  persistFilters?: boolean;
+  /** "bar" (الافتراضي) = شريط الفلتر الظاهر من filterFields · "advanced" = الزرار القديم "اختار حقل" */
+  filterMode?: "bar" | "advanced";
+  // ===== Phase 5 (اختياري) =====
+  /** تخطيط حر لفورم الإضافة/التعديل (شبكة 12 عمود). مش متحدد = الفورم زي ما كان */
+  formLayout?: FormLayout;
 }
 
-export interface GridFilterConfig {
-  fields: FilterFieldConfig[];
-  visible?: boolean;
-  applyOnInit?: boolean;
-  applyOnChange?: boolean;
-  layout?: "inline" | "stacked";
-  columns?: number;
-}
+export type { GridFilterConfig };
 
 // ============================================================
 // ICONS SVG
@@ -199,21 +231,12 @@ const Icons = {
 // GLASS CARD STYLES - Matching the dark mode from CSS
 // ============================================================
 
-const glassCardStyle = (isDark: boolean) => isDark ? {
-  background: 'rgba(19, 23, 32, 0.88)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255, 255, 255, 0.05)',
-  borderRadius: '1rem',
-  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
-} : {
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.5)',
-  borderRadius: '1rem',
-  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
-};
+const glassCardStyle = (isDark: boolean): React.CSSProperties => ({
+  background: 'var(--erp-surface)',
+  border: '1px solid var(--erp-border)',
+  borderRadius: '12px',
+  boxShadow: 'var(--erp-shadow-1)',
+});
 
 // ============================================================
 // BOTTOM SHEET MODAL MENU
@@ -246,20 +269,15 @@ const BottomSheetMenu: React.FC<{
     }
   };
 
-  const sheetStyle = isDark ? {
-    background: 'rgba(19, 23, 32, 0.98)',
-    backdropFilter: 'blur(20px)',
-    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-  } : {
-    background: 'rgba(255, 255, 255, 0.98)',
-    backdropFilter: 'blur(20px)',
-    borderTop: '1px solid rgba(255, 255, 255, 0.6)',
+  const sheetStyle: React.CSSProperties = {
+    background: 'var(--erp-surface)',
+    borderTop: '1px solid var(--erp-border)',
   };
 
   return (
     <>
       <div 
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-all duration-300"
+        className="fixed inset-0 z-50 bg-erp-overlay transition-all duration-300"
         style={{ animation: 'fadeIn 0.2s ease-out' }}
         onClick={onClose}
       />
@@ -275,15 +293,15 @@ const BottomSheetMenu: React.FC<{
         }}
       >
         <div 
-          className="rounded-t-3xl overflow-hidden shadow-2xl"
+          className="rounded-t-2xl overflow-hidden shadow-erp-4"
           style={sheetStyle}
         >
           <div className="flex justify-center pt-3 pb-2">
-            <div className={`w-12 h-1 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`} />
+            <div className={`w-12 h-1 rounded-full ${'bg-erp-border-strong'}`} />
           </div>
           
-          <div className={`px-5 pt-2 pb-3 border-b ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
-            <h3 className={`text-base font-semibold text-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          <div className={`px-5 pt-2 pb-3 border-b ${'border-erp-border'}`}>
+            <h3 className={`text-base font-semibold text-center ${'text-erp-text'}`}>
               {lang === 'ar' ? 'الإجراءات' : 'Actions'}
             </h3>
           </div>
@@ -296,7 +314,7 @@ const BottomSheetMenu: React.FC<{
                   action.onClick(row, id);
                   onClose();
                 }}
-                className={`w-full text-left px-5 py-4 transition-all duration-150 flex items-center gap-4 border-b ${isDark ? 'border-white/5 hover:bg-white/5' : 'border-gray-50 hover:bg-gray-50'} active:bg-gray-100 last:border-0`}
+                className={`w-full text-start px-5 py-4 min-h-[48px] transition-all duration-150 flex items-center gap-4 border-b ${'border-erp-border hover:bg-erp-surface-2'} active:bg-gray-100 last:border-0`}
                 style={{
                   animationDelay: `${idx * 30}ms`,
                   animation: 'fadeInSlide 0.2s ease-out forwards',
@@ -304,21 +322,21 @@ const BottomSheetMenu: React.FC<{
                   transform: 'translateY(10px)'
                 }}
               >
-                <span className={`w-5 h-5 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                <span className={`w-5 h-5 flex-shrink-0 ${'text-erp-text-muted'}`}>
                   {getActionIcon(action.key)}
                 </span>
-                <span className={`font-medium text-base ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                <span className={`font-medium text-base ${'text-erp-text'}`}>
                   {action.label}
                 </span>
               </button>
             ))}
           </div>
           
-          <div className={`p-4 pt-2 pb-6 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+          <div className={`p-4 pt-2 pb-6 border-t ${'border-erp-border'}`}>
             <button
               onClick={onClose}
               className={`w-full py-3.5 rounded-2xl font-semibold text-base transition-all duration-200 ${
-                isDark ? 'bg-gray-800/80 text-gray-200 active:bg-gray-700' : 'bg-gray-100 text-gray-700 active:bg-gray-200'
+                'bg-erp-surface-2 text-erp-text active:bg-erp-surface-3'
               }`}
             >
               {lang === 'ar' ? 'إلغاء' : 'Cancel'}
@@ -400,8 +418,8 @@ const ModalDropdownMenu: React.FC<{
         onClick={handleOpen}
         className={`p-2 rounded-xl transition-all duration-200 ${
           isOpen 
-            ? (isDark ? 'bg-gray-800 scale-95' : 'bg-gray-100 scale-95')
-            : (isDark ? 'hover:bg-gray-800 hover:scale-105' : 'hover:bg-gray-50 hover:scale-105')
+            ? ('bg-erp-surface-2 scale-95')
+            : ('hover:bg-erp-surface-2')
         }`}
         title={lang === 'ar' ? 'إجراءات إضافية' : 'More actions'}
       >
@@ -411,7 +429,7 @@ const ModalDropdownMenu: React.FC<{
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
           <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-erp-overlay"
             onClick={handleClose}
           />
           
@@ -419,11 +437,11 @@ const ModalDropdownMenu: React.FC<{
             className="relative w-full max-w-sm mx-auto overflow-hidden animate-slide-up"
             style={glassCardStyle(isDark)}
           >
-            <div className={`flex justify-end items-center p-4 border-b ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+            <div className={`flex justify-end items-center p-4 border-b ${'border-erp-border'}`}>
               <button
                 onClick={handleClose}
                 className={`p-1 rounded-lg transition-all duration-200 ${
-                  isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+                  'hover:bg-erp-surface-2'
                 }`}
               >
                 <Icons.Close />
@@ -439,10 +457,8 @@ const ModalDropdownMenu: React.FC<{
                     handleClose();
                   }}
                   className={`
-                    w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group
-                    ${isDark
-                      ? 'text-gray-200 hover:bg-blue-600/20 hover:text-white'
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                    w-full text-start px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 group
+                    ${'text-erp-text hover:bg-erp-accent-soft hover:text-erp-accent'
                     }
                     ${action.className || ''}
                   `}
@@ -453,7 +469,7 @@ const ModalDropdownMenu: React.FC<{
                     transform: 'translateY(-8px)'
                   }}
                 >
-                  <span className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${isDark ? 'text-gray-400 group-hover:text-blue-400' : 'text-gray-500 group-hover:text-blue-600'}`}>
+                  <span className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${'text-erp-text-muted group-hover:text-erp-accent'}`}>
                     {getActionIcon(action.key)}
                   </span>
                   <span className="font-medium text-sm">{action.label}</span>
@@ -544,17 +560,15 @@ const MobileCard: React.FC<{
   openBottomSheet: (row: any) => void;
   index: number;
 }> = ({ row, visibleColumns, showSelection, selected, onSelect, onEdit, onDelete, onDoubleClick, allActions, isDark, lang, t, openBottomSheet }) => {
-  const cardStyle = isDark ? {
-    background: 'rgba(19, 23, 32, 0.6)',
-    backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    borderRadius: '1rem',
-  } : {
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255, 255, 255, 0.5)',
-    borderRadius: '1rem',
-  };
+  const cardStyle: React.CSSProperties = {
+    background: 'var(--erp-surface)',
+    border: '1px solid ' + (selected ? 'var(--erp-accent)' : 'var(--erp-border)'),
+    borderRadius: '12px',
+    boxShadow: 'var(--erp-shadow-1)',
+    // المتصفح يتخطى رسم الكروت اللي بره الشاشة (تخفيف الـ DOM مع آلاف الكروت)
+    contentVisibility: 'auto',
+    containIntrinsicSize: 'auto 260px',
+  } as React.CSSProperties;
 
   const hasExtraActions = allActions.length > 0;
 
@@ -565,7 +579,7 @@ const MobileCard: React.FC<{
       onDoubleClick={() => onDoubleClick?.(row)}
     >
       <div className="p-4">
-        <div className="flex justify-between items-start mb-3 pb-2 border-b border-gray-100 dark:border-white/5">
+        <div className="flex justify-between items-start mb-3 pb-2 border-b border-erp-border">
           <div className="flex items-center gap-3">
             {showSelection && (
               <input
@@ -573,10 +587,10 @@ const MobileCard: React.FC<{
                 checked={selected}
                 onChange={() => onSelect(row)}
                 onClick={(e) => e.stopPropagation()}
-                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 transition-all"
+                className="size-4 rounded border-erp-border-strong accent-[var(--erp-accent)] transition-all"
               />
             )}
-            <span className={`text-xs font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            <span className={`text-xs font-mono ${'text-erp-text-subtle'}`}>
               #{row.ID || row.id || '-'}
             </span>
           </div>
@@ -585,7 +599,7 @@ const MobileCard: React.FC<{
               <button
                 onClick={() => onEdit(row)}
                 title={t("Edit", "تعديل")}
-                className={`p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${isDark ? 'text-amber-400 hover:bg-amber-500/15' : 'text-amber-600 hover:bg-amber-50'}`}
+                className={`p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${'text-erp-warning-text hover:bg-erp-warning-bg'}`}
               >
                 <div className="text-inherit"><Icons.Edit /></div>
               </button>
@@ -594,7 +608,7 @@ const MobileCard: React.FC<{
               <button
                 onClick={() => onDelete(row)}
                 title={t("Delete", "حذف")}
-                className={`p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${isDark ? 'text-red-400 hover:bg-red-500/15' : 'text-red-600 hover:bg-red-50'}`}
+                className={`p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${'text-erp-danger hover:bg-erp-danger-bg'}`}
               >
                 <div className="text-inherit"><Icons.Delete /></div>
               </button>
@@ -602,7 +616,7 @@ const MobileCard: React.FC<{
             {hasExtraActions && (
               <button
                 onClick={() => openBottomSheet(row)}
-                className={`p-2 rounded-xl transition-all duration-200 ${isDark ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-100'}`}
+                className={`p-2 rounded-xl transition-all duration-200 ${'text-erp-text-muted hover:bg-erp-surface-2'}`}
                 title={t("More actions", "إجراءات إضافية")}
               >
                 <Icons.Menu />
@@ -625,10 +639,10 @@ const MobileCard: React.FC<{
             
             return (
               <div key={idx} className="flex justify-between items-start gap-2">
-                <span className={`text-xs uppercase tracking-wide font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'} min-w-[90px]`}>
+                <span className={`text-xs uppercase tracking-wide font-semibold ${'text-erp-text-subtle'} min-w-[90px]`}>
                   {col.title}:
                 </span>
-                <span className={`text-sm text-right flex-1 font-medium break-words [overflow-wrap:anywhere] ${isDark ? 'text-gray-100' : 'text-gray-700'}`}>
+                <span className={`num text-sm text-end flex-1 font-medium break-words [overflow-wrap:anywhere] ${'text-erp-text'}`}>
                   {String(displayValue)}
                 </span>
               </div>
@@ -652,16 +666,14 @@ const formatCurrency = (value: any, locale: string = 'en-US'): string => {
 };
 
 const getButtonClass = (type: 'primary' | 'success' | 'danger' | 'warning' | 'gray', isDark: boolean): string => {
-  const baseClass = "px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5";
+  const baseClass = "px-3 h-11 md:h-9 rounded-lg font-medium text-[13px] transition-colors duration-200 erp-focus disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5";
   
   const styles = {
-    primary: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 focus:ring-blue-500",
-    success: "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20 focus:ring-emerald-500",
-    danger: "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md shadow-red-500/20 focus:ring-red-500",
-    warning: "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md shadow-amber-500/20 focus:ring-amber-500",
-    gray: isDark
-      ? "bg-gray-800/80 hover:bg-gray-700 text-gray-200 focus:ring-gray-500"
-      : "bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500",
+    primary: "bg-erp-primary hover:bg-erp-primary-hover text-erp-on-primary",
+    success: "bg-erp-accent hover:bg-erp-accent-hover text-white",
+    danger: "bg-erp-danger hover:opacity-90 text-white",
+    warning: "bg-erp-warning hover:opacity-90 text-white",
+    gray: "bg-erp-surface border border-erp-border text-erp-text hover:bg-erp-surface-2",
   };
   
   return `${baseClass} ${styles[type]}`;
@@ -670,6 +682,17 @@ const getButtonClass = (type: 'primary' | 'success' | 'danger' | 'warning' | 'gr
 // ============================================================
 // INPUT CONTROL COMPONENT
 // ============================================================
+
+// Phase 5: {row.X} أو {X} في شرط الدروب داون = قيمة حقل تاني في الفورم (فاضي = NULL)
+function resolveFormPlaceholders(input: string, row: Record<string, any>): string {
+  return input.replace(/\{row\.([A-Za-z_][A-Za-z0-9_]*)\}|\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_m, k1, k2) => {
+    const v = row[k1 || k2];
+    if (v === null || v === undefined || v === "") return "NULL";
+    if (typeof v === "number") return String(v);
+    if (typeof v === "boolean") return v ? "1" : "0";
+    return "N'" + String(v).replace(/'/g, "''") + "'";
+  });
+}
 
 const InputControl: React.FC<{
   column: DynamicGridColumn;
@@ -681,13 +704,12 @@ const InputControl: React.FC<{
   isDark: boolean;
   disabled?: boolean;
   isEdit?: boolean;
-}> = ({ column, value, onChange, onSearch, error, lang, isDark, disabled, isEdit = false }) => {
+  rowData?: Record<string, any>;   // Phase 5: صف الفورم الحالي (للدروب داون المتسلسل + enabledWhen)
+}> = ({ column, value, onChange, onSearch, error, lang, isDark, disabled, isEdit = false, rowData }) => {
   const inputType = column.inputType || column.type || "text";
-  const baseClass = `w-full border rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm`;
-  const themeClass = isDark
-    ? "bg-gray-800/60 border-gray-700 text-white placeholder-gray-500"
-    : "bg-white/90 border-gray-200 text-gray-900 placeholder-gray-400";
-  const errorClass = error ? "border-red-500 ring-red-500" : "";
+  const baseClass = `w-full border rounded-lg px-3 h-10 md:h-9 focus:outline-none focus:border-erp-accent focus:shadow-[0_0_0_3px_var(--erp-accent-soft)] transition-all duration-200 text-[13px]`;
+  const themeClass = "bg-erp-surface border-erp-border-strong text-erp-text placeholder:text-erp-text-subtle";
+  const errorClass = error ? "!border-erp-danger" : "";
   
   const getDisabledState = (): boolean => {
     if (disabled) return true;
@@ -695,12 +717,12 @@ const InputControl: React.FC<{
     if (!isEdit && column.IsDisabledInAdd) return true;
     if (column.enabledWhen) {
       const mode: ColumnMode = isEdit ? "edit" : "create";
-      if (!column.enabledWhen({}, mode)) return true;
+      if (!column.enabledWhen(rowData || {}, mode)) return true;
     }
     return false;
   };
   
-  const disabledClass = getDisabledState() ? "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-800/40" : "";
+  const disabledClass = getDisabledState() ? "opacity-60 cursor-not-allowed !bg-erp-surface-2" : "";
 
   const t = (en: string, ar: string) => lang === "ar" ? ar : en;
 
@@ -716,7 +738,9 @@ const InputControl: React.FC<{
     return (
       <Suspense fallback={<div className={`${baseClass} ${themeClass}`}>...</div>}>
         <DynamicSelect
-          config={column.selectConfig}
+          config={rowData && column.selectConfig.condition && column.selectConfig.condition.includes("{")
+            ? { ...column.selectConfig, condition: resolveFormPlaceholders(column.selectConfig.condition, rowData) }
+            : column.selectConfig}
           value={value}
           onChange={(v) => onChange(v)}
           disabled={getDisabledState()}
@@ -787,7 +811,7 @@ const InputControl: React.FC<{
         type="checkbox"
         checked={value || false}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 transition-all"
+        className="size-4 rounded border-erp-border-strong accent-[var(--erp-accent)] transition-all"
         disabled={getDisabledState()}
       />
     );
@@ -856,6 +880,7 @@ interface FormModalProps {
   runProcessTrans: boolean;
   ShowLoader: () => void;
   CloseLoader: () => void;
+  formLayout?: FormLayout;
 }
 
 const FormModal: React.FC<FormModalProps> = ({
@@ -877,6 +902,7 @@ const FormModal: React.FC<FormModalProps> = ({
   runProcessTrans,
   ShowLoader,
   CloseLoader,
+  formLayout,
 }) => {
   if (!isOpen) return null;
 
@@ -895,29 +921,35 @@ const FormModal: React.FC<FormModalProps> = ({
   return createPortal(
     <div className="fixed inset-0 z-[99999]">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-erp-overlay backdrop-blur-[2px]"
         onClick={onClose}
       />
       <div className="absolute inset-0 flex items-center justify-center p-3 md:p-6">
         <div
-          className="relative w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden rounded-3xl animate-slide-up"
+          className="relative w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden rounded-xl shadow-erp-4 animate-slide-up"
           style={glassCardStyle(isDark)}
         >
-          <div className={`flex justify-between items-center px-5 py-4 border-b sticky top-0 z-10 backdrop-blur-xl shrink-0 ${isDark ? 'border-white/5 bg-gray-900/95' : 'border-gray-200 bg-white/95'}`}>
-            <h3 className={`text-lg md:text-2xl font-bold truncate ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          <div className={`flex justify-between items-center px-5 py-4 border-b sticky top-0 z-10 shrink-0 ${'border-erp-border bg-erp-surface'}`}>
+            <h3 className={`text-[18px] leading-6 font-semibold truncate ${'text-erp-text'}`}>
               {title}
             </h3>
-            <button onClick={onClose} className={`p-2 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/10 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}>
+            <button onClick={onClose} className={`p-2 rounded-lg transition-colors duration-200 ${'hover:bg-erp-surface-2 text-erp-text-muted'}`}>
               <Icons.Close />
             </button>
           </div>
           <div className="flex-1 overflow-auto p-4 md:p-5 min-h-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sortedColumns.map(col => (
-                <div key={col.field} className="space-y-1.5">
-                  <label className={`block text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            <div className={formLayout && formLayout.length > 0 ? FORM_LAYOUT_GRID_CLASS : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"}>
+              {(formLayout && formLayout.length > 0
+                ? arrangeByLayout(sortedColumns, formLayout)
+                : sortedColumns.map(col => ({ cell: undefined as any, col }))
+              ).map((item, idx) => {
+                if (!item.col) return <div key={`s${idx}`} className={formLayoutCellClass(item.cell)} style={formLayoutCellStyle(item.cell)}><FormLayoutStatic cell={item.cell} isEN={lang !== "ar"} /></div>;
+                const col = item.col;
+                return (
+                <div key={col.field} className={`space-y-1.5 ${item.cell ? formLayoutCellClass(item.cell) : ""}`} style={item.cell ? formLayoutCellStyle(item.cell) : undefined}>
+                  <label className={`block text-[13px] font-medium ${'text-erp-text'}`}>
                     {col.title}
-                    {col.IsRequired && <span className="text-red-500 ml-1">*</span>}
+                    {col.IsRequired && <span className="text-erp-danger ms-1">*</span>}
                   </label>
                   <InputControl
                     column={col}
@@ -928,15 +960,17 @@ const FormModal: React.FC<FormModalProps> = ({
                     lang={lang}
                     isDark={isDark}
                     isEdit={isEdit}
+                    rowData={data}
                   />
                   {validationErrors[col.field] && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{validationErrors[col.field]}</p>
+                    <p className="text-erp-danger text-xs mt-1">{validationErrors[col.field]}</p>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-          <div className={`flex justify-end gap-3 px-5 py-4 border-t sticky bottom-0 z-10 shrink-0 backdrop-blur-xl ${isDark ? 'border-white/5 bg-gray-900/95' : 'border-gray-100 bg-white/95'}`} style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+          <div className={`flex justify-end gap-3 px-5 py-4 border-t sticky bottom-0 z-10 shrink-0 ${'border-erp-border bg-erp-surface'}`} style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
             <button onClick={onClose} className={getButtonClass('gray', isDark)}>{t("Cancel", "إلغاء")}</button>
             <button onClick={onSave} className={getButtonClass('success', isDark)}>{t("Save", "حفظ")}</button>
           </div>
@@ -968,13 +1002,28 @@ const buildFilterCondition = (filters: ActiveFilter[], lang: string): string => 
   const conditions: string[] = [];
 
   for (const filter of filters) {
-    if (!filter.value && !filter.fromValue && !filter.toValue) continue;
+    // الفاضي = مفيش شرط (والقيمة 0 / false قيمة حقيقية)
+    if (!isFilterActive(filter)) continue;
     if (!isValidField(filter.field)) continue;
 
+    // Phase 5: عامل مقارنة اختياري على الفلتر (مش متحدد = السلوك القديم تحت)
+    if (filter.operator && ['text', 'search', 'number', 'select', 'date'].includes(filter.type) && filter.value !== null && filter.value !== undefined && String(filter.value) !== '') {
+      const raw = String(filter.value);
+      const isNum = filter.type === 'number' && !isNaN(Number(raw));
+      const lit = isNum ? String(Number(raw)) : (filter.type === 'date' && isValidDate(raw)) ? `'${raw.replace(/-/g, '')}'` : `N'${escSql(raw)}'`;
+      switch (filter.operator) {
+        case '=': conditions.push(`${filter.field} = ${lit}`); continue;
+        case '<>': conditions.push(`${filter.field} <> ${lit}`); continue;
+        case '>=': conditions.push(`${filter.field} >= ${lit}`); continue;
+        case '<=': conditions.push(`${filter.field} <= ${lit}`); continue;
+        case 'starts': conditions.push(`${filter.field} LIKE N'${escSql(raw)}%'`); continue;
+        case 'contains': conditions.push(`${filter.field} LIKE N'%${escSql(raw)}%'`); continue;
+      }
+    }
     switch (filter.type) {
       case 'text':
       case 'search':
-        if (filter.value) {
+        if (filter.value !== null && filter.value !== undefined && String(filter.value) !== '') {
           conditions.push(`${filter.field} LIKE N'%${escSql(filter.value)}%'`);
         }
         break;
@@ -984,26 +1033,28 @@ const buildFilterCondition = (filters: ActiveFilter[], lang: string): string => 
           if (!isNaN(num)) conditions.push(`${filter.field} = ${num}`);
         }
         break;
+      // التواريخ: نطاق مفتوح من اليمين (>= و <) عشان الفهرس يشتغل — بدل CONVERT على العمود
       case 'date':
         if (filter.value && isValidDate(String(filter.value))) {
-          conditions.push(`CONVERT(date, ${filter.field}) = '${filter.value}'`);
+          const d = String(filter.value).replace(/-/g, '');
+          conditions.push(`(${filter.field} >= '${d}' AND ${filter.field} < DATEADD(day, 1, '${d}'))`);
         }
         break;
       case 'dateRange':
         {
-          const from = filter.fromValue && isValidDate(String(filter.fromValue)) ? filter.fromValue : null;
-          const to = filter.toValue && isValidDate(String(filter.toValue)) ? filter.toValue : null;
+          const from = filter.fromValue && isValidDate(String(filter.fromValue)) ? String(filter.fromValue).replace(/-/g, '') : null;
+          const to = filter.toValue && isValidDate(String(filter.toValue)) ? String(filter.toValue).replace(/-/g, '') : null;
           if (from && to) {
-            conditions.push(`CONVERT(date, ${filter.field}) BETWEEN '${from}' AND '${to}'`);
+            conditions.push(`(${filter.field} >= '${from}' AND ${filter.field} < DATEADD(day, 1, '${to}'))`);
           } else if (from) {
-            conditions.push(`CONVERT(date, ${filter.field}) >= '${from}'`);
+            conditions.push(`${filter.field} >= '${from}'`);
           } else if (to) {
-            conditions.push(`CONVERT(date, ${filter.field}) <= '${to}'`);
+            conditions.push(`${filter.field} < DATEADD(day, 1, '${to}')`);
           }
         }
         break;
       case 'select':
-        if (filter.value) {
+        if (filter.value !== null && filter.value !== undefined && filter.value !== '') {
           conditions.push(`${filter.field} = '${escSql(filter.value)}'`);
         }
         break;
@@ -1036,9 +1087,9 @@ export default function DynamicGrid({
   orderBy = "",
   orderType = "DESC",
   pageSize = 20,
-  enableInsert = true,
-  enableUpdate = true,
-  enableDelete = true,
+  enableInsert: enableInsertProp = true,
+  enableUpdate: enableUpdateProp = true,
+  enableDelete: enableDeleteProp = true,
   enableSearch = true,
   enableExport = true,
   enableSort = true,
@@ -1053,7 +1104,7 @@ export default function DynamicGrid({
   keyTrType = "",
   runProcessTrans = true,
   extraActions = [],
-  enablePrint = false,
+  enablePrint: enablePrintProp = false,
   enableEmail = false,
   enableArchive = false,
   enableExportPDF = false,
@@ -1078,19 +1129,55 @@ export default function DynamicGrid({
   gridFilter,
   onGridFilterChange,
   deferLoadUntilFilter,
+  pagingMode: pagingModeProp,
+  pageSizeOptions = [25, 50, 100],
+  enablePageSizeSelector = true,
+  filterStorageKey,
+  persistFilters = true,
+  filterMode = "bar",
+  formLayout,
+  moduleCode,
+  permissions,
+  excel,
+  report,
 }: DynamicGridExtendedProps & { compCode?: number; branchCode?: number; keyTrType?: string; runProcessTrans?: boolean }) {
-  
+
+  // ✅ صلاحيات (اختيارية): لو moduleCode / permissions مش متحددين = null = السلوك القديم بالظبط
+  const modulePerm = useEffectiveModulePermissions(moduleCode, permissions);
+  const enableInsert = enableInsertProp && (modulePerm ? modulePerm.create : true);
+  const enableUpdate = enableUpdateProp && (modulePerm ? modulePerm.edit : true);
+  const enableDelete = enableDeleteProp && (modulePerm ? modulePerm.delete : true);
+  const enablePrint = enablePrintProp && (modulePerm ? modulePerm.print : true);
+  const canPrintReport = modulePerm ? modulePerm.print : true;   // Phase 7: تقارير الطباعة (prop report)
+
   const isDark = useSys((s) => s.IsDark);
   const lang = useSys((s) => s.lang);
   const ShowLoader = useSys((s) => s.ShowLoader);
   const CloseLoader = useSys((s) => s.CloseLoader);
-  
+  const sessionUserId = useSys((s) => s.Session?.CurrentEnvironment?.UserID);
+  const sessionCompCode = useSys((s) => s.Session?.CurrentEnvironment?.CompCode);
+  const sessionModule = useSys((s) => s.Session?.ModuleCode);
+
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [exhausted, setExhausted] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [searchTemp, setSearchTemp] = useState<string>("");
   const [pageNumber, setPageNumber] = useState<number>(1);
+  // ===== Phase 2: وضع التحميل (تمرير/صفحات) وحجم الصفحة =====
+  // الافتراضي "infinite" على الكمبيوتر والموبايل: أسرع (صفحة صغيرة أول ما الشاشة تفتح) وبيطابق التصميم،
+  // وأرقام الصفحات متاحة بضغطة من الفوتر (بتتحفظ لكل يوزر/شاشة).
+  const [pagingModeState, setPagingModeState] = useState<"infinite" | "pages">("infinite");
+  const [pageSizeState, setPageSizeState] = useState<number>(pageSize);
+  const [initReady, setInitReady] = useState<boolean>(false);   // بعد قراءة التفضيلات/الفلاتر المحفوظة (client بس)
+  const reqSeqRef = useRef(0);                                   // رقم الطلب — بيتجاهل الردود القديمة
+  const pageNumberRef = useRef(1);
+  const hasMoreRef = useRef(false);
+  const lastConditionRef = useRef<string>("");                   // آخر شرط اتبعت (للتصدير بنفس الفلاتر)
+  const pagingMode = pagingModeProp ?? pagingModeState;
+  const isInfinite = pagingMode === "infinite";
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [sortField, setSortField] = useState<string>(orderBy || keyColumn);
   const [sortDirection, setSortDirection] = useState<SortDirection>(orderType as SortDirection);
@@ -1103,11 +1190,29 @@ export default function DynamicGrid({
   
   const [isMobile, setIsMobile] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
+  const [viewportH, setViewportH] = useState(600);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [selectedRowForSheet, setSelectedRowForSheet] = useState<any>(null);
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>(defaultFilters);
   const [gridFilterValues, setGridFilterValues] = useState<ActiveFilter[]>([]);
-  const [gridFilterReady, setGridFilterReady] = useState(!gridFilter || !deferLoadUntilFilter);
+  const [initialBarFilters, setInitialBarFilters] = useState<ActiveFilter[]>([]);
+
+  // ===== شريط الفلتر الظاهر =====
+  // gridFilter (صريح) أو filterFields (الشاشات القديمة) → الشريط بيظهر على طول. filterMode="advanced" بيرجّع الزرار القديم.
+  const barConfig = useMemo<GridFilterConfig | null>(() => {
+    if (gridFilter && gridFilter.fields.length > 0) return gridFilter;
+    if (filterMode !== "advanced" && filterFields.length > 0) return { fields: filterFields, applyOnChange: true };
+    return null;
+  }, [gridFilter, filterFields, filterMode]);
+  const showAdvanced = enableAdvancedFilter && filterFields.length > 0 && (filterMode === "advanced" || !!gridFilter);
+
+  // مفتاح التخزين المحلي: يوزر + شركة + شاشة
+  const storageScope = `${sessionUserId ?? 0}:${sessionCompCode ?? 0}:${filterStorageKey || sessionModule || tableName}`;
+  const filterStorageFullKey = `erp.gf.v1:${storageScope}`;
+  const prefsStorageKey = `erp.grid.prefs.v1:${storageScope}`;
+
+  // deferLoadUntilFilter: مايحملش الداتا لحد ما الحقول الإجبارية في الفلتر تتملي (غير كده بيحمّل على طول)
+  const gridFilterReady = initReady && (!barConfig || !deferLoadUntilFilter || !firstMissingRequired(barConfig.fields, gridFilterValues));
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1136,6 +1241,52 @@ export default function DynamicGrid({
     }
   }, [isMobile, data]);
 
+  // ===== قراءة التفضيلات والفلاتر المحفوظة (مرة واحدة بعد الـ mount — client بس) =====
+  useEffect(() => {
+    let prefMode: "infinite" | "pages" | null = null;
+    let prefSize: number | null = null;
+    try {
+      const raw = window.localStorage.getItem(prefsStorageKey);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p?.mode === "infinite" || p?.mode === "pages") prefMode = p.mode;
+        if (typeof p?.size === "number" && p.size > 0 && p.size <= 500) prefSize = p.size;
+      }
+    } catch { /* تخزين غير متاح */ }
+    if (prefMode && !pagingModeProp) setPagingModeState(prefMode);
+    const resolvedMode = pagingModeProp ?? prefMode ?? "infinite";
+    // التمرير اللانهائي: صفحة أصغر من 25 مش منطقية → نرفعها لأول اختيار
+    setPageSizeState(prefSize ?? (resolvedMode === "infinite" ? Math.max(pageSize, pageSizeOptions[0] ?? 25) : pageSize));
+
+    if (barConfig) {
+      const saved = persistFilters && barConfig.persist !== false ? loadSavedFilters(filterStorageFullKey, barConfig.fields) : null;
+      const initial = saved ?? buildInitialFilters(barConfig.fields, defaultFilters);
+      setInitialBarFilters(initial);
+      setGridFilterValues(initial);
+      onGridFilterChange?.(initial);
+    }
+    setInitReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const persistPrefs = (mode: "infinite" | "pages", size: number) => {
+    try {
+      window.localStorage.setItem(prefsStorageKey, JSON.stringify({ mode, size }));
+    } catch { /* تخزين غير متاح */ }
+  };
+
+  const changePagingMode = (mode: "infinite" | "pages") => {
+    setPagingModeState(mode);
+    setPageNumber(1);
+    persistPrefs(mode, pageSizeState);
+  };
+
+  const changePageSize = (size: number) => {
+    setPageSizeState(size);
+    setPageNumber(1);
+    persistPrefs(pagingMode, size);
+  };
+
   // Search debounce
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -1160,6 +1311,10 @@ export default function DynamicGrid({
     
     if (enablePrint && onPrint) {
       actions.push({ key: 'print', label: t("Print", "طباعة"), icon: <Icons.Print />, onClick: onPrint });
+    } else if (report?.transaction && canPrintReport) {
+      // Phase 7: لو الشاشة ماحددتش onPrint خاص بيها، الطباعة بتفتح تقرير المستند (الصف المختار)
+      const rc = report.transaction;
+      actions.push({ key: 'print', label: t("Print", "طباعة"), icon: <Icons.Print />, onClick: (row: any, id: any) => openReport({ reportCode: rc.reportCode, row, trId: id, title: rc.title, moduleCode }) });
     }
     if (enableEmail && onEmail) {
       actions.push({ key: 'email', label: t("Email", "بريد"), icon: <Icons.Email />, onClick: onEmail });
@@ -1184,7 +1339,7 @@ export default function DynamicGrid({
     }
     
     return actions;
-  }, [extraActions, enablePrint, enableEmail, enableArchive, enableExportPDF, enableCopy, enableShare, enableHistory, enableAudit, onPrint, onEmail, onArchive, onExportPDF, onCopy, onShare, onHistory, onAudit, t]);
+  }, [extraActions, enablePrint, enableEmail, enableArchive, enableExportPDF, enableCopy, enableShare, enableHistory, enableAudit, onPrint, onEmail, onArchive, onExportPDF, onCopy, onShare, onHistory, onAudit, t, report, canPrintReport, moduleCode]);
 
   const allActions = buildExtraActions();
 
@@ -1269,13 +1424,23 @@ export default function DynamicGrid({
     setPageNumber(1);
   };
 
-  // Load data
-  const loadData = useCallback(async () => {
+  // الأعمدة بتتقرا من ref + توقيع نصي: لو الأب بعت مصفوفة أعمدة جديدة كل render (زي SearchModal) مايحصلش إعادة تحميل ولا يضيع التمرير
+  const columnsRef = useRef(columns);
+  columnsRef.current = columns;
+  const getSearchColumnsRef = useRef(getSearchColumns);
+  getSearchColumnsRef.current = getSearchColumns;
+  const columnsSig =
+    columns.map((c) => `${c.field}${c.IsSearchColumn === false ? "!" : ""}${c.IsVisibleDisplayInGrid === false ? "-" : ""}`).join("|") +
+    "#" + (externalSearchColumns || []).join(",");
+
+  // Load data — صفحة واحدة بس من السيرفر (+ العدد الإجمالي). append=true = الصفحة اللي بعدها (تمرير لانهائي)
+  const fetchPage = useCallback(async (page: number, append: boolean) => {
     if (!gridFilterReady) return;
-    setLoading(true);
+    const seq = ++reqSeqRef.current;           // أي رد أقدم من آخر طلب بيتجاهل
+    if (append) setLoadingMore(true); else setLoading(true);
     try {
       let finalCondition = condition;
-      const searchCols = getSearchColumns();
+      const searchCols = getSearchColumnsRef.current();
 
       let searchCondition = '';
       if (enableSearch && search && searchCols.length > 0) {
@@ -1284,12 +1449,12 @@ export default function DynamicGrid({
         searchCondition = searchParts.length > 0 ? `(${searchParts.join(" OR ")})` : '';
       } else if (enableSearch && search) {
         const safeSearch = escSql(search);
-        const allColumns = columns.filter(c => c.IsVisibleDisplayInGrid !== false).map(col => col.field).filter(isValidField);
+        const allColumns = columnsRef.current.filter(c => c.IsVisibleDisplayInGrid !== false).map(col => col.field).filter(isValidField);
         const searchParts = allColumns.map(col => `${col} LIKE N'%${safeSearch}%'`);
         searchCondition = searchParts.length > 0 ? `(${searchParts.join(" OR ")})` : '';
       }
 
-      const advancedFilterCondition = enableAdvancedFilter ? buildFilterCondition(activeFilters, lang) : '';
+      const advancedFilterCondition = showAdvanced ? buildFilterCondition(activeFilters, lang) : '';
       const gridFilterCondition = gridFilterValues.length > 0 ? buildFilterCondition(gridFilterValues, lang) : '';
 
       let combinedCondition = '';
@@ -1305,13 +1470,32 @@ export default function DynamicGrid({
         : gridFilterCondition;
 
       finalCondition = combinedCondition;
-      
+      lastConditionRef.current = finalCondition;
+
+      // ترتيب ثابت: عمود الترتيب ثم المفتاح — عشان الصفحات ماتكررش/تفقد صفوف لما القيم متساوية
+      // (السيرفر بيضيف اتجاه الترتيب بعد النص ده، فالاتجاه الأول صريح)
+      const orderExpr = sortField && keyColumn && sortField !== keyColumn && isValidField(sortField) && isValidField(keyColumn)
+        ? `${sortField} ${sortDirection}, ${keyColumn}`
+        : sortField;
+
       const result = await SQL.Select(
         tableName, finalCondition, null, null, null, 0,
-        sortField, sortDirection, 0, "", null, null,
-        pageNumber, pageSize, true
+        orderExpr, sortDirection, 0, "", null, null,
+        page, pageSizeState, true
       );
-      setData(result.data);
+      if (seq !== reqSeqRef.current) return;     // رد قديم — اتجاهله
+      const rows = result.data || [];
+      setExhausted(append && rows.length === 0);   // صفحة فاضية رغم إن العدد أكبر (حذف في نفس الوقت) → وقّف التحميل
+      if (append) {
+        setData((prev) => {
+          const seen = new Set(prev.map((r) => r?.[keyColumn]));
+          return prev.concat(rows.filter((r: any) => !seen.has(r?.[keyColumn])));
+        });
+      } else {
+        setData(rows);
+      }
+      pageNumberRef.current = page;
+      setPageNumber(page);
       setTotal(result.totalCount);
       requestAnimationFrame(() => {
         if (shouldRestoreFocusRef.current && searchInputRef.current) {
@@ -1322,20 +1506,52 @@ export default function DynamicGrid({
         }
       });
     } catch (error) {
+      if (seq !== reqSeqRef.current) return;
       console.error("Failed to load data:", error);
       if (!isModalMode) {
         Sys.ShowMessage("❌ Failed to load data", "❌ فشل تحميل البيانات", "error");
       }
-      setData([]);
-      setTotal(0);
+      if (!append) {
+        setData([]);
+        setTotal(0);
+      } else {
+        setExhausted(true);   // ماتعيدش المحاولة في لوب — "تحديث" بيرجّع التحميل
+      }
     } finally {
-      setLoading(false);
+      if (seq === reqSeqRef.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
-  }, [tableName, condition, search, pageNumber, pageSize, sortField, sortDirection, enableSearch, getSearchColumns, columns, isModalMode, activeFilters, enableAdvancedFilter, lang, gridFilterValues, gridFilterReady]);
+  }, [tableName, condition, search, pageSizeState, sortField, sortDirection, enableSearch, columnsSig, isModalMode, activeFilters, showAdvanced, lang, gridFilterValues, gridFilterReady, keyColumn]);
 
+  // إعادة تحميل من الأول (بعد حفظ/حذف/تحديث): تمرير لانهائي = الصفحة 1، صفحات = الصفحة الحالية
+  const loadData = useCallback(() => fetchPage(isInfinite ? 1 : pageNumberRef.current, false), [fetchPage, isInfinite]);
+
+  // أي تغيير في الاستعلام (فلتر/بحث/ترتيب/حجم صفحة/وضع) → ابدأ من الأول. في وضع الصفحات التنقل بين الصفحات بيعدّل pageNumber.
+  const pagesModePage = isInfinite ? 1 : pageNumber;
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    pageNumberRef.current = pagesModePage;
+    fetchPage(pagesModePage, false);
+    if (isInfinite) {
+      if (containerRef.current) containerRef.current.scrollTop = 0;
+      setScrollTop(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchPage, pagesModePage, isInfinite]);
+
+  const hasMore = isInfinite && !exhausted && data.length < total;
+  hasMoreRef.current = hasMore;
+  const loadMore = useCallback(() => {
+    if (!hasMoreRef.current || loading || loadingMore) return;
+    fetchPage(pageNumberRef.current + 1, true);
+  }, [fetchPage, loading, loadingMore]);
+  const sentinelRef = useInfiniteSentinel({
+    enabled: hasMore && !loading && !loadingMore && gridFilterReady,
+    onLoadMore: loadMore,
+    rootRef: containerRef,
+    watch: data.length,
+  });
 
   // CRUD Operations
   const openAddForm = () => {
@@ -1504,11 +1720,16 @@ export default function DynamicGrid({
   const exportCSV = async () => {
     try {
       Sys.ShowMessage("⏳ Preparing export...", "⏳ جاري تجهيز التصدير...", "warning");
+      // التصدير بنفس الفلاتر والبحث الظاهرين (آخر شرط اتبعت للسيرفر) — بحد أقصى 50,000 صف
+      const EXPORT_LIMIT = 50000;
       const allData = await SQL.Select(
-        tableName, condition, null, ShowLoader, CloseLoader, 0,
-        sortField, sortDirection, 0, search, null, null,
+        tableName, lastConditionRef.current || condition, null, ShowLoader, CloseLoader, 0,
+        sortField, sortDirection, EXPORT_LIMIT, "", null, null,
         0, 0, false
       );
+      if (total > EXPORT_LIMIT) {
+        Sys.ShowMessage(`⚠️ Export limited to the first ${EXPORT_LIMIT} rows`, `⚠️ التصدير اتحدد بأول ${EXPORT_LIMIT} صف`, "warning");
+      }
       const headers = columns.filter(c => c.IsVisibleDisplayInGrid !== false).map(c => c.title).join(",");
       const rows = allData.data.map((row: any) =>
         columns.filter(c => c.IsVisibleDisplayInGrid !== false).map(c => {
@@ -1566,35 +1787,50 @@ export default function DynamicGrid({
 
   const visibleColumns = columns.filter(col => col.IsVisibleDisplayInGrid !== false);
 
-  // Virtual scroll
-  const visibleData = useMemo(() => {
-    if (!virtualScroll) return data;
-    const startIndex = Math.floor(scrollTop / rowHeight);
-    const endIndex = Math.min(startIndex + Math.ceil(Number(height) / rowHeight) + 5, data.length);
-    return data.slice(startIndex, endIndex);
-  }, [data, scrollTop, height, rowHeight, virtualScroll]);
+  // ===== تخفيف الـ DOM: الجدول بيرسم الصفوف الظاهرة بس (+ فواصل) لما الصفوف تعدّي 300 (أو virtualScroll=true) =====
+  // صفوف الجدول ارتفاعها ثابت 48px. كروت الموبايل بتستخدم content-visibility (المتصفح بيتخطى رسم اللي بره الشاشة).
+  const ROW_H = 48;
+  const WINDOW_THRESHOLD = 300;
+  const useWindowing = !isMobile && (virtualScroll || data.length > WINDOW_THRESHOLD);
+  const winStart = useWindowing ? Math.max(0, Math.floor(scrollTop / ROW_H) - 10) : 0;
+  const winEnd = useWindowing ? Math.min(data.length, Math.ceil((scrollTop + viewportH) / ROW_H) + 10) : data.length;
+  const visibleData = useMemo(
+    () => (useWindowing ? data.slice(winStart, winEnd) : data),
+    [data, useWindowing, winStart, winEnd]
+  );
 
+  const scrollRafRef = useRef<number | null>(null);
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    if (virtualScroll) {
-      setScrollTop(e.currentTarget.scrollTop);
-    }
-  }, [virtualScroll]);
+    if (!useWindowing || scrollRafRef.current !== null) return;
+    const el = e.currentTarget;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      setScrollTop(el.scrollTop);
+      setViewportH(el.clientHeight || 600);
+    });
+  }, [useWindowing]);
 
-  // Loading state
-  if (loading && data.length === 0) {
-    return (
-      <div className={`flex justify-center items-center p-12 rounded-3xl ${isDark ? 'bg-gray-900/50' : 'bg-white/50'} backdrop-blur-sm`}>
-        <div className="relative">
-          <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <div className={`mt-3 text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {t(`Loading data...`, `⏳ جاري تحميل البيانات...`)}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // حالة "فاضي": تحميل / مستني الفلتر الإجباري / مفيش داتا — جوه الجريد (الفلتر يفضل ظاهر ومايتعملوش unmount)
+  const loadingNode = (
+    <div className="flex flex-col items-center justify-center gap-3 p-12">
+      <div className="w-9 h-9 border-[3px] border-erp-accent border-t-transparent rounded-full animate-spin"></div>
+      <div className="text-sm font-medium text-erp-text-muted">{t(`Loading data...`, `⏳ جاري تحميل البيانات...`)}</div>
+    </div>
+  );
+  const emptyNode = (loading || !initReady)
+    ? loadingNode
+    : !gridFilterReady
+      ? <div className="text-center p-12 text-erp-text-muted">{t("Fill the required filters to load data", "املا الفلاتر المطلوبة عشان تتحمل البيانات")}</div>
+      : <div className="text-center p-12 text-erp-text-muted">{t("📭 No data found", "📭 لا توجد بيانات")}</div>;
 
-  const totalPages = Math.ceil(total / pageSize);
+  const loadingMoreNode = (
+    <div className="flex items-center justify-center gap-2 py-3 text-xs text-erp-text-muted" aria-live="polite">
+      <span className="size-4 border-2 border-erp-accent border-t-transparent rounded-full animate-spin" />
+      {t("Loading more…", "جاري تحميل المزيد…")}
+    </div>
+  );
+
+  const totalPages = Math.ceil(total / pageSizeState);
   const maxVisiblePages = 5;
   const startPage = Math.max(1, pageNumber - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
@@ -1631,16 +1867,18 @@ export default function DynamicGrid({
         )}
 
         {/* Grid Filter — ثابت فوق الجريد */}
-        {gridFilter && gridFilter.fields.length > 0 && (
+        {barConfig && initReady && (
           <DynamicGridFilter
-            config={gridFilter}
+            config={barConfig}
+            initialFilters={initialBarFilters}
+            resultCount={gridFilterReady ? total : undefined}
+            loading={loading || loadingMore}
+            storageKey={persistFilters ? filterStorageFullKey : undefined}
             onFiltersChange={(filters) => {
               setGridFilterValues(filters);
-              if (!gridFilterReady) setGridFilterReady(true);
               onGridFilterChange?.(filters);
               setPageNumber(1);
             }}
-            onReady={() => { if (!gridFilterReady) setGridFilterReady(true); }}
           />
         )}
 
@@ -1664,11 +1902,12 @@ export default function DynamicGrid({
           runProcessTrans={runProcessTrans}
           ShowLoader={ShowLoader}
           CloseLoader={CloseLoader}
+          formLayout={formLayout}
         />
 
         {/* Toolbar */}
         {showToolbar && (
-          <div className={`flex flex-wrap gap-2 p-3 border-b ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+          <div className={`flex flex-wrap gap-2 p-3 border-b ${'border-erp-border'}`}>
             <div className="flex flex-1 flex-wrap gap-2">
               {enableSearch && (
                 <div className="flex flex-1 min-w-[200px]">
@@ -1677,10 +1916,8 @@ export default function DynamicGrid({
                       ref={searchInputRef}
                       type="text"
                       placeholder={searchPlaceholder}
-                      className={`w-full border rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                        isDark
-                          ? 'bg-gray-800/60 border-gray-700 text-white placeholder-gray-500'
-                          : 'bg-white/90 border-gray-200 text-gray-800 placeholder-gray-400'
+                      className={`w-full h-9 border rounded-lg ps-9 pe-3 text-[13px] focus:outline-none focus:border-erp-accent focus:shadow-[0_0_0_3px_var(--erp-accent-soft)] transition-all duration-200 ${
+                        'bg-erp-surface border-erp-border-strong text-erp-text placeholder:text-erp-text-subtle'
                       }`}
                       value={searchTemp}
                       onChange={(e) => {
@@ -1688,7 +1925,7 @@ export default function DynamicGrid({
                         setSearchTemp(e.target.value);
                       }}
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <div className="absolute start-3 top-1/2 -translate-y-1/2 text-erp-text-subtle">
                       <Icons.Search />
                     </div>
                   </div>
@@ -1697,7 +1934,7 @@ export default function DynamicGrid({
               
               <div className="flex flex-wrap gap-2">
                 {/* Advanced Filter Button */}
-                {enableAdvancedFilter && filterFields.length > 0 && (
+                {showAdvanced && (
                   <AdvancedFilter
                     fields={filterFields}
                     onApplyFilters={(filters) => {
@@ -1727,10 +1964,33 @@ export default function DynamicGrid({
                     <span className="hidden sm:inline">{t("Delete", "حذف")} ({selectedRows.length})</span>
                   </button>
                 )}
+                {excel?.enabled && enableInsert && (isModalMode === false) && (
+                  <ExcelGridBar
+                    excel={excel}
+                    columns={columns}
+                    tableName={tableName}
+                    keyColumn={keyColumn}
+                    compCode={compCode}
+                    branchCode={branchCode}
+                    keyTrType={keyTrType}
+                    runProcessTrans={runProcessTrans}
+                    beforeSave={beforeSave}
+                    onDone={() => loadData()}
+                  />
+                )}
                 {enableExport && data.length > 0 && (
                   <button onClick={exportCSV} className={getButtonClass('primary', isDark)}>
                     <Icons.Export />
                     <span className="hidden sm:inline">{exportText}</span>
+                  </button>
+                )}
+                {report?.list && canPrintReport && (isModalMode === false) && (
+                  <button
+                    onClick={() => openReport({ reportCode: report.list!.reportCode, title: report.list!.title, moduleCode, filters: { ...filtersToMap(activeFilters), ...filtersToMap(gridFilterValues) } })}
+                    className={getButtonClass('primary', isDark)}
+                  >
+                    <Icons.Print />
+                    <span className="hidden sm:inline">{t("Print list", "طباعة القائمة")}</span>
                   </button>
                 )}
                 <button onClick={() => loadData()} className={getButtonClass('gray', isDark)}>
@@ -1739,25 +1999,28 @@ export default function DynamicGrid({
                 </button>
               </div>
             </div>
-            <div className={`text-right text-xs self-center whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>
-              📊 {t("Total", "الإجمالي")}: <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-600'}`}>{total}</span> {totalRecordsText}
+            <div className={`text-end text-xs self-center whitespace-nowrap ${'text-erp-text-muted'}`}>
+              📊 {t("Total", "الإجمالي")}: <span className="num font-bold text-erp-text">{total}</span> {totalRecordsText}
             </div>
           </div>
         )}
 
+        {/* شريط تقدم رفيع وقت إعادة التحميل (الفلتر والجدول يفضلوا ظاهرين) */}
+        <div className={`h-0.5 shrink-0 ${loading && data.length > 0 ? 'bg-erp-accent animate-pulse' : ''}`} aria-hidden="true" />
+
         {/* Data Table / Cards */}
         {isMobile ? (
-          <div 
+          <div
             ref={containerRef}
-            className="flex-1 overflow-auto p-3" 
+            className="flex-1 overflow-auto p-3"
             onScroll={handleScroll}
             style={{ overflowY: 'auto', flex: 1 }}
           >
             <div className="pb-4">
               {data.length === 0 ? (
-                <div className={`text-center p-12 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{noDataText}</div>
+                emptyNode
               ) : (
-                (virtualScroll ? visibleData : data).map((row, idx) => {
+                data.map((row, idx) => {
                   const uniqueKey = row[keyColumn] !== undefined && row[keyColumn] !== null 
                     ? `${row[keyColumn]}_${idx}` : `row_${idx}`;
                   return (
@@ -1782,6 +2045,15 @@ export default function DynamicGrid({
                   );
                 })
               )}
+              {isInfinite && data.length > 0 && <div ref={sentinelRef} aria-hidden="true" className="h-px" />}
+              {isInfinite && loadingMore && loadingMoreNode}
+              {!isInfinite ? null : (
+                data.length > 0 && (
+                  <div className="text-center text-xs text-erp-text-subtle py-2">
+                    {t("Showing", "عرض")} <span className="num font-semibold text-erp-text">{data.length}</span> {t("of", "من")} <span className="num font-semibold text-erp-text">{total}</span>
+                  </div>
+                )
+              )}
             </div>
           </div>
         ) : (
@@ -1793,31 +2065,29 @@ export default function DynamicGrid({
           >
             <div className="min-w-[800px]">
               <table className="w-full border-collapse">
-                <thead className={`sticky top-0 z-10 shadow-sm ${isDark ? 'bg-gray-900' : 'bg-white'} border-b ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
+                <thead className="sticky top-0 z-10 bg-erp-surface-2 border-b border-erp-border-strong">
                   <tr>
                     {showSelection && (
-                      <th className="p-3 w-10">
+                      <th className="px-3 h-10 w-10">
                         <input
                           type="checkbox"
                           checked={selectedRows.length === data.length && data.length > 0}
                           onChange={toggleSelectAll}
-                          className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 transition-all"
+                          className="size-4 rounded border-erp-border-strong accent-[var(--erp-accent)] transition-all"
                         />
                       </th>
                     )}
                     {visibleColumns.map((col, idx) => (
                       <th 
                         key={idx} 
-                        className={`p-3 text-left font-semibold text-xs uppercase tracking-wider ${
-                          isDark ? 'text-gray-300' : 'text-gray-600'
-                        } ${enableSort && col.sortable !== false ? 'cursor-pointer select-none hover:text-blue-500 transition-colors' : 'cursor-default'}`}
+                        className={`px-3 h-10 text-start font-semibold text-[11px] uppercase tracking-[.04em] whitespace-nowrap text-erp-text-muted ${enableSort && col.sortable !== false ? 'cursor-pointer select-none hover:text-erp-accent transition-colors' : 'cursor-default'}`}
                         style={{ width: col.width }}
                         onClick={() => handleSort(col.field)}
                       >
                         <div className="flex items-center gap-1.5">
                           {col.title}
                           {enableSort && col.sortable !== false && sortField === col.field && (
-                            <span className="text-blue-500">
+                            <span className="text-erp-accent">
                               {sortDirection === "ASC" ? "↑" : "↓"}
                             </span>
                           )}
@@ -1825,7 +2095,7 @@ export default function DynamicGrid({
                       </th>
                     ))}
                     {!isModalMode && (
-                      <th className={`p-3 text-center w-24 ${isDark ? 'text-gray-300' : 'text-gray-600'} font-semibold text-xs uppercase tracking-wider`}>
+                      <th className="px-3 h-10 text-center w-24 text-erp-text-muted font-semibold text-[11px] uppercase tracking-[.04em]">
                         {actionsText}
                       </th>
                     )}
@@ -1834,32 +2104,35 @@ export default function DynamicGrid({
                 <tbody>
                   {data.length === 0 ? (
                     <tr>
-                      <td colSpan={visibleColumns.length + (showSelection ? 2 : 1)} className={`text-center p-12 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>
-                        {noDataText}
+                      <td colSpan={visibleColumns.length + (showSelection ? 2 : 1)}>
+                        {emptyNode}
                       </td>
                     </tr>
                   ) : (
-                    (virtualScroll ? visibleData : data).map((row, idx) => {
-                      const uniqueKey = row[keyColumn] !== undefined && row[keyColumn] !== null 
+                    <>
+                    {useWindowing && winStart > 0 && (
+                      <tr aria-hidden="true" style={{ height: winStart * ROW_H }}><td colSpan={visibleColumns.length + (showSelection ? 2 : 1)} /></tr>
+                    )}
+                    {visibleData.map((row, wi) => {
+                      const idx = winStart + wi;
+                      const uniqueKey = row[keyColumn] !== undefined && row[keyColumn] !== null
                         ? `${row[keyColumn]}_${idx}` : `row_${idx}`;
                       return (
-                        <tr 
-                          key={uniqueKey} 
-                          className={`border-b transition-all duration-150 ${
-                            isDark
-                              ? 'border-white/5 hover:bg-white/5'
-                              : 'border-gray-100 hover:bg-blue-50/30'
+                        <tr
+                          key={uniqueKey}
+                          className={`h-12 border-b transition-colors duration-150 ${
+                            !!selectedRows.find(r => r[keyColumn] === row[keyColumn]) ? 'border-erp-border bg-erp-accent-soft' : 'border-erp-border hover:bg-erp-surface-2'
                           }`}
                           onDoubleClick={() => onRowDoubleClick?.(row)}
                         >
                           {showSelection && (
-                            <td className="p-3 text-center">
+                            <td className="px-3 py-2 text-center">
                               <input
                                 type="checkbox"
                                 checked={!!selectedRows.find(r => r[keyColumn] === row[keyColumn])}
                                 onChange={() => toggleSelection(row)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500 transition-all"
+                                className="size-4 rounded border-erp-border-strong accent-[var(--erp-accent)] transition-all"
                               />
                             </td>
                           )}
@@ -1867,7 +2140,7 @@ export default function DynamicGrid({
                             const value = row[col.field];
                             if (col.inlineToggle) {
                               return (
-                                <td key={`${col.field}_${uniqueKey}`} className="p-3 text-center">
+                                <td key={`${col.field}_${uniqueKey}`} className="px-3 py-2 text-center">
                                   <input
                                     type="checkbox"
                                     checked={!!value && value !== 0 && value !== "0"}
@@ -1911,14 +2184,14 @@ export default function DynamicGrid({
                                         Sys.ShowMessage(err?.message || "Error", err?.message || "خطأ", "error");
                                       }
                                     }}
-                                    className="w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+                                    className="size-4 rounded accent-[var(--erp-accent)] cursor-pointer"
                                   />
                                 </td>
                               );
                             }
                             if (col.itemTemplate) {
                               return (
-                                <td key={`${col.field}_${uniqueKey}`} className="p-3">
+                                <td key={`${col.field}_${uniqueKey}`} className="px-3 py-2">
                                   {col.itemTemplate(value, row, idx, (newValue) => {
                                     const newRow = { ...row, [col.field]: newValue };
                                     const index = data.findIndex(r => r[keyColumn] === row[keyColumn]);
@@ -1933,18 +2206,18 @@ export default function DynamicGrid({
                               );
                             }
                             return (
-                              <td key={`${col.field}_${uniqueKey}`} className={`p-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              <td key={`${col.field}_${uniqueKey}`} className={`px-3 py-2 text-[13px] text-erp-text ${col.IsDigits || col.type === "number" ? "num text-end" : ""}`}>
                                 {formatDisplayValue(col, value)}
                               </td>
                             );
                           })}
                           {!isModalMode && (
-                            <td className="p-3">
+                            <td className="px-3 py-2">
                               <div className="flex items-center justify-center gap-1">
                                 {enableUpdate && (
                                   <button
                                     onClick={() => openEditForm(row)}
-                                    className={`p-1.5 rounded-lg transition-all duration-200 text-amber-600 ${isDark ? 'hover:bg-amber-500/15' : 'hover:bg-amber-50'}`}
+                                    className="p-1.5 rounded-lg transition-colors duration-200 text-erp-text-muted hover:text-erp-warning-text hover:bg-erp-warning-bg"
                                     title={t("Edit", "تعديل")}
                                   >
                                     <Icons.Edit />
@@ -1953,7 +2226,7 @@ export default function DynamicGrid({
                                 {enableDelete && (
                                   <button
                                     onClick={() => handleDelete(row)}
-                                    className={`p-1.5 rounded-lg transition-all duration-200 text-red-600 ${isDark ? 'hover:bg-red-500/15' : 'hover:bg-red-50'}`}
+                                    className="p-1.5 rounded-lg transition-colors duration-200 text-erp-text-muted hover:text-erp-danger hover:bg-erp-danger-bg"
                                     title={t("Delete", "حذف")}
                                   >
                                     <Icons.Delete />
@@ -1974,22 +2247,69 @@ export default function DynamicGrid({
                           )}
                         </tr>
                       );
-                    })
+                    })}
+                    {useWindowing && winEnd < data.length && (
+                      <tr aria-hidden="true" style={{ height: (data.length - winEnd) * ROW_H }}><td colSpan={visibleColumns.length + (showSelection ? 2 : 1)} /></tr>
+                    )}
+                    </>
                   )}
                 </tbody>
               </table>
+              {isInfinite && data.length > 0 && <div ref={sentinelRef} aria-hidden="true" className="h-px" />}
+              {isInfinite && loadingMore && loadingMoreNode}
             </div>
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className={`flex flex-wrap justify-center items-center gap-1.5 p-3 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+        {/* Footer: showing X of Y + حجم الصفحة + وضع التحميل */}
+        {total > 0 && !isModalMode && (
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 border-t border-erp-border bg-erp-surface-2 text-xs text-erp-text-muted">
+            <span>
+              {t("Showing", "عرض")} <span className="num font-semibold text-erp-text">{Math.min(data.length, total)}</span> {t("of", "من")} <span className="num font-semibold text-erp-text">{total}</span> {totalRecordsText}
+            </span>
+            {isInfinite && hasMore && (
+              <span className="hidden sm:inline text-erp-text-subtle">{t("More rows load automatically as you scroll…", "يتم تحميل المزيد تلقائيًا عند التمرير…")}</span>
+            )}
+            <div className="flex items-center gap-3">
+              {enablePageSizeSelector && (
+                <label className="inline-flex items-center gap-1.5">
+                  <span>{t("Rows", "الصفوف")}</span>
+                  <select
+                    value={pageSizeState}
+                    onChange={(e) => changePageSize(Number(e.target.value))}
+                    className="num h-8 rounded-md border border-erp-border-strong bg-erp-surface text-erp-text text-xs px-1.5 focus:outline-none focus:border-erp-accent"
+                    aria-label={t("Rows per page", "عدد الصفوف في الصفحة")}
+                  >
+                    {Array.from(new Set([...pageSizeOptions, pageSizeState])).sort((a, b) => a - b).map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {!pagingModeProp && (
+                <div className="inline-flex rounded-md border border-erp-border-strong overflow-hidden" role="group" aria-label={t("Loading mode", "وضع التحميل")}>
+                  <button type="button" onClick={() => changePagingMode("infinite")} aria-pressed={isInfinite}
+                    className={`h-8 px-2.5 text-xs transition-colors ${isInfinite ? "bg-erp-accent text-white" : "bg-erp-surface text-erp-text-muted hover:bg-erp-surface-2"}`}>
+                    {t("Scroll", "تمرير")}
+                  </button>
+                  <button type="button" onClick={() => changePagingMode("pages")} aria-pressed={!isInfinite}
+                    className={`h-8 px-2.5 text-xs transition-colors ${!isInfinite ? "bg-erp-accent text-white" : "bg-erp-surface text-erp-text-muted hover:bg-erp-surface-2"}`}>
+                    {t("Pages", "صفحات")}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Pagination (وضع الصفحات بس) */}
+        {!isInfinite && totalPages > 1 && (
+          <div className="flex flex-wrap justify-center items-center gap-1.5 p-3 border-t border-erp-border bg-erp-surface">
             <button
               onClick={() => setPageNumber(1)}
               disabled={pageNumber === 1}
               className={`p-1.5 rounded-lg disabled:opacity-50 transition-all duration-200 ${
-                isDark ? 'text-gray-400 hover:bg-gray-800/50' : 'text-gray-600 hover:bg-gray-100'
+                'text-erp-text-muted hover:bg-erp-surface-2'
               }`}
             >
               <Icons.ChevronDoubleLeft />
@@ -1998,7 +2318,7 @@ export default function DynamicGrid({
               onClick={() => setPageNumber(p => Math.max(1, p - 1))}
               disabled={pageNumber === 1}
               className={`p-1.5 rounded-lg disabled:opacity-50 transition-all duration-200 ${
-                isDark ? 'text-gray-400 hover:bg-gray-800/50' : 'text-gray-600 hover:bg-gray-100'
+                'text-erp-text-muted hover:bg-erp-surface-2'
               }`}
             >
               <Icons.ChevronLeft />
@@ -2009,10 +2329,10 @@ export default function DynamicGrid({
                 <button
                   key={page}
                   onClick={() => setPageNumber(page)}
-                  className={`px-3 py-1 rounded-lg transition-all duration-200 min-w-[36px] text-sm font-medium ${
+                  className={`num px-3 h-9 rounded-lg transition-colors duration-200 min-w-[36px] text-[13px] font-medium ${
                     pageNumber === page 
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                      : (isDark ? 'text-gray-300 hover:bg-gray-800/50' : 'text-gray-600 hover:bg-gray-100')
+                      ? "bg-erp-accent text-white"
+                      : ('text-erp-text-muted hover:bg-erp-surface-2')
                   }`}
                 >
                   {page}
@@ -2024,7 +2344,7 @@ export default function DynamicGrid({
               onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))}
               disabled={pageNumber === totalPages}
               className={`p-1.5 rounded-lg disabled:opacity-50 transition-all duration-200 ${
-                isDark ? 'text-gray-400 hover:bg-gray-800/50' : 'text-gray-600 hover:bg-gray-100'
+                'text-erp-text-muted hover:bg-erp-surface-2'
               }`}
             >
               <Icons.ChevronRight />
@@ -2033,13 +2353,13 @@ export default function DynamicGrid({
               onClick={() => setPageNumber(totalPages)}
               disabled={pageNumber === totalPages}
               className={`p-1.5 rounded-lg disabled:opacity-50 transition-all duration-200 ${
-                isDark ? 'text-gray-400 hover:bg-gray-800/50' : 'text-gray-600 hover:bg-gray-100'
+                'text-erp-text-muted hover:bg-erp-surface-2'
               }`}
             >
               <Icons.ChevronDoubleRight />
             </button>
-            <span className={`text-xs ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              {t("Page", "صفحة")} <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-600'}`}>{pageNumber}</span> {t("of", "من")} <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-600'}`}>{totalPages}</span>
+            <span className="text-xs ms-1 text-erp-text-subtle">
+              {t("Page", "صفحة")} <span className="num font-bold text-erp-text">{pageNumber}</span> {t("of", "من")} <span className="num font-bold text-erp-text">{totalPages}</span>
             </span>
           </div>
         )}

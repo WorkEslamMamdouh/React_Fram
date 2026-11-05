@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useSys } from "../../Shared/SystemUsing";
-import { ScreenConfigV4, createEmptyScreen, createEmptyField, createEmptyDetail } from "../types/ScreenConfig";
+import { ScreenConfigV5, createEmptyScreen, createEmptyField, createEmptyDetail } from "../types/ScreenConfig";
 
 interface ExistingScreen {
   name: string;
@@ -21,7 +21,7 @@ const KNOWN_SCREENS: ExistingScreen[] = [
   { name: "SalesInvoice", type: "MasterDetail", table: "I_TR_Sales", description: "فاتورة المبيعات", path: "SalesInvoice/SalesInvoice.ts" },
 ];
 
-const TEMPLATES: { name: string; nameAr: string; type: "Grid" | "MasterDetail"; icon: string; description: string; descAr: string; config: () => ScreenConfigV4 }[] = [
+const TEMPLATES: { name: string; nameAr: string; type: "Grid" | "MasterDetail"; icon: string; description: string; descAr: string; config: () => ScreenConfigV5 }[] = [
   {
     name: "Simple Grid",
     nameAr: "جدول بسيط",
@@ -125,7 +125,7 @@ const TEMPLATES: { name: string; nameAr: string; type: "Grid" | "MasterDetail"; 
 
 interface WelcomeScreenProps {
   onNewScreen: (type: "Grid" | "MasterDetail") => void;
-  onLoadTemplate: (config: ScreenConfigV4) => void;
+  onLoadTemplate: (config: ScreenConfigV5) => void;
   onImportFile: () => void;
 }
 

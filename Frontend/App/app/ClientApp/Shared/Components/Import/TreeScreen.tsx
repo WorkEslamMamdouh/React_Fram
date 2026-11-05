@@ -71,9 +71,9 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
   const readOnly = mode === "view";
   const isInsert = mode === "new";
 
-  const card = isDark ? "bg-gray-900/80 border-gray-700/60 text-gray-100" : "bg-white/90 border-gray-200 text-gray-800";
-  const muted = isDark ? "text-gray-400" : "text-gray-500";
-  const btnOutline = `px-3 py-2 rounded-xl border-2 text-sm font-medium transition ${isDark ? "border-gray-600 hover:border-blue-500" : "border-gray-300 hover:border-blue-600"}`;
+  const card = "bg-erp-surface border-erp-border text-erp-text";
+  const muted = "text-erp-text-muted";
+  const btnOutline = `px-3 py-2 rounded-xl border-2 text-sm font-medium transition ${"border-erp-border-strong hover:border-erp-accent"}`;
 
   // ---------- تحديث القيم ----------
   const update = (m: Row, d: Row[][]) => {
@@ -398,10 +398,10 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
       <div className={`lg:w-[42%] xl:w-[38%] shrink-0 rounded-2xl border shadow-lg p-3 ${card}`}>
         <div className="flex items-center justify-between mb-2 gap-2">
           <h2 className="font-bold flex items-center gap-2">
-            <i className="fa-solid fa-sitemap text-blue-500" /> {config.treeTitle || t("Tree", "الشجرة")}
+            <i className="fa-solid fa-sitemap text-erp-accent" /> {config.treeTitle || t("Tree", "الشجرة")}
           </h2>
           {enableInsert && (
-            <button onClick={() => openNew(null)} className="px-3 py-1.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 shadow">
+            <button onClick={() => openNew(null)} className="px-3 py-1.5 rounded-xl text-white text-sm font-semibold bg-erp-accent hover:bg-erp-accent-hover hover:opacity-90 shadow">
               <i className="fa-solid fa-plus mx-1" /> {config.newRootTitle || t("New root", "جذر جديد")}
             </button>
           )}
@@ -421,7 +421,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
       <div className="flex-1 min-w-0 space-y-4">
         {mode === "empty" ? (
           <div className={`rounded-2xl border shadow-lg p-10 flex flex-col items-center justify-center text-center gap-3 ${card}`} style={{ minHeight: 320 }}>
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl shadow-lg">
+            <div className="w-20 h-20 rounded-full bg-erp-accent flex items-center justify-center text-white text-4xl shadow-lg">
               <i className="fa-solid fa-diagram-project" />
             </div>
             <h3 className="text-lg font-bold">{t("Pick a node from the tree", "اختار عقدة من الشجرة")}</h3>
@@ -429,7 +429,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
               {t("Click a node to see its data. Hover a node for quick actions (add child, edit, delete). Use the search box for big trees.", "دوس على أي عقدة عشان تشوف بياناتها. عدّي بالماوس على العقدة عشان تظهر أزرار (إضافة ابن، تعديل، حذف). استخدم البحث لو الشجرة كبيرة.")}
             </p>
             {enableInsert && (
-              <button onClick={() => openNew(null)} className="mt-2 px-5 py-2.5 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 shadow-md">
+              <button onClick={() => openNew(null)} className="mt-2 px-5 py-2.5 rounded-xl text-white font-semibold bg-erp-accent hover:bg-erp-accent-hover hover:opacity-90 shadow-md">
                 <i className="fa-solid fa-plus mx-1" /> {config.newRootTitle || t("New root", "جذر جديد")}
               </button>
             )}
@@ -441,14 +441,14 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-bold truncate">
                   {panelTitle}
-                  {readOnly && <span className={`mx-2 px-2 py-0.5 rounded-full text-xs font-semibold align-middle ${isDark ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-700"}`}>👁️ {t("View only", "عرض بس")}</span>}
+                  {readOnly && <span className={`mx-2 px-2 py-0.5 rounded-full text-xs font-semibold align-middle ${"bg-erp-surface-2 text-erp-text"}`}>👁️ {t("View only", "عرض بس")}</span>}
                 </h2>
                 {path.length > 0 && (
                   <div className={`text-xs flex flex-wrap items-center gap-1 mt-0.5 ${muted}`}>
                     {path.map((p, i) => (
                       <React.Fragment key={p.code}>
                         {i > 0 && <i className={`fa-solid fa-chevron-${IsLangEN ? "right" : "left"} text-[8px]`} />}
-                        <button className="hover:text-blue-500 hover:underline" onClick={() => tree.current?.reveal(p.code)}>
+                        <button className="hover:text-erp-accent hover:underline" onClick={() => tree.current?.reveal(p.code)}>
                           {p.code} {p.title}
                         </button>
                       </React.Fragment>
@@ -456,7 +456,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
                     {mode === "new" && (
                       <>
                         <i className={`fa-solid fa-chevron-${IsLangEN ? "right" : "left"} text-[8px]`} />
-                        <span className="text-emerald-500 font-semibold">{t("new", "جديد")}</span>
+                        <span className="text-erp-success font-semibold">{t("new", "جديد")}</span>
                       </>
                     )}
                   </div>
@@ -466,16 +466,16 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
                 <>
                   {enableInsert && selected && (
                     <button onClick={() => openNew(selected)} className={btnOutline}>
-                      <i className="fa-solid fa-plus mx-1 text-emerald-500" /> {t("Add child", "إضافة ابن")}
+                      <i className="fa-solid fa-plus mx-1 text-erp-success" /> {t("Add child", "إضافة ابن")}
                     </button>
                   )}
                   {enableDelete && selected && (
                     <button onClick={() => deleteNode(selected)} className={btnOutline}>
-                      <i className="fa-solid fa-trash mx-1 text-red-500" /> {t("Delete", "حذف")}
+                      <i className="fa-solid fa-trash mx-1 text-erp-danger" /> {t("Delete", "حذف")}
                     </button>
                   )}
                   {enableUpdate && (
-                    <button onClick={() => setMode("edit")} className="px-5 py-2 rounded-xl text-white font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 shadow-md">
+                    <button onClick={() => setMode("edit")} className="px-5 py-2 rounded-xl text-white font-semibold bg-erp-warning hover:opacity-90 shadow-md">
                       ✏️ {t("Edit", "تعديل")}
                     </button>
                   )}
@@ -485,7 +485,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
                   <button onClick={cancel} className={btnOutline}>
                     {t("Cancel", "إلغاء")}
                   </button>
-                  <button onClick={save} disabled={saving} className="px-6 py-2 rounded-xl text-white font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 shadow-md disabled:opacity-50">
+                  <button onClick={save} disabled={saving} className="px-6 py-2 rounded-xl text-white font-semibold bg-erp-accent hover:bg-erp-accent-hover hover:opacity-90 shadow-md disabled:opacity-50">
                     💾 {saving ? t("Saving...", "جاري الحفظ...") : t("Save", "حفظ")}
                   </button>
                 </>
@@ -510,7 +510,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
                     <div key={c.field} className={c.inputType === "textarea" ? "sm:col-span-2" : ""}>
                       <label className={`block text-sm font-semibold mb-1 ${muted}`}>
                         {c.title}
-                        {c.IsRequired && !disabled && <span className="text-red-500 mx-1">*</span>}
+                        {c.IsRequired && !disabled && <span className="text-erp-danger mx-1">*</span>}
                         {c.field === config.codeColumn && codeLocked && !readOnly && <i className="fa-solid fa-lock mx-1 text-xs" title={t("Has children", "ليها أبناء")} />}
                       </label>
                       <FieldInput
@@ -523,7 +523,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
                         isDark={isDark}
                         t={t}
                       />
-                      {errors[errKey] && <p className="text-red-500 text-xs mt-1">{errors[errKey]}</p>}
+                      {errors[errKey] && <p className="text-erp-danger text-xs mt-1">{errors[errKey]}</p>}
                     </div>
                   );
                 })}

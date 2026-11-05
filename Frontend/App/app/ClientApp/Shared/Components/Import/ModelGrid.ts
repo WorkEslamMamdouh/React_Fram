@@ -5,7 +5,8 @@
 
 export type ColumnType = "text" | "number" | "select" | "checkbox" | "date";
 export type SortDirection = "ASC" | "DESC";
-export type InputControlType = "text" | "number" | "select" | "search" | "date" | "textarea" | "checkbox";
+// "selectSearch" = DynamicSelect (دروب داون من جدول عن طريق selectConfig) — مدعوم في DynamicGrid و MasterDetail
+export type InputControlType = "text" | "number" | "select" | "selectSearch" | "search" | "date" | "textarea" | "checkbox";
 
 export interface SelectOption {
   value: any;
@@ -35,6 +36,8 @@ export interface DynamicSelectConfig {
   orderBy?: string;
   orderType?: SortDirection;
   placeholder?: { en: string; ar: string };
+  /** الأعمدة اللي البحث (وانت بتكتب في الدروب داون الكبير) بيدور فيها — الافتراضي displayField */
+  searchFields?: string[];
 }
 
 export type ColumnMode = "create" | "edit" | "view";

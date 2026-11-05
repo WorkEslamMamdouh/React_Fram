@@ -114,7 +114,7 @@ const handleUnauthorized = () => {
       "warning"
     );
     setTimeout(() => {
-      window.location.href = '/login';
+      window.location.href = '/ClientApp/Login';
     }, 2000);
   }
 };

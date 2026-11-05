@@ -29,24 +29,14 @@ export interface SearchModalProps {
 // ============================================================
 
 const getButtonClass = (type: 'primary' | 'success' | 'danger' | 'warning' | 'gray', isDark: boolean): string => {
-  const baseClass = "px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseClass = "px-4 h-10 rounded-lg font-medium text-[13px] transition-colors duration-200 erp-focus disabled:opacity-50 disabled:cursor-not-allowed";
   
   const styles = {
-    primary: isDark 
-      ? "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500" 
-      : "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
-    success: isDark 
-      ? "bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500" 
-      : "bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500",
-    danger: isDark 
-      ? "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500" 
-      : "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
-    warning: isDark 
-      ? "bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500" 
-      : "bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500",
-    gray: isDark 
-      ? "bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500" 
-      : "bg-gray-500 hover:bg-gray-600 text-white focus:ring-gray-500",
+    primary: "bg-erp-accent hover:bg-erp-accent-hover text-white",
+    success: "bg-erp-success hover:opacity-90 text-white",
+    danger: "bg-erp-danger hover:opacity-90 text-white",
+    warning: "bg-erp-warning hover:opacity-90 text-white",
+    gray: "bg-erp-surface border border-erp-border text-erp-text hover:bg-erp-surface-2",
   };
   
   return `${baseClass} ${styles[type]}`;
@@ -79,9 +69,10 @@ const SearchModal: React.FC<SearchModalProps> = ({
   }));
 
   // بناء شرط البحث
-  const buildSearchCondition = (searchText: string): string => {
-    if (!searchText) return config.condition || "";
-    
+  const buildSearchCondition = (rawText: string): string => {
+    if (!rawText) return config.condition || "";
+    const searchText = rawText.replace(/'/g, "''");   // أمان: apostrophe ماتبوظش الاستعلام
+
     if (config.searchColumns && config.searchColumns.length > 0) {
       const searchParts = config.searchColumns.map(col => `${col} LIKE N'%${searchText}%'`);
       const searchClause = `(${searchParts.join(" OR ")})`;
@@ -97,8 +88,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
       : searchClause;
   };
 
+  // البحث من السيرفر وانت بتكتب (debounce 300ms) — الجريد بيتحمّل صفحة صفحة مع تمرير لانهائي
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const h = setTimeout(() => setDebouncedSearch(searchValue.trim()), 300);
+    return () => clearTimeout(h);
+  }, [searchValue]);
+
   const handleSearch = () => {
-    setGridKey(prev => prev + 1);
+    setDebouncedSearch(searchValue.trim());
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -110,16 +108,14 @@ const SearchModal: React.FC<SearchModalProps> = ({
   if (!isOpen) return null;
 
   const t = (en: string, ar: string) => lang === "ar" ? ar : en;
-  const themeClass = isDark 
-    ? "bg-gray-900 text-white border-gray-700"
-    : "bg-white text-gray-900 border-gray-200";
+  const themeClass = "bg-erp-surface text-erp-text border border-erp-border";
 
  return createPortal(
   <div className="fixed inset-0 z-[99999]">
     
     {/* Overlay */}
     <div
-      className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      className="absolute inset-0 bg-erp-overlay backdrop-blur-[2px]"
       onClick={onClose}
     />
 
@@ -128,7 +124,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
       <div
         className={`
-          rounded-3xl
+          rounded-xl
           w-full
           max-w-[95vw]
           md:max-w-[90vw]
@@ -137,7 +133,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           flex
           flex-col
           overflow-hidden
-          shadow-2xl
+          shadow-erp-4
           animate-in
           fade-in
           zoom-in-95
@@ -160,10 +156,10 @@ const SearchModal: React.FC<SearchModalProps> = ({
             z-10
             backdrop-blur-xl
             shrink-0
-            ${isDark ? "border-gray-700 bg-[#111827]/95" : "border-gray-200 bg-white/95"}
+            border-erp-border bg-erp-surface
           `}
         >
-          <h3 className="text-lg md:text-2xl font-bold truncate">
+          <h3 className="text-[18px] leading-6 font-semibold truncate">
             {config.title}
           </h3>
 
@@ -175,14 +171,10 @@ const SearchModal: React.FC<SearchModalProps> = ({
               flex
               items-center
               justify-center
-              rounded-xl
-              transition-all
+              rounded-lg
+              transition-colors
               duration-200
-              ${
-                isDark
-                  ? "hover:bg-white/10 text-gray-300"
-                  : "hover:bg-gray-100 text-gray-600"
-              }
+              hover:bg-erp-surface-2 text-erp-text-muted
             `}
           >
             ×
@@ -195,29 +187,27 @@ const SearchModal: React.FC<SearchModalProps> = ({
             p-4
             border-b
             shrink-0
-            ${isDark ? "border-gray-700 bg-[#0f172a]" : "border-gray-200 bg-white"}
+            border-erp-border bg-erp-surface
           `}
         >
           <input
             type="text"
             placeholder={t(
-              "🔍 Search... (press Enter to search)",
+              "🔍 Type to search...",
               "🔍 بحث..."
             )}
             className={`
               w-full
               border
-              p-3
-              rounded-2xl
+              h-10
+              px-3
+              text-[13px]
+              rounded-lg
               focus:outline-none
-              focus:ring-2
-              focus:ring-blue-500
-              transition-all
-              ${
-                isDark
-                  ? "bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-                  : "bg-white border-gray-300 text-gray-900"
-              }
+              focus:border-erp-accent
+              focus:shadow-[0_0_0_3px_var(--erp-accent-soft)]
+              transition
+              bg-erp-surface border-erp-border-strong text-erp-text placeholder:text-erp-text-subtle
             `}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
@@ -235,7 +225,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
               tableName={config.tableName}
               keyColumn={config.keyColumn}
               columns={gridColumns}
-              condition={buildSearchCondition(searchValue)}
+              condition={buildSearchCondition(debouncedSearch)}
               orderBy={config.orderBy || config.keyColumn}
               orderType={config.orderType || "ASC"}
               pageSize={config.pageSize || 20}
@@ -272,15 +262,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
             z-10
             shrink-0
             backdrop-blur-xl
-            ${isDark ? "border-gray-700 bg-[#111827]/95" : "border-gray-200 bg-white/95"}
+            border-erp-border bg-erp-surface
           `}
           style={{
             paddingBottom: "max(16px, env(safe-area-inset-bottom))",
           }}
         >
-          <div className="text-sm text-gray-500 truncate">
+          <div className="text-sm text-erp-text-muted truncate">
             {selectedRow && config.displayField && (
-              <span className="text-emerald-500 font-medium">
+              <span className="text-erp-success font-medium">
                 {t("Selected:", "المحدد:")}{" "}
                 {selectedRow[config.displayField]}
               </span>

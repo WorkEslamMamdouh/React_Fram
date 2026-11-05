@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ScreenBuilder, TabId } from "./ScreenBuilder";
 import { useSys } from "../Shared/SystemUsing";
@@ -11,6 +11,9 @@ import PreviewTab from "./components/PreviewTab";
 import HelpPanel from "./components/HelpPanel";
 import ExamplesModal from "./components/ExamplesModal";
 import SearchManagerModal from "./components/SearchManagerModal";
+import DesignerView from "./components/designer/DesignerView";
+import PrintExcelTab from "./components/designer/PrintExcelTab";
+import { OpenScreenModal, SaveRegisterModal } from "./components/designer/ScreenModals";
 
 export default function InitalizeComponent() {
   const p = ScreenBuilder();
@@ -27,11 +30,13 @@ export default function InitalizeComponent() {
   const isTree = p.store.config.screenType === "Tree";
 
   const tabs: { id: TabId; icon: string; en: string; ar: string; show: boolean }[] = [
+    { id: "design", icon: "fa-pen-ruler", en: "Designer", ar: "المصمم", show: true },
     { id: "setup", icon: "fa-gear", en: "Setup", ar: "الإعداد", show: true },
     { id: "fields", icon: "fa-table-columns", en: "Fields", ar: "الحقول", show: true },
     { id: "list", icon: "fa-list", en: "List", ar: "القائمة", show: isMD },
     { id: "details", icon: "fa-layer-group", en: isTree ? "Node Details" : "Details", ar: isTree ? "تفاصيل العقدة" : "التفاصيل", show: isMD || isTree },
     { id: "validations", icon: "fa-shield-check", en: "Validations", ar: "التحققات", show: true },
+    { id: "print", icon: "fa-print", en: "Print & Excel", ar: "الطباعة والإكسل", show: !isTree },
     { id: "preview", icon: "fa-code", en: "Preview & Save", ar: "المعاينة والحفظ", show: true },
   ];
 
@@ -55,6 +60,9 @@ export default function InitalizeComponent() {
           onChanged={(fns) => p.setSearchFunctions(fns.map((f) => f.name))}
         />
       )}
+
+      {p.showOpen && <OpenScreenModal connection={p.connection} connected={p.isConnected} projectPath={p.projectPath} onClose={() => p.setShowOpen(false)} />}
+      {p.showSave && <SaveRegisterModal connection={p.connection} connected={p.isConnected} projectPath={p.projectPath} dbScriptsPath={p.dbScriptsPath} onClose={() => p.setShowSave(false)} />}
 
       {/* Help Panel */}
       <HelpPanel activeTab={p.activeTab} isOpen={p.showHelp} onClose={() => p.setShowHelp(false)} />
@@ -135,6 +143,13 @@ export default function InitalizeComponent() {
 
           <div className={`w-px h-5 ${d ? "bg-gray-700" : "bg-gray-300"}`} />
 
+          <button onClick={p.handleConnectServer} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${p.isConnected ? "bg-emerald-50 text-emerald-700 border-emerald-200" : d ? "bg-gray-800 text-gray-300 border-gray-700" : "bg-gray-50 text-gray-700 border-gray-200"}`} title={t("Connect using the server settings (no password in the browser)", "اتصال بإعدادات السيرفر (من غير باسورد في المتصفح)")}>
+            <i className="fa-solid fa-plug mr-1" />{p.isConnected ? (p.connection.database || t("Connected", "متصل")) : t("Connect (server)", "اتصال (السيرفر)")}
+          </button>
+          <button onClick={() => p.setShowOpen(true)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${d ? "bg-gray-800 text-gray-300 border-gray-700" : "bg-gray-50 text-gray-700 border-gray-200"}`}>
+            <i className="fa-solid fa-folder-open mr-1" />{t("Open screen", "افتح شاشة")}
+          </button>
+
           {/* Undo/Redo */}
           <button onClick={p.store.undo} disabled={!p.store.canUndo()} className={`p-1.5 rounded-lg transition ${!p.store.canUndo() ? "opacity-30" : d ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}>
             <i className="fa-solid fa-rotate-left text-xs" />
@@ -147,6 +162,9 @@ export default function InitalizeComponent() {
 
           <button onClick={p.handleImportFile} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${d ? "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700" : "bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200"}`}>
             <i className="fa-solid fa-file-import mr-1" />{t("Import", "استيراد")}
+          </button>
+          <button onClick={() => p.setShowSave(true)} className="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:opacity-90 shadow-sm">
+            <i className="fa-solid fa-floppy-disk mr-1" />{t("Save & register", "حفظ وتسجيل")}
           </button>
           <button onClick={p.handleSaveAll} className="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-sm">
             <i className="fa-solid fa-download mr-1" />{t("Save All", "حفظ الكل")}
@@ -185,8 +203,23 @@ export default function InitalizeComponent() {
           ))}
         </div>
 
+        {/* Draft banner */}
+        {p.draft && (
+          <div className="flex items-center gap-3 px-4 py-2 text-xs bg-amber-50 text-amber-800 border-b border-amber-200">
+            <i className="fa-solid fa-clock-rotate-left" /> {t("An unsaved draft from your last session was found.", "فيه مسودة من آخر مرة ما اتحفظتش.")}
+            <button className="underline font-semibold" onClick={p.restoreDraft}>{t("Restore", "استرجاع")}</button>
+            <button className="underline" onClick={p.discardDraft}>{t("Discard", "تجاهل")}</button>
+          </div>
+        )}
+        {p.activeTab === "design" && (
+          <div className="flex-1 min-h-0">
+            <DesignerView db={p.db} onLoadColumns={p.loadTableColumns} onGoTab={(tb) => p.setActiveTab(tb)} />
+          </div>
+        )}
+
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={`flex-1 overflow-y-auto p-4 ${p.activeTab === "design" ? "hidden" : ""}`}>
+          {p.activeTab === "print" && <PrintExcelTab db={p.db} />}
           {p.activeTab === "setup" && (
             <SetupTab fields={p.store.config.fields.map(f => f.field)} />
           )}

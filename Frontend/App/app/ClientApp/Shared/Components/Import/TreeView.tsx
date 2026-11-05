@@ -410,9 +410,9 @@ const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(function TreeView(
   };
 
   // ---------- الرسم ----------
-  const muted = isDark ? "text-gray-400" : "text-gray-500";
-  const hover = isDark ? "hover:bg-gray-800/70" : "hover:bg-blue-50/70";
-  const selBg = isDark ? "bg-blue-900/40 ring-1 ring-blue-500/50" : "bg-blue-100 ring-1 ring-blue-300";
+  const muted = "text-erp-text-muted";
+  const hover = "hover:bg-erp-surface-2";
+  const selBg = "bg-erp-accent-soft ring-1 ring-erp-accent";
   const rootBucket = buckets.current.get(ROOT);
   const loadedCount = nodes.current.size;
 
@@ -448,7 +448,7 @@ const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(function TreeView(
               e.stopPropagation();
               toggle(node);
             }}
-            className={`w-5 h-5 flex items-center justify-center rounded ${node.isLeaf ? "invisible" : isDark ? "hover:bg-gray-700" : "hover:bg-gray-200"}`}
+            className={`w-5 h-5 flex items-center justify-center rounded ${node.isLeaf ? "invisible" : "hover:bg-erp-surface-3"}`}
             aria-label={isOpen ? t("Collapse", "قفل") : t("Expand", "فتح")}
           >
             {node.isLeaf === null ? (
@@ -458,8 +458,8 @@ const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(function TreeView(
             )}
           </button>
         )}
-        <i className={`fa-solid ${inSearch ? "fa-magnifying-glass-location text-blue-500" : icon} text-sm w-4 text-center`} />
-        <span className={`font-mono text-xs px-1.5 py-0.5 rounded ${isDark ? "bg-gray-800 text-blue-300" : "bg-gray-100 text-blue-700"}`}>
+        <i className={`fa-solid ${inSearch ? "fa-magnifying-glass-location text-erp-accent" : icon} text-sm w-4 text-center`} />
+        <span className={`font-mono text-xs px-1.5 py-0.5 rounded ${"bg-erp-surface-2 text-erp-accent"}`}>
           {inSearch ? highlight(node.code, search?.q || "") : node.code}
         </span>
         <span className="truncate text-sm flex-1 min-w-0">{inSearch ? highlight(node.title, search?.q || "") : node.title}</span>
@@ -510,11 +510,11 @@ const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(function TreeView(
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("Search by code or name...", "بحث بالكود أو الاسم...")}
-            className={`w-full rounded-xl border py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? "bg-gray-800/70 border-gray-700 text-white" : "bg-white border-gray-300"}`}
+            className={`w-full rounded-xl border py-2 text-sm focus:outline-none focus:ring-2 focus:ring-erp-accent ${"bg-erp-surface border-erp-border-strong text-erp-text"}`}
             style={{ paddingInlineStart: 36, paddingInlineEnd: 32 }}
           />
           {query && (
-            <button onClick={() => setQuery("")} className={`absolute top-1/2 -translate-y-1/2 ${muted} hover:text-red-500`} style={{ insetInlineEnd: 10 }} aria-label={t("Clear", "مسح")}>
+            <button onClick={() => setQuery("")} className={`absolute top-1/2 -translate-y-1/2 ${muted} hover:text-erp-danger`} style={{ insetInlineEnd: 10 }} aria-label={t("Clear", "مسح")}>
               <i className="fa-solid fa-xmark" />
             </button>
           )}
@@ -525,11 +525,11 @@ const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(function TreeView(
             bump();
           }}
           title={t("Collapse all", "قفل الكل")}
-          className={`w-9 h-9 rounded-xl border ${isDark ? "border-gray-700 hover:bg-gray-800" : "border-gray-300 hover:bg-gray-100"}`}
+          className={`w-9 h-9 rounded-xl border ${"border-erp-border-strong hover:bg-erp-surface-2"}`}
         >
           <i className="fa-solid fa-compress" />
         </button>
-        <button onClick={reload} title={t("Reload", "تحديث")} className={`w-9 h-9 rounded-xl border ${isDark ? "border-gray-700 hover:bg-gray-800" : "border-gray-300 hover:bg-gray-100"}`}>
+        <button onClick={reload} title={t("Reload", "تحديث")} className={`w-9 h-9 rounded-xl border ${"border-erp-border-strong hover:bg-erp-surface-2"}`}>
           <i className="fa-solid fa-rotate" />
         </button>
         {toolbarExtra}
@@ -557,7 +557,7 @@ const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(function TreeView(
         tabIndex={0}
         onKeyDown={onKeyDown}
         onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
-        className={`relative flex-1 min-h-0 overflow-y-auto rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${isDark ? "border-gray-700 bg-gray-900/40" : "border-gray-200 bg-white"}`}
+        className={`relative flex-1 min-h-0 overflow-y-auto rounded-xl border focus:outline-none focus:ring-2 focus:ring-erp-accent/40 ${"border-erp-border bg-erp-surface"}`}
       >
         {count === 0 && !(rootBucket?.loading || search?.loading) ? (
           <div className={`flex flex-col items-center justify-center h-full gap-2 p-6 text-center ${muted}`}>

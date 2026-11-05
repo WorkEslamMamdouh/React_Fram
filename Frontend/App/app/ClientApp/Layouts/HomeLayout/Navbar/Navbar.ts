@@ -1,11 +1,12 @@
 "use client"
 import { Sys } from "../../../Shared/SystemTools";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSys } from "../../../Shared/SystemUsing";
 import { } from "../../../Shared/Entities_DataBase";
 import { } from "../../../Shared/Entities";
 import { OpenPage } from "../../../Shared/App";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { buildMenuItems, resolveFavorites, toggleFavorite, useFavoriteRows } from "../../../Shared/MenuPrefs";
 import { Language } from "../../../Language/Language";
 import { SQL } from "@/app/ClientApp/Shared/CallDataBase";
 import { Console } from "console";
@@ -138,7 +139,6 @@ export function Navbar() {
  
 
   function ChangeModDark(_IsDark: boolean) {
-    debugger
     toggleModDark(_IsDark)
 
 
@@ -146,9 +146,7 @@ export function Navbar() {
       IDSettingsUser: Session.CurrentEnvironment.Sys_SettingsUserProfile.IDSettingsUser,
       IsDarkMode: _IsDark
     }
-    debugger
     let Res = SQL.Update("Sys_SettingsUserProfile", "IDSettingsUser", Data, ShowLoader, CloseLoader)
-    debugger
     console.log(Res);
 
   }
@@ -169,7 +167,6 @@ export function Navbar() {
 
 
     useEffect(() => {
-    debugger
           Session.CurrentEnvironment.BranchCode = selectedBranch.BranchCode;
       Session.CurrentEnvironment.Sys_Branch = selectedBranch;
       SetSession(Session)
@@ -178,7 +175,6 @@ export function Navbar() {
 
 
     useEffect(() => {
-    debugger
 
           Session.CurrentEnvironment.FinYear = selectedYear.FinYear;
       Session.CurrentEnvironment.Sys_Control = selectedYear;
@@ -189,7 +185,6 @@ export function Navbar() {
 
   // **تحديث selectedBranch عندما تتغير branchesData**
   useEffect(() => {
-    debugger
     if (branchesData.length > 0 && selectedBranch.BranchCode) {
       const updatedBranch = branchesData.find(b => b.BranchCode === selectedBranch.BranchCode);
       if (updatedBranch) {
@@ -216,7 +211,6 @@ export function Navbar() {
 
 
   useEffect(() => {
-    debugger
 
     if (!branchesData || branchesData.length === 0) return;
 
@@ -258,90 +252,16 @@ export function Navbar() {
     // updateBranchesNames();
   }, [IsLangEN]);
 
-  // بيانات الصفحات المفضلة - تحتاج أيضاً إلى تحديث عند تغيير اللغة
-  const [favoritePages, setFavoritePages] = useState([
-    {
-      id: 1,
-      title: "",
-      path: "/dashboard/analytics",
-      icon: "📊",
-      lastVisited: "2024-01-15"
-    },
-    {
-      id: 2,
-      title: "",
-      path: "/users/manage",
-      icon: "👥",
-      lastVisited: "2024-01-14"
-    },
-    {
-      id: 3,
-      title: "",
-      path: "/reports",
-      icon: "📈",
-      lastVisited: "2024-01-13"
-    },
-    {
-      id: 4,
-      title: "",
-      path: "/settings",
-      icon: "⚙️",
-      lastVisited: "2024-01-12"
-    },
-    {
-      id: 5,
-      title: "",
-      path: "/help",
-      icon: "❓",
-      lastVisited: "2024-01-10"
-    }
-  ]);
-
-  // **تحديث أسماء الصفحات المفضلة عند تغيير اللغة**
-  const updateFavoritePages = () => {
-    setFavoritePages([
-      {
-        id: 1,
-        title: IsLangEN ? "Dashboard Analytics" : "لوحة التحليلات",
-        path: "/dashboard/analytics",
-        icon: "📊",
-        lastVisited: "2024-01-15"
-      },
-      {
-        id: 2,
-        title: IsLangEN ? "User Management" : "إدارة المستخدمين",
-        path: "/users/manage",
-        icon: "👥",
-        lastVisited: "2024-01-14"
-      },
-      {
-        id: 3,
-        title: IsLangEN ? "Reports Center" : "مركز التقارير",
-        path: "/reports",
-        icon: "📈",
-        lastVisited: "2024-01-13"
-      },
-      {
-        id: 4,
-        title: IsLangEN ? "Settings & Preferences" : "الإعدادات والتفضيلات",
-        path: "/settings",
-        icon: "⚙️",
-        lastVisited: "2024-01-12"
-      },
-      {
-        id: 5,
-        title: IsLangEN ? "Help & Support" : "المساعدة والدعم",
-        path: "/help",
-        icon: "❓",
-        lastVisited: "2024-01-10"
-      }
-    ]);
-  };
-
-  // **تحديث الصفحات المفضلة عند تغيير اللغة**
-  useEffect(() => {
-    updateFavoritePages();
-  }, [IsLangEN]);
+  // المفضلة: من جدول Sys_Favorites (نفس القايمة اللي في القايمة الجانبية) — بتظهر الشاشات المسموحة بس
+  const pathname = usePathname();
+  const favEnv: any = Session?.CurrentEnvironment ?? {};
+  const favUserId: number = Number(favEnv.UserID || favEnv.Sys_CompanyAndUser?.UserID || 0) || 0;
+  const favCompCode: number = Number(favEnv.CompCode || 0) || 0;
+  const favBranchCode: number = Number(favEnv.BranchCode || 0) || 0;
+  const menuItems = useMemo(() => buildMenuItems(Session?.CurrentPrivileges ?? [], () => { }), [Session?.CurrentPrivileges]);
+  const menuItemByCode = useMemo(() => new Map(menuItems.map((i) => [i.MODULE_CODE, i])), [menuItems]);
+  const favRows = useFavoriteRows(favUserId);
+  const favoritePages = useMemo(() => resolveFavorites(menuItems, favRows, IsLangEN), [menuItems, favRows, IsLangEN]);
 
   useEffect(() => {
     if (IsDark === true) {
@@ -441,30 +361,51 @@ export function Navbar() {
 
   };
 
-  // دالة إزالة صفحة من المفضلة
-  const removeFromFavorites = (id: number, event: React.MouseEvent) => {
+  // دالة إزالة صفحة من المفضلة (بتشتغل على جدول Sys_Favorites)
+  const removeFromFavorites = (code: string, event: React.MouseEvent) => {
+    event.preventDefault();
     event.stopPropagation();
-    setFavoritePages(favoritePages.filter(page => page.id !== id));
+    const it = menuItemByCode.get(code);
+    if (it) void toggleFavorite(favUserId, favCompCode, favBranchCode, code, it.TITLE_EN || it.TITLE_AR || code);
   };
 
-  // دالة إضافة صفحة جديدة للمفضلة
+  // دالة إضافة الشاشة الحالية للمفضلة (لو هي شاشة مسموحة)
+  const currentModule = (pathname || "").split("/")[2] ?? "";
+  const currentScreen = menuItemByCode.get(currentModule);
+  const canFavoriteCurrent = !!currentScreen && currentScreen.MODULE_TYPE === "screen" && !favoritePages.some((f) => f.code === currentModule);
   const addCurrentPageToFavorites = () => {
-    const newPage = {
-      id: Date.now(),
-      title: IsLangEN ? "Current Page" : "الصفحة الحالية",
-      path: window.location.pathname,
-      icon: "📍",
-      lastVisited: new Date().toISOString().split('T')[0]
-    };
-    setFavoritePages([newPage, ...favoritePages]);
+    if (currentScreen && canFavoriteCurrent) {
+      void toggleFavorite(favUserId, favCompCode, favBranchCode, currentModule, currentScreen.TITLE_EN || currentScreen.TITLE_AR || currentModule);
+    }
+  };
+
+  // فتح شاشة من المفضلة
+  const openFavoritePage = (code: string, event: React.MouseEvent) => {
+    event.preventDefault();
     setIsBookmarksOpen(false);
+    OpenPage(code, Router);
   };
 
   // دالة تبديل الـ Sidebar
   const toggleSidebar = () => {
+    // موبايل وتابلت (<1024): افتح/اقفل الدرج بدل تصغير القايمة
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      window.dispatchEvent(new CustomEvent("erp:toggle-drawer"));
+      return;
+    }
     setIsSidebarOpen(!isSidebarOpen);
     toggleSideMenu();
   };
+
+  // فتح نافذة البحث (Ctrl+K) — الـ SideMenu هو اللي بيسمعها
+  const openGlobalSearch = () => {
+    window.dispatchEvent(new CustomEvent("erp:open-search"));
+  };
+
+  // اسم الشركة الحالية
+  const companyName = IsLangEN
+    ? Session.CurrentEnvironment.Sys_CompanyAndUser.CompNameE
+    : Session.CurrentEnvironment.Sys_CompanyAndUser.CompNameA;
 
   // بيانات المستخدم
   const user = {
@@ -568,6 +509,7 @@ IsNotifications,
     user,
     messages,
     yearsData,
+    companyName,
   };
 
   //function
@@ -586,9 +528,11 @@ IsNotifications,
     removeFromFavorites,
     addCurrentPageToFavorites,
     toggleSidebar,
+    openGlobalSearch,
     updateNotifications,
     updateMessages,
-    updateFavoritePages,
+    openFavoritePage,
+    canFavoriteCurrent,
     ChangeModDark,
     Logout,
     OpenHome,

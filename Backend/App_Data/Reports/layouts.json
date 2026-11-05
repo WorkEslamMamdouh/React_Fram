@@ -1,0 +1,16 @@
+[
+  {
+    "LayoutId": 1,
+    "ReportCode": "T_TrialBalance",
+    "Scope": "company",
+    "CompCode": 1,
+    "BranchCode": null,
+    "PaperSize": "A4",
+    "Orientation": "landscape",
+    "MarginsJson": "{\"left\":1,\"right\":1,\"top\":1,\"bottom\":1}",
+    "LayoutMrt": null,
+    "IsDefault": true,
+    "UpdatedAt": "2026-11-05T04:36:26.7452851+02:00",
+    "UpdatedBy": "islam"
+  }
+]

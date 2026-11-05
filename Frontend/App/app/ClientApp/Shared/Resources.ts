@@ -186,7 +186,11 @@ export const useTranslate = () => {
     // ===== salesApproval =====
     salesApproval_title: "Sales Approval",
     salesApproval_subtitle: "Sales invoices and approvals",
-    salesApproval_refresh: "Refresh"
+    salesApproval_refresh: "Refresh",
+    // ===== demoCash =====
+    demoCash_title: "Demo Cash",
+    demoCash_subtitle: "",
+    demoCash_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -364,6 +368,10 @@ export const useTranslate = () => {
     // ===== salesApproval =====
     salesApproval_title: "اعتماد المبيعات",
     salesApproval_subtitle: "فواتير المبيعات واعتمادها",
-    salesApproval_refresh: "تحديث"
+    salesApproval_refresh: "تحديث",
+    // ===== demoCash =====
+    demoCash_title: "كاش تجريبي 2",
+    demoCash_subtitle: "",
+    demoCash_refresh: "تحديث"
   }
 };

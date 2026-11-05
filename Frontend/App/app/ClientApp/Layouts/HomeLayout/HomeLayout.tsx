@@ -72,23 +72,17 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
 
       {/* ========== MAIN CONTENT ========== */}
       <main
-        className={`pt-[60px] px-2 pb-3 bg-gray-50 dark:bg-neutral-900 h-screen overflow-hidden transition-all duration-300 ${
-          IsLangEN
-            ? IsOpenMenu
-              ? "lg:pl-60"
-              : "lg:pl-16"
-            : IsOpenMenu
-            ? "lg:pr-60"
-            : "lg:pr-16"
+        className={`pt-16 pb-[56px] md:pb-0 bg-erp-canvas text-erp-text h-screen overflow-hidden transition-[padding] duration-300 ${
+          IsOpenMenu ? "lg:ps-[260px]" : "lg:ps-[72px]"
         }`}
-      
+
       >
-        <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-xl h-full flex flex-col">
-          
+        <div className="h-full flex flex-col">
+
           {/* Content - Added an ID for easier selection */}
-          <div 
+          <div
             id="main-content-scrollable"
-            className= {IsOpenMenu ? "p-4 overflow-y-auto flex-1 scroll-smooth" : "p-1 overflow-y-auto flex-1 scroll-smooth"} 
+            className="p-4 md:p-6 xl:p-8 overflow-y-auto flex-1 scroll-smooth"
           >
             {children}  
 
@@ -100,9 +94,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       {/* ========== SCROLL TO TOP BUTTON - Moved outside the relative div ========== */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-6 z-50 p-3 rounded-full bg-blue-600 dark:bg-blue-500 text-white shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 ${
-          IsLangEN ? 'right-6' : 'left-6'
-        } ${
+        className={`fixed bottom-20 md:bottom-6 end-4 md:end-6 z-50 p-3 rounded-full bg-erp-accent text-white shadow-erp-3 hover:bg-erp-accent-hover transition-all duration-300 transform hover:scale-110 erp-focus ${
           showScrollTop
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-10 pointer-events-none'

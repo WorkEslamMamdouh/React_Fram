@@ -3,6 +3,10 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { DynamicSelectConfig } from "./ModelGrid";
 import { SQL } from "../../CallDataBase";
 import { useSys } from "../../SystemUsing";
+import SearchableSelect, { buildSelectOrder, SELECT_PAGE_SIZE } from "./SearchableSelect";
+
+// أكبر عدد صفوف يفضل معاه الـ select العادي (غير كده → بحث من السيرفر وهو بيكتب)
+const NATIVE_LIMIT = 100;
 
 export interface DynamicSelectProps {
   config: DynamicSelectConfig;
@@ -25,6 +29,7 @@ export default function DynamicSelect({
   const isDark = useSys((s) => s.IsDark);
 
   const [options, setOptions] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const fetchedRef = useRef(false);
@@ -63,6 +68,8 @@ export default function DynamicSelect({
       setLoading(true);
       setLoadError(null);
       try {
+        // صفحة واحدة بس + العدد الإجمالي (مش الجدول كله). لو الجدول صغير (≤ NATIVE_LIMIT) نفس الـ select القديم،
+        // ولو أكبر → دروب داون بحث من السيرفر (SearchableSelect)
         const result = await SQL.Select(
           config.tableName,
           config.condition || "",
@@ -70,11 +77,19 @@ export default function DynamicSelect({
           null,
           null,
           0,
-          config.orderBy || config.valueField,
-          config.orderType || "ASC"
+          buildSelectOrder(config),
+          config.orderType || "ASC",
+          0,
+          "",
+          null,
+          null,
+          1,
+          NATIVE_LIMIT,
+          true
         );
         if (cancelled) return;
         setOptions(result.data || []);
+        setTotal(result.totalCount || (result.data || []).length);
         fetchedRef.current = true;
       } catch (err: any) {
         if (cancelled) return;
@@ -134,6 +149,25 @@ export default function DynamicSelect({
       >
         <option>{t("Error loading data", "خطأ في تحميل البيانات")}</option>
       </select>
+    );
+  }
+
+  // جدول كبير → دروب داون بحث من السيرفر + تمرير لانهائي
+  if (!loading && fetchedRef.current && total > options.length) {
+    return (
+      <SearchableSelect
+        key={configKey}
+        config={config}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        error={error}
+        className={className}
+        selectedColumns={selectedColumns}
+        validAttributes={validAttributes}
+        initialOptions={options.slice(0, SELECT_PAGE_SIZE)}
+        initialTotal={total}
+      />
     );
   }
 

@@ -16,6 +16,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const IsLangEN = lang === "en";
   const router = useRouter();
 
+  // اتجاه الصفحة واللغة على مستوى <html> (ar = rtl)
+  useEffect(() => {
+    const html = document.documentElement;
+    html.dir = lang === "ar" ? "rtl" : "ltr";
+    html.lang = lang === "ar" ? "ar" : "en";
+  }, [lang]);
+
   // ✅ redirect بس (بدون رسالة)
   useEffect(() => {
     if (!hydrated) return;
