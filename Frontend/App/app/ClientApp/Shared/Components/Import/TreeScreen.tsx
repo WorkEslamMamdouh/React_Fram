@@ -195,7 +195,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
       row[config.levelColumn] = pl + 1;
     }
     if (config.leafColumn) row[config.leafColumn] = !!parent;
-    if (config.activeColumn && isEmpty(row[config.activeColumn])) row[config.activeColumn] = true;
+    if (config.activeColumn && (isEmpty(row[config.activeColumn]) || row[config.activeColumn] === false)) row[config.activeColumn] = true;
     if (config.autoCode !== false) {
       try {
         row[config.codeColumn] = await nextCode(parent);
@@ -267,7 +267,9 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
         return;
       }
     }
-    if (isEmpty(final.master[config.codeColumn])) {
+    // لو عمود الكود هو نفسه المفتاح (Identity) في الإضافة: القاعدة بتولّده، فمفيش كود يتفحص
+    const codeIsIdentity = isInsert && config.codeColumn === config.keyColumn;
+    if (!codeIsIdentity && isEmpty(final.master[config.codeColumn])) {
       setErrors({ ["m." + config.codeColumn]: t("Code is required", "الكود مطلوب") });
       Sys.ShowMessage("❌ Code is required", "❌ الكود مطلوب", "error");
       return;
@@ -280,7 +282,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
       const code = String(final.master[config.codeColumn]);
       const dupCond = `${config.codeColumn} = ${codeLit(code)}` + (!isInsert ? ` AND ${config.keyColumn} <> ${SqlLiteral(final.master[config.keyColumn])}` : "");
       const dup = await SQL.Select(config.tableName, config.condition ? `(${config.condition}) AND ${dupCond}` : dupCond, [config.codeColumn], null, null, 0, config.codeColumn, "ASC", 1);
-      if ((dup.data || []).length > 0) {
+      if (!codeIsIdentity && (dup.data || []).length > 0) {
         const msg = t(`Code ${code} already exists`, `الكود ${code} موجود قبل كده`);
         setErrors({ ["m." + config.codeColumn]: msg });
         Sys.ShowMessage("❌ " + msg, "❌ " + msg, "error");
@@ -304,7 +306,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
       const masterData = buildSaveRow(final.master, config.columns, isInsert ? [config.keyColumn] : []);
       // أعمدة الشجرة بتتحفظ حتى لو مش ظاهرة في الفورم
       for (const f of [config.codeColumn, config.parentColumn, config.levelColumn, config.leafColumn]) {
-        if (f && !(f in masterData)) masterData[f] = final.master[f] ?? null;
+        if (f && !(f in masterData) && !(codeIsIdentity && f === config.codeColumn)) masterData[f] = final.master[f] ?? null;
       }
       if (!isInsert) masterData[config.keyColumn] = final.master[config.keyColumn];
 
@@ -337,7 +339,7 @@ export default function TreeScreen({ config, height = "calc(100vh - 170px)" }: {
       setMode("view");
       await tree.current?.refreshChildren(parentCode);
       if (!isInsert && oldParent !== parentCode) await tree.current?.refreshChildren(oldParent);
-      await tree.current?.reveal(code);
+      if (!codeIsIdentity) await tree.current?.reveal(code);
     } catch (e) {
       const msg = Sys.GetErrorMessage(e);
       Sys.ShowMessage("❌ Failed to save: " + msg, "❌ فشل الحفظ: " + msg, "error");

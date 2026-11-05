@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  Sys_UserPermsAdmin.ts  -  لوجيك شاشة "صلاحيات خاصة بمستخدم" (استثناءات فوق الدور)
@@ -14,20 +14,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSys } from "../Shared/SystemUsing";
 import { Sys } from "../Shared/SystemTools";
-import { usePermissions } from "../Shared/Permissions";
-import { adminCall, showError, ALL_PERM_KEYS, emptyPerms, LookupBranch, LookupCompany, MatrixModule, PermKey, PermMap, UserRow } from "../Sys_UsersAdmin/AdminApi";
+import { useScreenPerm } from "../Sys_UsersAdmin/useScreenPerm";
+import { adminCall as adminCallBase, AuthMode, showError, ALL_PERM_KEYS, emptyPerms, LookupBranch, LookupCompany, MatrixModule, PermKey, PermMap, UserRow } from "../Sys_UsersAdmin/AdminApi";
 
 const MODULE_CODE = "Sys_UserPermsAdmin";
 
 export interface PickedUser { UserID: number; USER_CODE: string; USER_NAME: string }
 export interface RoleChip { RoleId: number; DescA: string; DescE: string }
 
-export function Sys_UserPermsAdmin() {
+export function Sys_UserPermsAdmin(mode: AuthMode = "jwt") {
+  const adminCall = <T = any>(action: string, data?: any) => adminCallBase<T>(action, data, mode);
   const didRun = useRef(false);
 
   const IsLangEN = useSys((s) => s.IsLangEN);
   const IsDark = useSys((s) => s.IsDark);
-  const perm = usePermissions(MODULE_CODE);
+  const perm = useScreenPerm(MODULE_CODE, mode);
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);
 
   // ---------- المستخدم ----------

@@ -59,7 +59,8 @@ export function resolveParamValues(def: ReportDef, ctx: Pick<OpenReportOptions, 
         const rng = lookupCI(ctx.filters, m[1]);
         v = rng && typeof rng === "object" ? rng[m[2].toLowerCase()] : undefined;
       } else if (base && typeof base === "object" && !Array.isArray(base) && !(base instanceof Date)) {
-        v = base.from ?? base.value;          // مدى تاريخ من غير تحديد from/to = البداية
+        // مدى تاريخ من غير تحديد from/to: الباراميتر اللي اسمه بيبدأ بـ To (زي ToDate) ياخد النهاية، والباقي البداية
+        v = /^[Tt]o[A-Z_]/.test(p.ParamName) && base.to !== undefined ? base.to : (base.from ?? base.value);
       } else v = base;
     }
     out[p.ParamName] = toParamText(v);
@@ -103,12 +104,20 @@ export function buildReportObject(S: any, def: ReportDef, run: RunResult, layout
   if (override) { paper = override.paper; orientation = override.orientation; margins = override.margins; }
 
   let report: any;
+  let loaded = false;
   if (layout?.LayoutMrt) {
-    report = new S.Report.StiReport();
-    report.load(layout.LayoutMrt);
-    register(report);
-    if (override) applyPaper(S, report, paper, orientation, margins);   // المقاس المحفوظ في التصميم بيفضل إلا لو اليوزر غيّره
-  } else {
+    try {
+      report = new S.Report.StiReport();
+      report.load(layout.LayoutMrt);
+      register(report);
+      if (override) applyPaper(S, report, paper, orientation, margins);   // المقاس المحفوظ في التصميم بيفضل إلا لو اليوزر غيّره
+      loaded = true;
+    } catch (e) {
+      console.warn("[Reports] saved layout is corrupt, falling back to the auto layout", e);   // تصميم تالف: نطبع بالتلقائي بدل ما التقرير يفشل
+      layout = null;
+    }
+  }
+  if (!loaded) {
     report = buildDefaultReport(S, {
       title: (isEN ? run.NameE : run.NameA) || def.ReportCode,
       columns: cols, isEN, paper, orientation, margins, paramsText, register,

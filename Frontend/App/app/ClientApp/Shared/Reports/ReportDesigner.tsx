@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  ReportDesigner.tsx  -  مصمم التقارير (Stimulsoft Designer) بملء الشاشة
@@ -11,7 +11,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSys } from "../SystemUsing";
 import { Sys } from "../SystemTools";
-import { ReportsApi } from "./ReportApi";
+import { createReportsApi } from "./ReportApi";
+import type { AuthMode } from "../AdminHttp";
 import { buildDefaultReport } from "./defaultLayout";
 import { loadStimulsoft, registerData } from "./stimulsoft";
 import { tablesForRegister } from "./ReportService";
@@ -30,6 +31,11 @@ export interface ReportDesignerProps {
   initialScope?: ReportScope;
   initialComp?: number | null;
   initialBranch?: number | null;
+  /** مقاس واتجاه التصميم الجديد (من إعدادات ScreenBuilder). التصميم القديم بياخد مقاسه من الصفحة المحفوظة. */
+  initialPaper?: PaperSizeKey;
+  initialOrientation?: OrientationKey;
+  /** "jwt" (افتراضي، شاشات الـ ERP) أو "admin" (منطقة الأدمن بتوكن الأدمن: الشركة/الفرع/المستخدم للعيّنة بيختارهم الأدمن) */
+  authMode?: AuthMode;
   onClose: () => void;
   onSaved?: () => void;
 }
@@ -72,6 +78,9 @@ function fakeRun(def: ReportDef, cols: { Name: string; SqlType: string }[]): Run
 export default function ReportDesigner(props: ReportDesignerProps) {
   const IsLangEN = useSys((s) => s.IsLangEN);
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);
+  const authMode: AuthMode = props.authMode ?? "jwt";
+  const apiRef = useRef(createReportsApi(authMode));
+  const ReportsApi = apiRef.current;
 
   const hostRef = useRef<HTMLDivElement>(null);
   const SRef = useRef<any>(null);
@@ -94,6 +103,8 @@ export default function ReportDesigner(props: ReportDesignerProps) {
   const [isDefault, setIsDefault] = useState(true);
   const [sampleOpen, setSampleOpen] = useState(false);
   const [sampleVals, setSampleVals] = useState<Record<string, string>>({});
+  // الأدمن مالوش جلسة ERP: بيختار الشركة والفرع والمستخدم اللي هتتحسب بيهم باراميترات الجلسة في العيّنة
+  const [sampleCtx, setSampleCtx] = useState<{ comp: number | null; branch: number | null; userId: string }>({ comp: null, branch: null, userId: "" });
   const [saving, setSaving] = useState(false);
 
   // ---------- تركيب المصمم على تقرير
@@ -130,7 +141,7 @@ export default function ReportDesigner(props: ReportDesignerProps) {
         const [d, lk] = await Promise.all([ReportsApi.getReport(props.reportCode), ReportsApi.lookups()]);
         if (off) return;
         setDef(d); defRef.current = d; setLookups(lk);
-        const S = await loadStimulsoft(true);
+        const S = await loadStimulsoft(true, authMode);
         SRef.current = S;
         let cols: { Name: string; SqlType: string }[] = [];
         if (d.ProcName) {
@@ -144,7 +155,7 @@ export default function ReportDesigner(props: ReportDesignerProps) {
         const run = fakeRun(d, cols);
         lastRunRef.current = run;
         let report: any;
-        let paper: PaperSizeKey = "A4", orientation: OrientationKey = cols.length > 8 ? "landscape" : "portrait", margins: Margins = { ...DEFAULT_MARGINS };
+        let paper: PaperSizeKey = props.initialPaper ?? "A4", orientation: OrientationKey = props.initialOrientation ?? (cols.length > 8 ? "landscape" : "portrait"), margins: Margins = { ...DEFAULT_MARGINS };
         if (props.layoutId) {
           const l: LayoutMeta = await ReportsApi.getLayout(props.layoutId);
           setScope(l.Scope); setComp(l.CompCode); setBranch(l.BranchCode); setIsDefault(l.IsDefault);
@@ -213,7 +224,10 @@ export default function ReportDesigner(props: ReportDesignerProps) {
     setBusy(true);
     try {
       const env: any = useSys.getState().Session?.CurrentEnvironment;
-      const run = await ReportsApi.run(d.ReportCode, env?.CompCode ?? 0, env?.BranchCode ?? 0, sampleVals, true);
+      const admin = authMode === "admin";
+      const run = admin
+        ? await ReportsApi.run(d.ReportCode, sampleCtx.comp ?? 0, sampleCtx.branch ?? 0, sampleVals, true, Number(sampleCtx.userId) || 0)
+        : await ReportsApi.run(d.ReportCode, env?.CompCode ?? 0, env?.BranchCode ?? 0, sampleVals, true);
       lastRunRef.current = run;
       const json = cur.report.saveToJsonString();
       const rep = new S.Report.StiReport();
@@ -261,7 +275,7 @@ export default function ReportDesigner(props: ReportDesignerProps) {
           <label className="flex items-center gap-1 text-[12px] text-erp-text">
             <input type="checkbox" className="accent-[var(--erp-accent)]" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} /> {t("Default for this scope", "الافتراضي لهذا النطاق")}
           </label>
-          <button className={btnOutline} disabled={busy || !def || def.Params.length === 0} onClick={() => { const v: Record<string, string> = {}; (def?.Params || []).forEach((p) => (v[p.ParamName] = sampleVals[p.ParamName] ?? (p.Source === "const" ? p.SourceValue : ""))); setSampleVals(v); setSampleOpen(true); }}>
+          <button className={btnOutline} disabled={busy || !def || def.Params.length === 0} onClick={() => { const v: Record<string, string> = {}; (def?.Params || []).forEach((p) => (v[p.ParamName] = sampleVals[p.ParamName] ?? (p.Source === "const" ? p.SourceValue : ""))); setSampleVals(v); if (authMode === "admin") { const c0 = comp ?? lookups?.Companies[0]?.CompCode ?? null; const b0 = scope === "branch" && branch != null ? branch : (lookups?.Branches.find((b) => b.CompCode === c0)?.BranchCode ?? null); setSampleCtx((x) => ({ comp: x.comp ?? c0, branch: x.branch ?? b0, userId: x.userId })); } setSampleOpen(true); }}>
             <i className="fa-solid fa-database" aria-hidden="true" /> {t("Run sample", "تشغيل عيّنة")}
           </button>
           <button className={btnAccent} disabled={busy || saving} onClick={() => void save(designerRef.current?.report)}>
@@ -291,6 +305,21 @@ export default function ReportDesigner(props: ReportDesignerProps) {
           <div className="w-full max-w-md rounded-xl border border-erp-border bg-erp-surface p-4 shadow-erp-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="mb-1 text-[15px] font-semibold text-erp-text">{t("Run sample data", "تشغيل بيانات عيّنة")}</h3>
             <p className="mb-3 text-[12px] text-erp-text-muted">{t("Runs the procedure with these values (first 200 rows) so you can design with real data. Nothing is saved.", "هينفّذ الإجراء بالقيم دي (أول 200 صف) عشان تصمم على بيانات حقيقية. مفيش حاجة بتتحفظ.")}</p>
+            {authMode === "admin" && (
+              <div className="mb-3 grid grid-cols-3 gap-2 rounded-lg border border-erp-border bg-erp-surface-2 p-2">
+                <label className="block text-[12px] text-erp-text">{t("Company", "الشركة")}
+                  <select className={`${inp} w-full`} value={sampleCtx.comp ?? ""} onChange={(e) => { const c = e.target.value === "" ? null : Number(e.target.value); setSampleCtx({ ...sampleCtx, comp: c, branch: lookups?.Branches.find((b) => b.CompCode === c)?.BranchCode ?? null }); }}>
+                    <option value="">—</option>{(lookups?.Companies || []).map((c) => <option key={c.CompCode} value={c.CompCode}>{c.CompCode} - {name(c.NameA, c.NameE)}</option>)}
+                  </select></label>
+                <label className="block text-[12px] text-erp-text">{t("Branch", "الفرع")}
+                  <select className={`${inp} w-full`} value={sampleCtx.branch ?? ""} onChange={(e) => setSampleCtx({ ...sampleCtx, branch: e.target.value === "" ? null : Number(e.target.value) })}>
+                    <option value="">—</option>{(lookups?.Branches || []).filter((b) => b.CompCode === sampleCtx.comp).map((b) => <option key={b.BranchCode} value={b.BranchCode}>{b.BranchCode} - {name(b.BranchDescA, b.BranchDescE)}</option>)}
+                  </select></label>
+                <label className="block text-[12px] text-erp-text">{t("User ID (UserID param)", "رقم المستخدم (UserID)")}
+                  <input className={`${inp} w-full`} dir="ltr" inputMode="numeric" value={sampleCtx.userId} onChange={(e) => setSampleCtx({ ...sampleCtx, userId: e.target.value.replace(/\D/g, "") })} /></label>
+                <p className="col-span-3 text-[11px] text-erp-text-muted">{t("Session parameters (CompCode / BranchCode / UserID) take these values.", "باراميترات الجلسة (CompCode / BranchCode / UserID) هتاخد القيم دي.")}</p>
+              </div>
+            )}
             <div className="max-h-[50vh] space-y-2 overflow-y-auto">
               {def.Params.map((p) => (
                 <label key={p.ParamName} className="block">

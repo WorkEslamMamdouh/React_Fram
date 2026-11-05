@@ -1,0 +1,111 @@
+.company-screen {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4fc, #e8edf8);
+    padding: 50px 20px;
+}
+
+.company-container {
+    max-width: 750px;
+    margin: 0 auto;
+}
+
+.company-card {
+    background: white;
+    border-radius: 55px;
+    padding: 55px 50px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 700;
+    color: #1a2a4f;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 40px;
+    font-size: 16px;
+    font-family: 'Cairo', sans-serif;
+    background: white;
+}
+
+.btn-group {
+    display: flex;
+    gap: 18px;
+    margin-top: 35px;
+}
+
+.btn-confirm {
+    flex: 1;
+    padding: 16px;
+    background: linear-gradient(135deg, #2d3e6e, #4a6fa5);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-back-login {
+    flex: 1;
+    padding: 16px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .hero-text h1 {
+        font-size: 42px;
+    }
+
+    .section-title {
+        font-size: 36px;
+    }
+
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-container {
+        padding: 15px 20px;
+    }
+
+    .company-card {
+        padding: 35px 25px;
+    }
+
+    .lang-btn-wrapper {
+        top: 15px;
+        right: 15px;
+    }
+
+    .lang-globe {
+        width: 42px;
+        height: 42px;
+    }
+
+    .login-btn-nav {
+        padding: 10px 25px;
+        font-size: 14px;
+    }
+}

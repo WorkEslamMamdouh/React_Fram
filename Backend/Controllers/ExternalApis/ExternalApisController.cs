@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -24,7 +24,7 @@ namespace ERP.Controllers.ExternalApis
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AllowAnonymous]   // auth is checked per action: JWT (Guard / Use) or X-Admin-Token (admin portal)
     public class ExternalApisController : ControllerBase
     {
         private const string ModuleCode = "Sys_ExternalApisAdmin";
@@ -95,10 +95,15 @@ namespace ERP.Controllers.ExternalApis
             return level;
         }
 
+        /// Admin portal caller: valid X-Admin-Token (in-memory store of AdminAuthController) = super admin.
+        private bool IsAdminToken() => AdminTokenStore.IsValid(Request.Headers["X-Admin-Token"].ToString());
+
         private async Task<IActionResult> Guard(int need)
         {
             try
             {
+                if (IsAdminToken()) return null;
+                if (CurrentUserId() <= 0) return Fail("Login required / سجّل الدخول أولاً", HttpStatusCode.Unauthorized);
                 if (await AccessLevel(CurrentUserId()) >= need) return null;
                 return Fail("You do not have permission for this operation / ليس لديك صلاحية لهذه العملية", HttpStatusCode.Forbidden);
             }
@@ -131,7 +136,7 @@ namespace ERP.Controllers.ExternalApis
         public async Task<IActionResult> List()
         {
             var denied = await Guard(1); if (denied != null) return denied;
-            var level = await AccessLevel(CurrentUserId());
+            var level = IsAdminToken() ? 2 : await AccessLevel(CurrentUserId());
             var set = await ExternalApiService.LoadSettings();
             var apis = ExternalApiCatalog.All.Select(a =>
             {

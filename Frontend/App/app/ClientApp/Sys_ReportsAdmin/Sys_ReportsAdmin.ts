@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  Sys_ReportsAdmin.ts  -  لوجيك شاشة "إدارة التقارير" (Phase 7)
@@ -12,7 +12,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSys } from "../Shared/SystemUsing";
 import { Sys } from "../Shared/SystemTools";
-import { ReportsApi } from "../Shared/Reports/ReportApi";
+import { createReportsApi } from "../Shared/Reports/ReportApi";
+import type { AuthMode } from "../Shared/AdminHttp";
 import { openReport } from "../Shared/Reports/openReport";
 import { LayoutMeta, ReportDef, ReportKind, ReportLookups, ReportParamDef, ReportScope } from "../Shared/Reports/ReportTypes";
 
@@ -25,7 +26,9 @@ const err = (e: any) => { const m = e?.message || String(e); Sys.ShowMessage(m, 
 export interface DesignerTarget { code: string; layoutId?: number; scope: ReportScope; comp: number | null; branch: number | null }
 export interface DupTarget { layoutId: number; scope: ReportScope; comp: number | null; branch: number | null }
 
-export function Sys_ReportsAdmin() {
+/** mode: "jwt" = داخل الـ ERP | "admin" = منطقة الأدمن (توكن الأدمن) */
+export function Sys_ReportsAdmin(authMode: AuthMode = "jwt") {
+  const ReportsApi = useMemo(() => createReportsApi(authMode), [authMode]);
   const didRun = useRef(false);
   const IsLangEN = useSys((s) => s.IsLangEN);
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);
@@ -161,7 +164,7 @@ export function Sys_ReportsAdmin() {
   };
 
   return {
-    IsLangEN, t, reports: filtered, total: reports.length, mode, loading, search, setSearch, Load, lookups, procs,
+    IsLangEN, t, authMode, reports: filtered, total: reports.length, mode, loading, search, setSearch, Load, lookups, procs,
     editor, OpenNew, OpenEdit, CloseEditor, SetDef, SetParam, AddParam, RemoveParam, LoadParams, SaveDef, DeleteDef, TestPrint,
     layoutsFor, layouts, OpenLayouts, CloseLayouts, DesignLayout, ReloadLayouts, designer, CloseDesigner,
     dup, setDup, OpenDup, CloseDup, DoDup, SetDefault, DeleteLayout, compName, branchName,

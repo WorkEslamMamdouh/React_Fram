@@ -12,6 +12,8 @@ import { createRoot } from "react-dom/client";
 import ReportViewer from "./ReportViewer";
 import { OpenReportOptions } from "./ReportTypes";
 
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") { (window as any).__openReport = (o: OpenReportOptions) => openReport(o); }   // dev-only QA hook
+
 export function openReport(opts: OpenReportOptions) {
   if (typeof document === "undefined") return;
   const host = document.createElement("div");

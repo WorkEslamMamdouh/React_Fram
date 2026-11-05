@@ -10,7 +10,7 @@ import { checkConfig, importFromTs } from "../../utils/validateConfig";
 import { parseSettingsFromTs, convertV3toV4 } from "../../utils/configConverter";
 import { normalizeConfig, ScreenConfigV5 } from "../../types/ScreenConfig";
 import { syncPrintReport } from "../../../Shared/Reports/printSync";
-import { SqlConnection, scanScreens, listConfigs, readScreen, saveFiles, saveConfigJson, registerModule, ScannedScreen } from "../../utils/sqlApi";
+import { SqlConnection, scanScreens, listConfigs, readScreen, saveFiles, saveConfigJson, registerModule, distinctValues, ScannedScreen } from "../../utils/sqlApi";
 
 const btn = "h-9 px-4 rounded-lg text-[13px] font-medium transition";
 
@@ -135,9 +135,17 @@ export function SaveRegisterModal({ connection, connected, projectPath, dbScript
       if (r2.success) push(true, t("Screen config saved in Sys_ScreenConfig", "إعدادات الشاشة اتحفظت في Sys_ScreenConfig"));
       else push(null, r2.missingTable ? t("Sys_ScreenConfig table not found (run Database/Phase5_ScreenBuilder.sql) - config is still inside the screen file marker.", "جدول Sys_ScreenConfig مش موجود (شغّل Database/Phase5_ScreenBuilder.sql) - الإعدادات لسه موجودة جوه ماركر ملف الشاشة.") : t("Config JSON not saved: ", "الإعدادات ما اتحفظتش: ") + r2.error);
       if (doRegister) {
-        const r3 = await registerModule(connection, { module: name, descA: config.titleAr || name, descE: config.titleEn || name, menu: config.permissions.parentMenu, type: "S", sort: config.menuSort, icon: config.icon, color: config.iconColor }).catch((e) => ({ success: false, error: String(e), sort: 0, messages: [] as string[] }));
+        const r3 = await registerModule(connection, { module: name, descA: config.titleAr || name, descE: config.titleEn || name, menu: config.permissions.parentMenu, type: "S", sort: config.menuSort, icon: /^\s*(fa[-\s]|fa$)/i.test(config.icon || "") ? "" : config.icon, color: config.iconColor }).catch((e) => ({ success: false, error: String(e), sort: 0, messages: [] as string[] }));
         if (r3.success) push(true, t(`Registered in the menu (sort ${r3.sort}) with admin permissions. Log out and log in again to see it.`, `اتسجلت في القايمة (ترتيب ${r3.sort}) وصلاحيات الأدمن كاملة. اخرج وادخل تاني عشان تظهر.`));
         else push(false, t("Menu registration failed: ", "تسجيل القايمة فشل: ") + (r3 as any).error);
+        // تحذير: لو مجموعة القايمة الأب مش موجودة كمجموعة (MODULE_TYPE = M) الشاشة بتتشال من القايمة (يتيمة)
+        const pm = (config.permissions.parentMenu || "").trim();
+        if (r3.success && pm) {
+          const q = (s: string) => s.replace(/'/g, "''");
+          const g = await distinctValues(connection, "Sys_Modules", "MODULE_CODE", `MODULE_CODE = '${q(pm)}' AND MODULE_TYPE = 'M'`, 1).catch(() => null);
+          if (g && g.success && (g.values || []).length === 0)
+            push(null, t(`Warning: menu group "${pm}" does not exist, so the screen will NOT show in the menu. Use an existing group code or leave the parent empty.`, `تنبيه: مجموعة القايمة "${pm}" مش موجودة، فالشاشة مش هتظهر في القايمة. استخدم كود مجموعة موجودة أو سيب الأب فاضي.`));
+        }
       }
       // Phase 7: سجّل تقارير الطباعة المفعّلة (الإجراء + ربط الباراميترات) في إدارة التقارير — لو فشل مش بيوقف الحفظ
       for (const [k, kind] of [["listPrint", "list"], ["transactionPrint", "transaction"]] as const) {

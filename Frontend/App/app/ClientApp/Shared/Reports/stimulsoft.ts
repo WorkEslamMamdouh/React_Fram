@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  stimulsoft.ts  -  تحميل Stimulsoft Reports.JS (كبير جدًا) عند الحاجة فقط + خط عربي + الترخيص
@@ -9,7 +9,8 @@
 //  الأنواع any عن قصد (الـ d.ts بتاع المكتبة 3MB).
 // =====================================================================================
 
-import { ReportsApi } from "./ReportApi";
+import { createReportsApi } from "./ReportApi";
+import type { AuthMode } from "../AdminHttp";
 import {
   Margins, OrientationKey, PAPER_PRESETS, PaperSizeKey,
 } from "./ReportTypes";
@@ -20,10 +21,30 @@ const FONT_URL = "/fonts/Cairo/Cairo.ttf";
 let loading: Promise<any> | null = null;
 let designerLoaded = false;
 
-async function applyLicenseAndFont(S: any) {
+// المكتبة بتتحمّل كملفات جاهزة من public/stimulsoft (بـ <script>) بدل import():
+// كده سيرفر التطوير (Turbopack) مابيعيدش بناء ~24MB مع كل تعديل وماياكلش الرام.
+// الملفات بتتنسخ من node_modules بالسكربت scripts/copy-stimulsoft.js (postinstall).
+const STI_BASE = "/stimulsoft/";
+const STI_VERSION = "2026.4.2";
+const scriptPromises: Record<string, Promise<void>> = {};
+function loadScript(file: string): Promise<void> {
+  if (!scriptPromises[file]) {
+    scriptPromises[file] = new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = `${STI_BASE}${file}?v=${STI_VERSION}`;
+      s.async = false;
+      s.onload = () => resolve();
+      s.onerror = () => { delete scriptPromises[file]; reject(new Error(`Stimulsoft script failed to load: ${file}`)); };
+      document.head.appendChild(s);
+    });
+  }
+  return scriptPromises[file];
+}
+
+async function applyLicenseAndFont(S: any, mode: AuthMode) {
   let key = process.env.NEXT_PUBLIC_STIMULSOFT_KEY || "";
   if (!key) {
-    try { key = (await ReportsApi.config()).LicenseKey || ""; } catch { /* trial */ }
+    try { key = (await createReportsApi(mode).config()).LicenseKey || ""; } catch { /* trial */ }
   }
   if (key) {
     try { S.Base.StiLicense.key = key; } catch (e) { console.warn("Stimulsoft license key rejected", e); }
@@ -39,23 +60,27 @@ async function applyLicenseAndFont(S: any) {
 }
 
 /** يرجّع كائن Stimulsoft (الـ Viewer فقط أو معاه الـ Designer). */
-export async function loadStimulsoft(withDesigner = false): Promise<any> {
+export async function loadStimulsoft(withDesigner = false, mode: AuthMode = "jwt"): Promise<any> {
   if (typeof window === "undefined") throw new Error("Stimulsoft runs in the browser only");
   if (!loading) {
     loading = (async () => {
-      const mod: any = await import("stimulsoft-reports-js/Scripts/stimulsoft.viewer");
-      const S = mod.Stimulsoft ?? mod.default?.Stimulsoft ?? (window as any).Stimulsoft;
+      await loadScript("stimulsoft.reports.pack.js");
+      await loadScript("stimulsoft.dashboards.pack.js");
+      await loadScript("stimulsoft.viewer.pack.js");
+      const S = (window as any).Stimulsoft;
       if (!S) throw new Error("Stimulsoft failed to load");
-      await applyLicenseAndFont(S);
+      await applyLicenseAndFont(S, mode);
       try { S.System.Data.DataSet.tryParseDateTime = true; } catch { /* ignore */ }
+      if (process.env.NODE_ENV !== "production") { try { (window as any).__Sti = S; } catch { /* dev-only QA hook */ } }
       return S;
     })().catch((e) => { loading = null; throw e; });
   }
   const S = await loading;
   if (withDesigner && !designerLoaded) {
-    const mod: any = await import("stimulsoft-reports-js/Scripts/stimulsoft.designer");
-    const D = mod.Stimulsoft ?? mod.default?.Stimulsoft ?? S;
+    await loadScript("stimulsoft.designer.pack.js");
+    const D = (window as any).Stimulsoft ?? S;
     designerLoaded = true;
+    if (process.env.NODE_ENV !== "production") { try { (window as any).__Sti = D; } catch { /* dev-only QA hook */ } }
     return D;
   }
   return S;

@@ -1,0 +1,68 @@
+ body {
+    display: block;
+    margin: 0px;
+}
+
+ 
+      .input-group {
+            margin-bottom: 28px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #1a2a4f;
+        }
+
+ .input-group input {
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 30px;
+
+  box-sizing: border-box; /* 🔥 مهم جدًا */
+}
+
+
+
+
+ 
+
+
+/* زر تبديل اللغة - دائري مع كرة أرضية */
+.lang-btn-wrapper {
+    position: fixed;
+    top: 25px;
+    left: 25px;
+    z-index: 1000;
+}
+
+.lang-globe {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(45, 62, 110, 0.1);
+}
+
+.lang-globe i {
+    font-size: 24px;
+    color: #2d3e6e;
+    transition: all 0.3s;
+}
+
+.lang-globe:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 35px rgba(45, 62, 110, 0.25);
+}
+
+.lang-globe:hover i {
+    transform: rotate(360deg);
+}

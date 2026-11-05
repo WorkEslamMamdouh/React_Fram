@@ -190,7 +190,27 @@ export const useTranslate = () => {
     // ===== demoCash =====
     demoCash_title: "Demo Cash",
     demoCash_subtitle: "",
-    demoCash_refresh: "Refresh"
+    demoCash_refresh: "Refresh",
+    // ===== tstExpense =====
+    tstExpense_title: "Test Expenses",
+    tstExpense_subtitle: "",
+    tstExpense_refresh: "Refresh",
+    // ===== tstOrder =====
+    tstOrder_title: "Test Orders",
+    tstOrder_subtitle: "",
+    tstOrder_refresh: "Refresh",
+    // ===== tstCustomer =====
+    tstCustomer_title: "Test Customers",
+    tstCustomer_subtitle: "",
+    tstCustomer_refresh: "Refresh",
+    // ===== tstCategory =====
+    tstCategory_title: "Test Categories",
+    tstCategory_subtitle: "",
+    tstCategory_refresh: "Refresh",
+    // ===== tstOpeningStock =====
+    tstOpeningStock_title: "Test Opening Stock",
+    tstOpeningStock_subtitle: "",
+    tstOpeningStock_refresh: "Refresh"
   },
   ar: {
     login: "تسجيل الدخول",
@@ -372,6 +392,26 @@ export const useTranslate = () => {
     // ===== demoCash =====
     demoCash_title: "كاش تجريبي 2",
     demoCash_subtitle: "",
-    demoCash_refresh: "تحديث"
+    demoCash_refresh: "تحديث",
+    // ===== tstExpense =====
+    tstExpense_title: "مصروفات اختبار",
+    tstExpense_subtitle: "",
+    tstExpense_refresh: "تحديث",
+    // ===== tstOrder =====
+    tstOrder_title: "طلبات اختبار",
+    tstOrder_subtitle: "",
+    tstOrder_refresh: "تحديث",
+    // ===== tstCustomer =====
+    tstCustomer_title: "عملاء اختبار",
+    tstCustomer_subtitle: "",
+    tstCustomer_refresh: "تحديث",
+    // ===== tstCategory =====
+    tstCategory_title: "شجرة تصنيفات",
+    tstCategory_subtitle: "",
+    tstCategory_refresh: "تحديث",
+    // ===== tstOpeningStock =====
+    tstOpeningStock_title: "رصيد أول المدة اختبار",
+    tstOpeningStock_subtitle: "",
+    tstOpeningStock_refresh: "تحديث"
   }
 };

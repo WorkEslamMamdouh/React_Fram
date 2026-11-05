@@ -54,6 +54,8 @@ export interface MasterDetailConfig {
   pageSize?: number;
   filterFields?: FilterFieldConfig[];
   defaultFilters?: ActiveFilter[];
+  /** بيتنادى لما فلاتر القايمة تتغير (عشان طباعة القائمة تبعت القيم الحالية للتقرير) */
+  onFilterChange?: (filters: ActiveFilter[]) => void;
 
   // ===== الحفظ =====
   compCode: number;
@@ -83,7 +85,10 @@ export interface MasterDetailConfig {
   // ===== Phase 6 (اختياري): تحميل نموذج Excel واستيراد معاملات/سطور. مش متحدد = مفيش تغيير. بيحتاج صلاحية الإضافة. =====
   excel?: import("../Excel/ExcelTypes").ExcelMasterDetailConfig;
 
+  // ===== اختياري: أزرار إضافية في قايمة الإجراءات (كل صف) — بتتولد من ScreenBuilder (أزرار scope = row) =====
+  rowActions?: { key: string; label: string; icon?: any; onClick: (row: any, id: any) => void; isVisible?: boolean; className?: string }[];
+
   // نصوص الشاشة
-  newTitle?: string;             // "فاتورة جديدة"
+  newTitle?: string;            // "فاتورة جديدة"
   editTitle?: string;            // "تعديل فاتورة رقم"
 }

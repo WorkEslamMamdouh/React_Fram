@@ -1,4 +1,6 @@
-﻿const API_BASE = "http://localhost:49475/api/screenbuilder";
+﻿import { adminSessionExpired } from "../../Shared/AdminHttp";
+import { API_BASE_URL } from "../../../../CallAPI/api";
+const API_BASE = `${API_BASE_URL}screenbuilder`;
 
 export interface SqlConnection {
   server: string;
@@ -36,7 +38,7 @@ async function post<T>(endpoint: string, body: any): Promise<T> {
     headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken() },
     body: JSON.stringify(body ?? {}),
   });
-  if (res.status === 401) throw new Error("Admin login expired - open AdminLogin and log in again / سجّل دخول الأدمن من جديد");
+  if (res.status === 401) adminSessionExpired();     // التوكن في ذاكرة السيرفر: بعد إعادة التشغيل لازم دخول جديد
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }

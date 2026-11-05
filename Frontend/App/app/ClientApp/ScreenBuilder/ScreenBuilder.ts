@@ -180,7 +180,13 @@ export function ScreenBuilder() {
       const res = resources[col.name];
       if (res) { f.titleAr = res.ar; f.titleEn = res.en; }
       else if (known) { f.titleAr = known.ar; f.titleEn = known.en; }
-      else { f.titleAr = col.name; f.titleEn = col.name; }
+      else {
+        // اسم مقروء: CategoryID → Category ، CustomerNameA → Customer Name A (لو العمود الأساس ليه عنوان معروف بنستخدمه)
+        const human = col.name.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+ID$/i, "").trim() || col.name;
+        const baseKnown = getKnownTitle(col.name.replace(/ID$/, "")) || getKnownTitle(col.name.replace(/(Code|Name[AE]?)$/, ""));
+        f.titleAr = baseKnown ? baseKnown.ar : human;
+        f.titleEn = baseKnown ? baseKnown.en : human;
+      }
 
       // Auto values
       const auto = detectAutoValue(col.name);
@@ -200,6 +206,7 @@ export function ScreenBuilder() {
       if (col.isComputed || col.notInDb) {
         f.inForm = false;
         f.noSave = true;
+        f.inFilter = false;   // أعمدة الفيو/المحسوبة مش بتتحط في الفلتر تلقائيًا (ممكن تتفعل يدويًا)
       }
 
       f.order = fields.length + 1;

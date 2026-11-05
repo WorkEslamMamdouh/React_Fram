@@ -1180,6 +1180,32 @@ namespace GateWay.App
             return await ProcessStoredProcedure(item);
         }
 
+        // قيم الباراميترات بتوصل كـ JsonElement (System.Text.Json) والـ SqlParameter مابيفهمهاش: نحوّلها لنوع .NET عادي
+        private static object ProcParamValue(object? v)
+        {
+            if (v == null) return DBNull.Value;
+            if (v is System.Text.Json.JsonElement je)
+            {
+                switch (je.ValueKind)
+                {
+                    case System.Text.Json.JsonValueKind.Null:
+                    case System.Text.Json.JsonValueKind.Undefined:
+                        return DBNull.Value;
+                    case System.Text.Json.JsonValueKind.True: return true;
+                    case System.Text.Json.JsonValueKind.False: return false;
+                    case System.Text.Json.JsonValueKind.Number:
+                        if (je.TryGetInt32(out var i32)) return i32;
+                        if (je.TryGetInt64(out var i64)) return i64;
+                        return je.GetDecimal();
+                    case System.Text.Json.JsonValueKind.String:
+                        return je.GetString() ?? (object)DBNull.Value;
+                    default:
+                        return je.GetRawText();
+                }
+            }
+            return v;
+        }
+
         private async Task<List<Dictionary<string, object>>> ProcessStoredProcedure(TableModel item)
         {
             var results = new List<Dictionary<string, object>>();
@@ -1200,7 +1226,7 @@ namespace GateWay.App
                 {
                     foreach (var param in item.parameters)
                     {
-                        cmd.Parameters.AddWithValue($"@{param.Key}", param.Value ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue($"@{param.Key}", ProcParamValue(param.Value));
                     }
                 }
 

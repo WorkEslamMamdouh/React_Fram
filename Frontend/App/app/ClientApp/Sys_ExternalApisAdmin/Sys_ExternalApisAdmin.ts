@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSys } from "../Shared/SystemUsing";
 import { Sys } from "../Shared/SystemTools";
 import { BaseResponse } from "../Shared/Entities";
+import { adminFetch, AuthMode } from "../Shared/AdminHttp";
 
 export interface ApiOpInfo { name: string; descE: string; descA: string; params: { name: string; type: string; required: boolean }[] }
 export interface ApiCard {
@@ -30,7 +31,8 @@ export const CATEGORIES: { code: string; en: string; ar: string; icon: string }[
   { code: "geo", en: "Location & weather", ar: "المواقع والطقس", icon: "fa-location-dot" },
 ];
 
-async function call<T = any>(action: string, data?: any): Promise<T> {
+async function callBase<T = any>(action: string, data?: any, mode: AuthMode = "jwt"): Promise<T> {
+  if (mode === "admin") return adminFetch<T>("ExternalApis", action, data);
   let res: BaseResponse<any>;
   try {
     res = await Sys.CallApi<BaseResponse<any>>({ method: "POST", controller: "ExternalApis", action, data: data ?? {} });
@@ -41,7 +43,8 @@ async function call<T = any>(action: string, data?: any): Promise<T> {
   return (res as any).Response as T;
 }
 
-export function Sys_ExternalApisAdmin() {
+export function Sys_ExternalApisAdmin(mode: AuthMode = "jwt") {
+  const call = <T = any>(action: string, data?: any) => callBase<T>(action, data, mode);
   const didRun = useRef(false);
   const IsLangEN = useSys((s) => s.IsLangEN);
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);

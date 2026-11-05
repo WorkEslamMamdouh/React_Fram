@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE = "http://localhost:49475/api/admin";
+import { API_BASE_URL } from "../../../CallAPI/api";
+
+const API_BASE = `${API_BASE_URL}admin`;
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -12,6 +14,14 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showPass, setShowPass] = useState(false);
+
+  // رسالة "انتهت جلسة الأدمن" (بتتحط من AdminHttp لما السيرفر يرفض التوكن)
+  useEffect(() => {
+    try {
+      const m = sessionStorage.getItem("admin_login_msg");
+      if (m) { setErr(m); sessionStorage.removeItem("admin_login_msg"); }
+    } catch { /* ignore */ }
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +43,7 @@ export default function AdminLoginPage() {
 
       if (body?.IsSuccess && body?.Response?.Token) {
         localStorage.setItem("admin_token", body.Response.Token);
-        router.push("/ClientApp/ScreenBuilder");
+        router.push("/ClientApp/Admin");
       } else {
         setErr(body?.ErrorMessage || "فشل تسجيل الدخول");
       }

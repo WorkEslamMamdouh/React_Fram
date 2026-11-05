@@ -147,7 +147,9 @@ namespace GateWay.Filters
             {
                 // 1. تجربة XOR Fast
                 var xorDecrypted = CryptoHelper.DecryptFast(encryptedValue);
-                if (xorDecrypted != encryptedValue && !IsEncrypted(xorDecrypted))
+                // قبول النتيجة لو نص سليم (من غير رموز تحكم/استبدال). الفحص القديم !IsEncrypted كان بيرفض
+                // أي نص مفكوك يتصادف إنه Base64 (زي Code و ParentID) فيوصل للـ SQL مشفّر.
+                if (xorDecrypted != encryptedValue && !HasGarbageChars(xorDecrypted))
                     return xorDecrypted;
                  
 
@@ -162,6 +164,14 @@ namespace GateWay.Filters
         /// <summary>
         /// التحقق إذا كانت القيمة مشفرة
         /// </summary>
+        private static bool HasGarbageChars(string s)
+        {
+            foreach (var ch in s)
+                if (ch == '�' || (ch < ' ' && ch != '\t' && ch != '\r' && ch != '\n'))
+                    return true;
+            return false;
+        }
+
         private bool IsEncrypted(string value)
         {
             if (string.IsNullOrEmpty(value)) return false;

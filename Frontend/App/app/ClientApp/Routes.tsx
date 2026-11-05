@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { usePathname } from "next/navigation";
 import LoginLayout from "./Layouts/LoginLayout";
@@ -58,6 +58,11 @@ useEffect(() => {
     // **************AdminLayout
     Admin: AdminLayout,
     ScreenBuilder: AdminLayout,
+    AdminReports: AdminLayout,
+    AdminUsers: AdminLayout,
+    AdminRoles: AdminLayout,
+    AdminUserPerms: AdminLayout,
+    AdminExternalApis: AdminLayout,
     Home: HomeLayout,
     SalesApproval: HomeLayout,
     Cost_Center: HomeLayout,

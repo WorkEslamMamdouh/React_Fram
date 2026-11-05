@@ -1,0 +1,39 @@
+[
+  {
+    "ReportCode": "T_TrialBalance",
+    "NameA": "ميزان المراجعة (اختبار)",
+    "NameE": "Trial Balance (test)",
+    "Kind": "list",
+    "MODULE_CODE": null,
+    "ProcName": "IProc_Z_A_TrialBalance",
+    "IsActive": true,
+    "CreatedAt": "2026-11-05T04:29:12.9160831+02:00",
+    "UpdatedAt": "2026-11-05T04:29:12.9160831+02:00",
+    "Params": [
+      {
+        "ParamName": "comp",
+        "Source": "session",
+        "SourceValue": "CompCode",
+        "SortOrder": 1
+      },
+      {
+        "ParamName": "FromDate",
+        "Source": "const",
+        "SourceValue": "2026-01-01",
+        "SortOrder": 2
+      },
+      {
+        "ParamName": "ToDate",
+        "Source": "const",
+        "SourceValue": "2026-12-31",
+        "SortOrder": 3
+      },
+      {
+        "ParamName": "Level",
+        "Source": "const",
+        "SourceValue": "1",
+        "SortOrder": 4
+      }
+    ]
+  }
+]

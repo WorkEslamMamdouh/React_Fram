@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -66,6 +66,8 @@ namespace ERP.Controllers
             public int BranchCode { get; set; }
             public Dictionary<string, JsonElement> Params { get; set; } = new Dictionary<string, JsonElement>();
             public bool Sample { get; set; }
+            /// <summary>Admin-token callers only (no ERP session): the user id used for session-sourced UserID params. Ignored for normal users.</summary>
+            public int UserId { get; set; }
         }
 
         // ------------------------------------------------------------------ helpers
@@ -172,7 +174,15 @@ namespace ERP.Controllers
         /// PRINT permission of a screen for (user, company, branch): user rows first, else roles; highest Prc_Preference wins (same as the front end).
         private static async Task<bool> HasPrint(SqlConnection c, int userId, string module, int comp, int branch)
         {
-            if (string.IsNullOrWhiteSpace(module)) return userId > 0;
+            if (string.IsNullOrWhiteSpace(module))
+            {
+                // report without a screen: any logged-in user, but only for a company/branch the user really belongs to
+                // (CompCode/BranchCode come from the request body, so they must be checked)
+                if (userId <= 0) return false;
+                var mem = await Rows(c, "SELECT TOP 1 1 AS X FROM Sys_RoleUsers WHERE UserID=@u AND CompCode=@c AND BranchCode=@b AND ISActive=1",
+                    P("@u", userId), P("@c", comp), P("@b", branch));
+                return mem.Count > 0;
+            }
             var rows = await Rows(c, @"SELECT TOP 1 [PRINT] FROM IQ_Sys_RoleModule
                 WHERE MODULE_CODE=@m AND CompCode=@c AND UserID=@u AND User_CompCode=@c AND User_BranchCode=@b ORDER BY Prc_Preference DESC",
                 P("@m", module), P("@c", comp), P("@u", userId), P("@b", branch));
@@ -297,6 +307,16 @@ namespace ERP.Controllers
             l.PaperSize = l.PaperSize ?? "A4";
             l.Orientation = l.Orientation == "landscape" ? "landscape" : "portrait";
             if (l.LayoutMrt != null && l.LayoutMrt.Length > 12 * 1024 * 1024) return "Layout is too large (max 12MB) / التصميم كبير جدًا";
+            if (!string.IsNullOrWhiteSpace(l.LayoutMrt))
+            {
+                // a corrupt/foreign file would break printing for every company that falls back to it
+                try
+                {
+                    var jo = Newtonsoft.Json.Linq.JObject.Parse(l.LayoutMrt);
+                    if (jo["Pages"] == null) return "Layout is not a valid Stimulsoft report (no Pages) / ملف التصميم غير صالح";
+                }
+                catch { return "Layout is not valid JSON / ملف التصميم غير صالح"; }
+            }
             if (!string.IsNullOrWhiteSpace(l.MarginsJson))
             {
                 try { JsonConvert.DeserializeObject<Dictionary<string, double>>(l.MarginsJson); } catch { return "MarginsJson is not valid"; }
@@ -583,7 +603,7 @@ namespace ERP.Controllers
                         if (m.Source == "const") { raw = m.SourceValue; provided = true; }
                         else if (m.Source == "session" && m.SourceValue == "CompCode") { raw = req.CompCode.ToString(); provided = true; }
                         else if (m.Source == "session" && m.SourceValue == "BranchCode") { raw = req.BranchCode.ToString(); provided = true; }
-                        else if (m.Source == "session" && m.SourceValue == "UserID") { raw = ctx.UserId.ToString(); provided = true; }
+                        else if (m.Source == "session" && m.SourceValue == "UserID") { raw = (ctx.AdminToken && req.UserId > 0 ? req.UserId : ctx.UserId).ToString(); provided = true; }
                         else if (m.Source == "session" && m.SourceValue == "Today") { raw = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture); provided = true; }
                         else if (req.Params.TryGetValue(p.Name, out var je)) { raw = JsonToString(je); provided = true; }
                         else if (req.Params.Keys.FirstOrDefault(k => string.Equals(k, p.Name, StringComparison.OrdinalIgnoreCase)) is string k2) { raw = JsonToString(req.Params[k2]); provided = true; }

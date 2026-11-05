@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  Sys_RolesAdmin.ts  -  لوجيك شاشة "الأدوار والصلاحيات"
@@ -12,8 +12,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSys } from "../Shared/SystemUsing";
 import { Sys } from "../Shared/SystemTools";
-import { usePermissions } from "../Shared/Permissions";
-import { adminCall, showError, ALL_PERM_KEYS, emptyPerms, MatrixModule, PermKey, PermMap, RoleRow } from "../Sys_UsersAdmin/AdminApi";
+import { useScreenPerm } from "../Sys_UsersAdmin/useScreenPerm";
+import { adminCall as adminCallBase, AuthMode, showError, ALL_PERM_KEYS, emptyPerms, MatrixModule, PermKey, PermMap, RoleRow } from "../Sys_UsersAdmin/AdminApi";
 
 const MODULE_CODE = "Sys_RolesAdmin";
 
@@ -26,13 +26,14 @@ export interface RoleForm {
   IsAdmin: boolean;
 }
 
-export function Sys_RolesAdmin() {
+export function Sys_RolesAdmin(mode: AuthMode = "jwt") {
+  const adminCall = <T = any>(action: string, data?: any) => adminCallBase<T>(action, data, mode);
   const didRun = useRef(false);
 
   const IsLangEN = useSys((s) => s.IsLangEN);
   const IsDark = useSys((s) => s.IsDark);
   const Session = useSys((s) => s.Session);
-  const perm = usePermissions(MODULE_CODE);
+  const perm = useScreenPerm(MODULE_CODE, mode);
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);
 
   // ---------- State ----------
@@ -202,7 +203,7 @@ export function Sys_RolesAdmin() {
     try {
       const res = await adminCall<{ roleId: number }>("SaveRole", {
         roleId: f.RoleId, descA: f.DescA, descE: f.DescE, remarks: f.Remarks, isAvailable: f.IsAvailable,
-        compCode: Session?.CurrentEnvironment?.CompCode || 1, isAdmin: hasIsAdmin ? f.IsAdmin : null,
+        compCode: (mode === "admin" ? 0 : Session?.CurrentEnvironment?.CompCode) || 1, isAdmin: hasIsAdmin ? f.IsAdmin : null,
       });
       CloseRoleModal();
       Sys.ShowMessage("Role saved", "اتحفظ الدور", "success");

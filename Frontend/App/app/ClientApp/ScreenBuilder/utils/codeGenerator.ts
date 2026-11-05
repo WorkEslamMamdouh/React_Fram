@@ -161,10 +161,12 @@ function buildExtras(cfg: ScreenConfigV5): Extras {
   // ---------- الفلاتر ----------
   const fcs: FilterControlV5[] = isTree ? [] : (cfg.filterArea || []);
   const sourced = fcs.map((fc, i) => ({ fc, i })).filter((x) => x.fc.source && x.fc.source.table && x.fc.source.valueField && x.fc.source.displayField);
-  const needFV = isGrid && fcs.length > 0;
+  // الماستر ديتيل كمان محتاج قيم الفلاتر (طباعة القائمة بتبعتها للتقرير) — بتتبعت من القايمة عبر config.onFilterChange
+  const needFV = (isGrid || cfg.screenType === "MasterDetail") && fcs.length > 0;
   if (!isTree) imports.push(`import { FilterFieldConfig, FilterOption, ActiveFilter } from "../Shared/Components/Import/AdvancedFilter";`);
   if (needFV) {
     react.add("useCallback");
+    react.add("useState");
     lines.push(`  // قيم الفلاتر الحالية (بتتحدّث لما اليوزر يغيّر الفلتر) — بتستخدم في الدروب داون المتسلسل والأزرار
   const [filterVals, setFilterVals] = useState<Record<string, any>>({});
   void filterVals;
@@ -253,11 +255,15 @@ function buildExtras(cfg: ScreenConfigV5): Extras {
     void row;${a.confirm ? `
     if (!(await Sys.Confirm(${q("Run: " + (a.labelEn || a.labelAr) + "?")}, ${q("تنفيذ: " + (a.labelAr || a.labelEn) + "؟")}))) return;` : ""}
     const res = await RunProc(${q(a.proc)}, { ${params} });
-    if (!res.ok) { Sys.ShowMessage(res.error || "Failed", res.error || "فشل التنفيذ", "error"); return; }${a.after === "message" ? `
+    if (!res.ok) { Sys.ShowMessage(res.error || "Failed", res.error || "فشل التنفيذ", "error"); return; }
+    // الإجراء المخزن بيرجّع صف فيه Ok (1 نجاح / 0 فشل) و MsgA / MsgE: لازم نعرض الفشل ومانكملش كأنه نجح
+    const r0: any = res.rows && res.rows[0];
+    if (r0 && (r0.Ok === 0 || r0.Ok === false || r0.ok === 0)) { Sys.ShowMessage(r0.MsgE || r0.MsgA || "Failed", r0.MsgA || r0.MsgE || "فشل التنفيذ", "error"); RefreshGrid(); return; }
+${a.after !== "message" ? `    if (r0 && (r0.MsgE || r0.MsgA)) Sys.ShowMessage(r0.MsgE || r0.MsgA, r0.MsgA || r0.MsgE, "success");` : ""}${a.after === "message" ? `
     Sys.ShowMessage(${q(a.messageEn || "Done")}, ${q(a.messageAr || "تم")}, "success");` : ""}${a.after === "refresh" ? `
     RefreshGrid();` : ""}
   }`);
-    if (a.scope === "row" && isGrid) rowActs.push(`{ key: ${q("act_" + i)}, label: t(${q(a.labelEn || a.proc)}, ${q(a.labelAr || a.labelEn || a.proc)}), onClick: (row: any) => { void RunAction_${i}(row); } },`);
+    if (a.scope === "row" && (isGrid || cfg.screenType === "MasterDetail")) rowActs.push(`{ key: ${q("act_" + i)}, label: t(${q(a.labelEn || a.proc)}, ${q(a.labelAr || a.labelEn || a.proc)}), icon: ${q(a.icon || "⚡")}, onClick: (row: any) => { void RunAction_${i}(row); } },`);
     else toolbar.push(`{ key: ${q("act_" + i)}, label: t(${q(a.labelEn || a.proc)}, ${q(a.labelAr || a.labelEn || a.proc)}), icon: ${q(a.icon || "fa-bolt")}, onClick: () => { void RunAction_${i}(); } },`);
   });
 
@@ -385,7 +391,7 @@ export function usedSearchFns(cfg: ScreenConfigV5): string[] {
   return Array.from(new Set(all.map((f) => f.searchFn).filter(Boolean)));
 }
 
-function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenConfigV5): string {
+function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenConfigV5, isDetail: boolean = false): string {
   const props: [string, string][] = [];
   const set = (k: string, v: string) => {
     const i = props.findIndex((p) => p[0] === k);
@@ -417,7 +423,10 @@ function fieldToColumnCode(f: FieldConfigV4, md: boolean = false, cfg?: ScreenCo
   if (md && f.formula) set("formula", formulaToJs(f.formula));
   if (f.width && f.width !== 150) set("width", String(f.width));
 
-  if (!f.inGrid) set("IsVisibleDisplayInGrid", "false");
+  // جريد التفاصيل هو نفسه فورم الإدخال: العمود القابل للإدخال (inForm) لازم يبان فيه حتى لو inGrid=false،
+  // وإلا الحقل الإجباري يبقى مخفي ومحدش يقدر يدخله والحفظ يفشل.
+  const hiddenInDetailGrid = !f.inGrid && !(isDetail && f.inForm && !f.formula && !f.auto);
+  if (hiddenInDetailGrid) set("IsVisibleDisplayInGrid", "false");
   if (!f.inForm || f.formula) {
     set("editable", "false");
     set("insertable", "false");
@@ -575,7 +584,7 @@ export function generateHookFile(cfg: ScreenConfigV5): string {
   cfg.details.forEach((d, i) => {
     const dn = `Detail${i + 1}Columns`;
     detailNames.push(dn);
-    sections.push(memo(dn, "MasterDetailColumn", d.fields.map((f) => fieldToColumnCode(f, true, cfg)).join("\n"), "IsLangEN, CompCode, BranchCode"));
+    sections.push(memo(dn, "MasterDetailColumn", d.fields.map((f) => fieldToColumnCode(f, true, cfg, true)).join("\n"), "IsLangEN, CompCode, BranchCode"));
   });
 
   if (!isTree) sections.push(memo("FilterFields", "FilterFieldConfig", extras.filterItems, extras.filterDeps));
@@ -630,7 +639,7 @@ ${detailsArr}
       orderBy: ${q(cfg.orderBy || cfg.keyColumn)},
       orderType: ${q(cfg.orderType)},
       pageSize: ${cfg.pageSize},
-      filterFields: FilterFields,${extras.formLayoutCode ? "\n      formLayout: FormLayoutCells," : ""}${cfg.permissions.usePermissions ? "\n      moduleCode: ModuleCode," : ""}${extras.hasTx ? "\n      onPrint: onPrintTransaction," : ""}${extras.hasExcel ? "\n      excel: ExcelCfg," : ""}
+      filterFields: FilterFields,${cfg.filterArea.length > 0 ? "\n      onFilterChange: onFilterChange," : ""}${extras.formLayoutCode ? "\n      formLayout: FormLayoutCells," : ""}${cfg.permissions.usePermissions ? "\n      moduleCode: ModuleCode," : ""}${extras.hasTx ? "\n      onPrint: onPrintTransaction," : ""}${extras.hasExcel ? "\n      excel: ExcelCfg," : ""}${extras.hasRowActions ? "\n      rowActions: RowActions," : ""}
 ${commonSave}
       newTitle: t(${q("New " + (cfg.titleEn || name))}, ${q("إضافة " + (cfg.titleAr || name))}),
       editTitle: t(${q(cfg.titleEn || name)}, ${q(cfg.titleAr || name)}),
@@ -733,6 +742,7 @@ function toolbarJsx(ex: Extras): string {
 
 function gridExtraProps(cfg: ScreenConfigV5, ex: Extras): string {
   const out: string[] = [];
+  if (cfg.view && cfg.view !== cfg.table) out.push("viewName={p.grid.ViewName}");
   if (cfg.permissions.usePermissions) out.push("moduleCode={p.grid.ModuleCode}");
   if (ex.formLayoutCode) out.push("formLayout={p.grid.FormLayoutCells}");
   if (cfg.filterArea.length > 0) out.push("onGridFilterChange={p.onFilterChange}");
@@ -842,7 +852,7 @@ ${toolbarJsx(ex)}
           keyColumn={p.grid.KeyColumn}
           columns={p.grid.Columns}
           condition={${hfEnabled ? "p.grid.Condition + headerFilterClause" : "p.grid.Condition"}}
-          orderBy={p.grid.KeyColumn}
+          orderBy={${cfg.orderBy ? JSON.stringify(cfg.orderBy) : "p.grid.KeyColumn"}}
           orderType="${cfg.orderType}"
           pageSize={${cfg.pageSize}}
           compCode={p.grid.CompCode}

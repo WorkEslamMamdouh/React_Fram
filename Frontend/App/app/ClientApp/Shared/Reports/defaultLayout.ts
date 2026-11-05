@@ -110,8 +110,10 @@ export function buildDefaultReport(S: any, o: DefaultLayoutOptions): any {
   });
 
   // ---------------- تذييل الصفحة
-  const footer = new C.StiPageFooterBand();
-  footer.name = "PageFooter";
+  // إيصال (ارتفاع مفتوح): تذييل الصفحة بيضاعف ارتفاع الصفحة (فراغ كبير + صفحة PDF تانية) → نستخدم تذييل التقرير بدله
+  const thermal = o.paper === "Thermal80" || o.paper === "Thermal58";
+  const footer = thermal ? new C.StiReportSummaryBand() : new C.StiPageFooterBand();
+  footer.name = thermal ? "ReportFooter" : "PageFooter";
   footer.height = 0.6;
   page.components.add(footer);
   text(footer, 0, 0, usable / 2, 0.6, `${o.isEN ? "By" : "بواسطة"}: {${coName}.PrintedBy}`, { size: 8 });

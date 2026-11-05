@@ -195,6 +195,22 @@ TestPage، CashTypes، CashTypesDemo، FinancialType، Employees، FinTrans_Expe
 - الفهارس: `Phase2_Suggested_Indexes.sql` و`Phase6_Excel.sql` اتشغّلوا — 10 فهارس اتعملت (الباقي اتخطى لأن العمود مش موجود أو نوعه max). نسخة احتياطية قبلها: `BK_20261106_Sys_Modules` و`BK_20261106_Sys_RoleModule`.
 - شاشة `Sys_ExternalApisAdmin` (تفعيل بتكة + تجربة الاتصال)، ومساعد `Shared/ExternalApis/ExternalApi.ts`.
 
+### المرحلة 10 — منطقة الأدمن + اختبار كامل على بيانات تجربة (2026-11-05) ✅
+- **منطقة الأدمن** (دخول `/ClientApp/AdminLogin`، كلها `AdminLayout` + `Layouts/AdminShell.tsx`): `Admin` (الرئيسية)، `AdminUsers`، `AdminRoles`، `AdminUserPerms`، `AdminReports` (التقارير + مصمم التقارير)، `AdminExternalApis`. الشاشات بقت View مشتركة بوضعين (`jwt` جوه البرنامج / `admin` للأدمن).
+- **تصميم التقارير من ScreenBuilder:** زراير "تصميم تقرير القائمة / الحركة" في تاب الطباعة والإكسل (نطاق كل الشركات / شركة / فرع + الورق + تجربة بعينة).
+- الباك: `AdminUsersController` و`ExternalApisController` بيقبلوا `X-Admin-Token` كأدمن كامل؛ انتهاء توكن الأدمن بيرجّع لصفحة الدخول برسالة (`Shared/AdminHttp.ts`).
+- **Stimulsoft** بقى بيتحمّل كملفات جاهزة من `public/stimulsoft/*.pack.js` (سكربت `scripts/copy-stimulsoft.js` في postinstall) — ده حل مشكلة إن سيرفر التطوير كان بيوصل 7GB.
+- **بيانات التجربة:** `Database/Test_ScreenBuilder_Schema.sql` (اتشغّل) — جداول `TST_*` وفيوهات `IQ_TST_*` وإجراءات `TST_Rpt_*` / `TST_Proc_*`. للمسح: `Database/Test_ScreenBuilder_Drop.sql`. الخطة: `Database/Test_ScreenBuilder_Plan.md`.
+- **شاشات اتبنت بـ ScreenBuilder واتجربت شغالة:** `TstExpense` (جريد)، `TstOrder` (ماستر + تفصيلتين + أزرار ترحيل/إلغاء/إعادة حساب + إكسل + طباعة)، `TstCategory` (شجرة)، `TstCustomer` (إكسل)، `TstOpeningStock` (إكسل أكتر من حركة).
+- **تقارير اتعملت واتجربت:** `TST_OrderList`، `TST_SalesByCategory` (مجموعات + رسم بياني على Data2)، `TST_CustomerStatement`، `TST_OrderPrint` (حركة: رأس/أصناف/دفعات + باركود/QR، A4/A5/رول)، `TST_ItemsBarcode`، `TST_Dashboard` — بتصميم للشركة وللفرع.
+- **مشاكل كبيرة اتصلحت في الاختبار:**
+  - `Security/Filters.cs`: فك التشفير كان بيرمي أي قيمة مفكوكة شكلها Base64 (زي `Code` و`ParentID`) فتوصل للـ SQL مشفرة.
+  - `ManageDataSQLController.cs`: حفظ/تعديل/حذف ماستر ديتيل بأكتر من تفصيلة كان بيفشل (العمليات كانت متوازية على نفس الاتصال) — بقت بالترتيب.
+  - `SQLServer.cs`: باراميترات الإجراءات من الشاشات كانت بتوصل JsonElement (`ProcParamValue`).
+  - `ReportsController.cs`: ثغرة طباعة تقرير لشركة/فرع اليوزر مش تبعهم + رفض تصميمات بايظة.
+  - codegen/ScreenBuilder: الأيقونة، الفيو في الجريد، الترتيب، التاريخ، تحذير مجموعة القايمة، عناوين الحقول، الفلاتر الافتراضية، أزرار الصف في الماستر ديتيل، العمود الإجباري المخفي، رسايل نتيجة الإجراء، تمرير الفلاتر لطباعة القايمة.
+  - `TreeScreen.tsx` (كود من نوع identity)، `MasterDetail.tsx` (`fillFrom` مع `selectSearch`، `onFilterChange`)، `ReportService.ts` (ToDate بياخد نهاية الفترة).
+
 ## 7. مشاكل ونقط معروفة
 - مافيش اختبارات آلية في المشروع؛ التأكد كله بـ `tsc` وتجربة يدوية.
 - صفحة `Home` لسه قالب تجريبي بنصوص إنجليزي ثابتة، وفي شاشات عناوينها أسماء خام (`Cost_Center`, `Store`) وعناوين أعمدة Employees إنجليزي كابيتال.
@@ -207,3 +223,8 @@ TestPage، CashTypes، CashTypesDemo، FinancialType، Employees، FinTrans_Expe
 - `Sys_RoleModule` لدور 2 فيه 7 أكواد `Menu_*` مش موجودة في `Sys_Modules`.
 - شاشة SalesInvoice: عمود التفاصيل `Qty` بس الفيو `IQ_TR_SaleDetails` فيه `Quantity` — محتاج مراجعة.
 - بيانات اختبار في `D_A_CashTypes`: `QA_TEST_1..3` (CashTypeID 42, 43, 44) — ممكن تتمسح.
+- `qa_test_user` (UserID 6) لسه **فعّال** — يتوقف من `AdminUsers`. والدور "QA Builder Role" (RoleId 4) و"QA Test Role" (RoleId 3) بتوع اختبار.
+- ScreenBuilder: "حفظ في المشروع" بيكتب الملفات بس من غير `Sys_ScreenConfig`، و"افتح شاشة" بيقرا من `Sys_ScreenConfig` — استخدم "حفظ وتسجيل" دايمًا لحد ما يتوحّدوا.
+- ScreenBuilder: فتح شاشة قديمة (زي SalesInvoice) مش بيمنع الحفظ — اتأكد قبل ما تدوس حفظ.
+- أزرار الصف (ترحيل/إلغاء) بتظهر لكل الحالات ومش مربوطة بصلاحية لكل زرار؛ وعرض الماستر ديتيل (View) بيبين أرقام بدل الأسماء في الدروب داون.
+- `Security/Filters.cs`: احتمال ضعيف إن قيمة عادية شكلها Base64 تتفك غلط.

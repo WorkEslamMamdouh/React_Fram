@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  Sys_UsersAdmin.ts  -  لوجيك شاشة "المستخدمين"
@@ -15,8 +15,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSys } from "../Shared/SystemUsing";
 import { Sys } from "../Shared/SystemTools";
-import { usePermissions } from "../Shared/Permissions";
-import { adminCall, showError, LookupBranch, LookupCompany, LookupRole, UserRow } from "./AdminApi";
+import { useScreenPerm } from "./useScreenPerm";
+import { adminCall as adminCallBase, showError, AuthMode, LookupBranch, LookupCompany, LookupRole, UserRow } from "./AdminApi";
 
 const MODULE_CODE = "Sys_UsersAdmin";
 
@@ -27,14 +27,17 @@ const emptyForm = (): UserForm => ({ UserID: 0, USER_CODE: "", USER_NAME: "", US
 let keySeq = 1;
 const newKey = () => "a" + keySeq++;
 
-export function Sys_UsersAdmin() {
+/** mode: "jwt" = شاشة الـ ERP (صلاحيات المستخدم) | "admin" = منطقة الأدمن (توكن الأدمن، كل المستخدمين) */
+export function Sys_UsersAdmin(mode: AuthMode = "jwt") {
+  const adminCall = <T = any>(action: string, data?: any) => adminCallBase<T>(action, data, mode);
   const didRun = useRef(false);
   const router = useRouter();
 
   const IsLangEN = useSys((s) => s.IsLangEN);
   const IsDark = useSys((s) => s.IsDark);
-  const myUserId = useSys((s) => s.Session?.CurrentEnvironment?.UserID);
-  const perm = usePermissions(MODULE_CODE);
+  const sessionUserId = useSys((s) => s.Session?.CurrentEnvironment?.UserID);
+  const myUserId = mode === "admin" ? undefined : sessionUserId;
+  const perm = useScreenPerm(MODULE_CODE, mode);
   const t = (en: string, ar: string) => (IsLangEN ? en : ar);
 
   // ---------- القايمة ----------
@@ -234,7 +237,7 @@ export function Sys_UsersAdmin() {
     }
   }
 
-  function OpenOverrides(u: UserRow) { router.push(`/ClientApp/Sys_UserPermsAdmin?userId=${u.UserID}`); }
+  function OpenOverrides(u: UserRow) { router.push(`/ClientApp/${mode === "admin" ? "AdminUserPerms" : "Sys_UserPermsAdmin"}?userId=${u.UserID}`); }
 
   return {
     IsLangEN, IsDark, t, perm, myUserId,

@@ -173,6 +173,13 @@ export default function InitalizeComponent() {
           <button onClick={() => p.setShowHelp(true)} className={`p-1.5 rounded-lg transition ${d ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`} title={t("Help", "مساعدة")}>
             <i className="fa-solid fa-circle-question" />
           </button>
+          <a
+            href="/ClientApp/Admin"
+            className={`p-1.5 rounded-lg transition ${d ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}
+            title={t("Admin home", "لوحة الأدمن")}
+          >
+            <i className="fa-solid fa-gauge-high" />
+          </a>
           <button
             onClick={() => {
               if (typeof window !== "undefined") {

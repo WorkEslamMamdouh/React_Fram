@@ -123,7 +123,7 @@ export function buildSaveRow(row: Row, columns: MasterDetailColumn[], skip: stri
 interface FieldInputProps {
   col: MasterDetailColumn;
   value: any;
-  onChange: (v: any) => void;
+  onChange: (v: any, extra?: Record<string, any>) => void;
   onSearch: () => void;
   disabled: boolean;
   error?: string;
@@ -161,12 +161,22 @@ export function FieldInput({ col, value, onChange, onSearch, disabled, error, co
 
   if (type === "selectSearch" && (col as any).selectConfig) {
     const sc = (col as any).selectConfig as { tableName: string; displayField: string; valueField: string; condition?: string };
-    const resolved = { ...sc, condition: resolveRowPlaceholders(sc.condition || "", row) };
+    // fillFrom مع القائمة المنسدلة: بنطلب أعمدة المصدر كـ attributes (حد أقصى 5) وبعد الاختيار ننسخها للحقول المستهدفة
+    const fillEntries = Object.entries(col.fillFrom || {});
+    const fillSources = Array.from(new Set(fillEntries.map(([, s]) => s))).slice(0, 5);
+    const resolved = { ...sc, condition: resolveRowPlaceholders(sc.condition || "", row), ...(fillSources.length ? { attributes: fillSources } : {}) };
     return (
       <DynamicSelect
         config={resolved}
         value={value}
-        onChange={(v: any) => onChange(v === "" || v == null ? null : v)}
+        onChange={(v: any, attrs?: Record<string, any>) => {
+          const nv = v === "" || v == null ? null : v;
+          if (nv != null && fillEntries.length && attrs) {
+            const extra: Record<string, any> = {};
+            for (const [target, source] of fillEntries) extra[target] = attrs[source] ?? null;
+            onChange(nv, extra);
+          } else onChange(nv);
+        }}
         disabled={disabled}
         error={!!error}
       />
@@ -557,9 +567,11 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
     if (enableView) list.push({ key: "md_view", label: t("View", "عرض"), icon: "👁️", onClick: (row: Row) => openEdit(row, true), isVisible: true });
     if (enableUpdate) list.push({ key: "md_edit", label: t("Edit", "تعديل"), icon: "✏️", onClick: (row: Row) => openEdit(row), isVisible: true });
     if (enablePrint) list.push({ key: "md_print", label: t("Print", "طباعة"), icon: "🖨️", onClick: (row: Row) => printRecord(row), isVisible: true });
+    // أزرار إضافية من الشاشة (اختياري: config.rowActions) — بتتحط قبل "حذف"
+    for (const a of config.rowActions || []) list.push({ isVisible: true, ...a });
     if (enableDelete) list.push({ key: "md_delete", label: t("Delete", "حذف"), icon: "🗑️", onClick: (row: Row) => deleteRecord(row), isVisible: true });
     return list;
-  }, [enableView, enableUpdate, enablePrint, enableDelete, t, openEdit, printRecord, deleteRecord]);
+  }, [enableView, enableUpdate, enablePrint, enableDelete, t, openEdit, printRecord, deleteRecord, config.rowActions]);
 
   // ======================================================================
   // القائمة
@@ -595,6 +607,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
           enableAdvancedFilter={(config.filterFields || []).length > 0}
           filterFields={config.filterFields}
           defaultFilters={config.defaultFilters}
+          onGridFilterChange={config.onFilterChange}
           extraActions={extraActions}
           onRowDoubleClick={enableUpdate ? (row: Row) => openEdit(row) : enableView ? (row: Row) => openEdit(row, true) : undefined}
           height={height}
@@ -650,7 +663,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
                 <FieldInput
                   col={c}
                   value={master[c.field]}
-                  onChange={(v) => setMasterField(c.field, v)}
+                  onChange={(v, x) => setMasterField(c.field, v, x)}
                   onSearch={() => setSearchTarget({ col: c, detail: -1, rowIndex: -1 })}
                   disabled={disabled}
                   error={errors[errKey]}
@@ -751,7 +764,7 @@ export interface DetailsEditorProps {
   setActiveTab: (i: number) => void;
   viewOnly: boolean;
   errors: Record<string, string>;
-  onChange: (d: number, i: number, field: string, value: any) => void;
+  onChange: (d: number, i: number, field: string, value: any, extra?: Record<string, any>) => void;
   onSearch: (col: MasterDetailColumn, d: number, i: number) => void;
   onAddRow: (d: number) => void;
   onRemoveRow: (d: number, i: number) => void;
@@ -815,7 +828,7 @@ export function DetailsEditor({ configs, allRows, activeTab, setActiveTab, viewO
                             <FieldInput
                               col={c}
                               value={r[c.field]}
-                              onChange={(v) => onChange(di, ri, c.field, v)}
+                              onChange={(v, x) => onChange(di, ri, c.field, v, x)}
                               onSearch={() => onSearch(c, di, ri)}
                               disabled={viewOnly || c.editable === false}
                               error={errors[errKey]}

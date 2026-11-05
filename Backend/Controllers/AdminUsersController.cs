@@ -1,4 +1,4 @@
-using GateWay.App;
+﻿using GateWay.App;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -25,7 +25,7 @@ namespace ERP.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AllowAnonymous]   // auth is checked in Begin(): JWT + module permission, or X-Admin-Token (super admin)
     public class AdminUsersController : ControllerBase
     {
         private const string ModUsers = "Sys_UsersAdmin";
@@ -154,6 +154,9 @@ namespace ERP.Controllers
 
         private async Task<(SqlConnection con, IActionResult denied)> Begin(string[] modules, bool write)
         {
+            // X-Admin-Token (admin portal) = super admin: skips the module-permission check only
+            if (AdminTokenStore.IsValid(Request.Headers["X-Admin-Token"].ToString())) return (Open(), null);
+            if (CurrentUserId() <= 0) return (null, Unauthorized());
             var c = Open();
             if (!await HasAccess(c, CurrentUserId(), modules, write))
             {

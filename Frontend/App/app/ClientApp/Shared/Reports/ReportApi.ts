@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  ReportApi.ts  -  نداءات ReportsController (api/Reports/*)
@@ -6,7 +6,7 @@
 //  - reportsCallAdminToken: بـ X-Admin-Token — للـ ScreenBuilder (أدمن مش بالضرورة عنده JWT)
 // =====================================================================================
 
-import api from "../../../../CallAPI/api";
+import { adminFetch, AuthMode } from "../AdminHttp";
 import { Sys } from "../SystemTools";
 import { BaseResponse } from "../Entities";
 import {
@@ -32,37 +32,37 @@ export async function reportsCall<T = any>(action: string, data?: any): Promise<
   return unwrap<T>(res);
 }
 
-/** نداء بتوكن الأدمن (ScreenBuilder). */
+/** نداء بتوكن الأدمن (ScreenBuilder / منطقة الأدمن). 401 = الجلسة خلصت → تحويل لصفحة دخول الأدمن. */
 export async function reportsCallAdminToken<T = any>(action: string, data?: any): Promise<T> {
-  let tok = "";
-  try { tok = localStorage.getItem("admin_token") || ""; } catch { /* ignore */ }
-  try {
-    const r = await api.post(`Reports/${action}`, data ?? {}, { headers: { "X-Admin-Token": tok } });
-    return unwrap<T>(r.data);
-  } catch (e: any) {
-    if (e?.response?.status === 401) throw new Error("Admin login expired - open AdminLogin / سجّل دخول الأدمن من جديد");
-    throw new Error(e?.message || "Request failed");
-  }
+  return adminFetch<T>("Reports", action, data);
 }
 
-export const ReportsApi = {
-  config: () => reportsCall<ReportsConfig>("config"),
-  listReports: () => reportsCall<{ Mode: string; Reports: ReportDef[] }>("list-reports"),
-  getReport: (ReportCode: string) => reportsCall<ReportDef>("get-report", { ReportCode }),
-  saveReport: (def: ReportDef) => reportsCall<ReportDef>("save-report", def),
-  deleteReport: (ReportCode: string) => reportsCall<boolean>("delete-report", { ReportCode }),
-  listLayouts: (ReportCode: string) => reportsCall<LayoutMeta[]>("list-layouts", { ReportCode }),
-  getLayout: (LayoutId: number) => reportsCall<LayoutMeta>("get-layout", { LayoutId }),
-  saveLayout: (l: Partial<LayoutMeta>) => reportsCall<{ LayoutId: number }>("save-layout", l),
-  deleteLayout: (LayoutId: number) => reportsCall<boolean>("delete-layout", { LayoutId }),
-  setDefaultLayout: (LayoutId: number) => reportsCall<boolean>("set-default-layout", { LayoutId }),
+export type ReportsApiType = ReturnType<typeof createReportsApi>;
+
+/** mode = "jwt" (شاشات الـ ERP) أو "admin" (منطقة الأدمن بتوكن الأدمن). */
+export function createReportsApi(mode: AuthMode = "jwt") {
+  const call = <T = any>(action: string, data?: any): Promise<T> => (mode === "admin" ? reportsCallAdminToken<T>(action, data) : reportsCall<T>(action, data));
+  return {
+  config: () => call<ReportsConfig>("config"),
+  listReports: () => call<{ Mode: string; Reports: ReportDef[] }>("list-reports"),
+  getReport: (ReportCode: string) => call<ReportDef>("get-report", { ReportCode }),
+  saveReport: (def: ReportDef) => call<ReportDef>("save-report", def),
+  deleteReport: (ReportCode: string) => call<boolean>("delete-report", { ReportCode }),
+  listLayouts: (ReportCode: string) => call<LayoutMeta[]>("list-layouts", { ReportCode }),
+  getLayout: (LayoutId: number) => call<LayoutMeta>("get-layout", { LayoutId }),
+  saveLayout: (l: Partial<LayoutMeta>) => call<{ LayoutId: number }>("save-layout", l),
+  deleteLayout: (LayoutId: number) => call<boolean>("delete-layout", { LayoutId }),
+  setDefaultLayout: (LayoutId: number) => call<boolean>("set-default-layout", { LayoutId }),
   duplicateLayout: (LayoutId: number, Scope?: string, CompCode?: number | null, BranchCode?: number | null) =>
-    reportsCall<{ LayoutId: number }>("duplicate-layout", { LayoutId, Scope, CompCode, BranchCode }),
+    call<{ LayoutId: number }>("duplicate-layout", { LayoutId, Scope, CompCode, BranchCode }),
   resolveLayout: (ReportCode: string, CompCode: number, BranchCode: number) =>
-    reportsCall<{ Layout: LayoutMeta | null }>("resolve-layout", { ReportCode, CompCode, BranchCode }),
-  procs: () => reportsCall<string[]>("procs"),
-  procParams: (Name: string) => reportsCall<ProcInfo>("proc-params", { Name }),
-  lookups: () => reportsCall<ReportLookups>("lookups"),
-  run: (ReportCode: string, CompCode: number, BranchCode: number, Params: Record<string, any>, Sample = false) =>
-    reportsCall<RunResult>("run", { ReportCode, CompCode, BranchCode, Params, Sample }),
+    call<{ Layout: LayoutMeta | null }>("resolve-layout", { ReportCode, CompCode, BranchCode }),
+  procs: () => call<string[]>("procs"),
+  procParams: (Name: string) => call<ProcInfo>("proc-params", { Name }),
+  lookups: () => call<ReportLookups>("lookups"),
+  run: (ReportCode: string, CompCode: number, BranchCode: number, Params: Record<string, any>, Sample = false, UserId = 0) =>
+    call<RunResult>("run", { ReportCode, CompCode, BranchCode, Params, Sample, UserId }),
 };
+}
+
+export const ReportsApi = createReportsApi("jwt");

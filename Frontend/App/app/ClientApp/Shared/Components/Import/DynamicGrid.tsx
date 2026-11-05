@@ -73,6 +73,8 @@ export interface DynamicGridExtendedProps extends DynamicGridProps {
   // ✅ صلاحيات اختيارية: moduleCode (= MODULE_CODE) بيقرا من Session.CurrentPrivileges، و permissions بتتطبق مباشرة.
   //    مش متحددين = مفيش أي تغيير في السلوك. بيقفلوا (مش بيفتحوا) الإضافة/التعديل/الحذف/الطباعة.
   moduleCode?: string;
+  // اختياري: فيو للقراءة (القايمة/التصدير) بدل الجدول — الحفظ والحذف بيفضلوا على tableName. مش متحدد = tableName زي الأول.
+  viewName?: string;
   permissions?: ModulePermissions;
   // ✅ Phase 6 (اختياري): أزرار "تحميل نموذج Excel" / "استيراد من Excel" — مش متحدد = مفيش تغيير. بيحتاج صلاحية الإضافة (CREATE).
   excel?: ExcelGridConfig;
@@ -1136,6 +1138,7 @@ export default function DynamicGrid({
   persistFilters = true,
   filterMode = "bar",
   formLayout,
+  viewName,
   moduleCode,
   permissions,
   excel,
@@ -1361,7 +1364,7 @@ export default function DynamicGrid({
       return value ? (lang === "ar" ? "✅ نعم" : "✅ Yes") : (lang === "ar" ? "❌ لا" : "❌ No");
     }
     if (value === null || value === undefined) return "-";
-    if ((col.type === "date" || col.inputType === "date") && col.dateDisplayFormat) {
+    if ((col.type === "date" || col.inputType === "date")) {
       return displayDate(value, col.dateDisplayFormat);
     }
     return String(value);
@@ -1479,7 +1482,7 @@ export default function DynamicGrid({
         : sortField;
 
       const result = await SQL.Select(
-        tableName, finalCondition, null, null, null, 0,
+        viewName || tableName, finalCondition, null, null, null, 0,
         orderExpr, sortDirection, 0, "", null, null,
         page, pageSizeState, true
       );
@@ -1723,7 +1726,7 @@ export default function DynamicGrid({
       // التصدير بنفس الفلاتر والبحث الظاهرين (آخر شرط اتبعت للسيرفر) — بحد أقصى 50,000 صف
       const EXPORT_LIMIT = 50000;
       const allData = await SQL.Select(
-        tableName, lastConditionRef.current || condition, null, ShowLoader, CloseLoader, 0,
+        viewName || tableName, lastConditionRef.current || condition, null, ShowLoader, CloseLoader, 0,
         sortField, sortDirection, EXPORT_LIMIT, "", null, null,
         0, 0, false
       );

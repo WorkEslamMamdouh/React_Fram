@@ -1,14 +1,17 @@
-"use client";
+﻿"use client";
 
 // =====================================================================================
 //  AdminApi.ts  -  نداءات AdminUsersController (api/AdminUsers/*) + الأنواع
 //  مشترك بين شاشات: Sys_UsersAdmin / Sys_RolesAdmin / Sys_UserPermsAdmin
-//  النداءات بتروح بـ JWT (Sys.CallApi بيحط Authorization). مفيش تشفير XOR هنا:
+//  النداءات بتروح بـ JWT (Sys.CallApi بيحط Authorization)، أو بتوكن الأدمن لو mode = "admin". مفيش تشفير XOR هنا:
 //  الباك مابيفكهوش للـ actions دي. لازم الموقع يشتغل HTTPS في الإنتاج عشان كلمات السر.
 // =====================================================================================
 
 import { Sys } from "../Shared/SystemTools";
 import { BaseResponse } from "../Shared/Entities";
+import { adminFetch, AuthMode } from "../Shared/AdminHttp";
+
+export type { AuthMode };
 
 export type PermKey =
   | "EXECUTE" | "CREATE" | "EDIT" | "DELETE" | "PRINT" | "VIEW"
@@ -58,7 +61,9 @@ export function emptyPerms(): PermMap {
 }
 
 /** ينده على الباك. بيرجّع Response أو بيرمي Error برسالة واضحة (ثنائية اللغة من السيرفر). */
-export async function adminCall<T = any>(action: string, data?: any): Promise<T> {
+/** mode = "admin": بتوكن الأدمن (منطقة الأدمن، كل الشركات، بدون فحص صلاحيات الشاشات). الافتراضي "jwt" زي ما كان. */
+export async function adminCall<T = any>(action: string, data?: any, mode: AuthMode = "jwt"): Promise<T> {
+  if (mode === "admin") return adminFetch<T>("AdminUsers", action, data);
   let res: BaseResponse<any>;
   try {
     res = await Sys.CallApi<BaseResponse<any>>({ method: "POST", controller: "AdminUsers", action, data: data ?? {} });

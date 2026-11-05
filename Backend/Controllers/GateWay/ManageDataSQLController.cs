@@ -269,10 +269,10 @@ namespace GateWay.Controllers
 
                             // ✅ تحديث الـ Ids في الـ Detail (إذا لزم الأمر)
                             // ملاحظة: هنا نفترض أن Ids هي قيم المفتاح الأجنبي، وليست المفتاح الأساسي للـ Detail
-                            deleteTasks.Add(_service.DeleteListByForeignKey(con, tran,
+                            deleteTasks.Add(Task.FromResult(await _service.DeleteListByForeignKey(con, tran,
                                 detail.Delete_Details.TableName,
                                 foreignKeyColumn,
-                                detail.Delete_Details.Ids.Cast<object>().ToList()));
+                                detail.Delete_Details.Ids.Cast<object>().ToList())));
                             deleteTableNames.Add(detail.Delete_Details.TableName);
                         }
                     }
@@ -289,7 +289,7 @@ namespace GateWay.Controllers
                     var insertTasks = new List<Task<int>>();
                     var insertTableNames = new List<string>();
 
-                    void AddInsertTask(DetailWrapper? detail)
+                    async Task AddInsertTask(DetailWrapper? detail)
                     {
                         if (detail?.BulkInsertRequest?.DataList?.Any() == true)
                         {
@@ -305,17 +305,18 @@ namespace GateWay.Controllers
                                 item[foreignKeyColumn] = masterId;
                             });
 
-                            insertTasks.Add(_service.BulkInsertUltraFast(con, tran,
-                                detail.BulkInsertRequest.TableName, detailList));
+                            // تنفيذ تسلسلي: نفس الـ connection/transaction مابيدعمش MARS (أكتر من تفصيلة كانت بتفشل)
+                            insertTasks.Add(Task.FromResult(await _service.BulkInsertUltraFast(con, tran,
+                                detail.BulkInsertRequest.TableName, detailList)));
                             insertTableNames.Add(detail.BulkInsertRequest.TableName);
                         }
                     }
 
-                    AddInsertTask(request.Detail_1);
-                    AddInsertTask(request.Detail_2);
-                    AddInsertTask(request.Detail_3);
-                    AddInsertTask(request.Detail_4);
-                    AddInsertTask(request.Detail_5);
+                    await AddInsertTask(request.Detail_1);
+                    await AddInsertTask(request.Detail_2);
+                    await AddInsertTask(request.Detail_3);
+                    await AddInsertTask(request.Detail_4);
+                    await AddInsertTask(request.Detail_5);
 
                     var insertResults = insertTasks.Any() ? await Task.WhenAll(insertTasks) : Array.Empty<int>();
 
@@ -446,10 +447,10 @@ namespace GateWay.Controllers
                         else if (detail.Delete_Details.Ids?.Any() == true)
                         {
                             // ✅ حذف تفاصيل محددة
-                            deleteTasks.Add(_service.DeleteListByForeignKey(con, tran,
+                            deleteTasks.Add(Task.FromResult(await _service.DeleteListByForeignKey(con, tran,
                                 detail.Delete_Details.TableName,
                                 foreignKeyColumn,
-                                detail.Delete_Details.Ids.Cast<object>().ToList()));
+                                detail.Delete_Details.Ids.Cast<object>().ToList())));
                             deleteTableNames.Add(detail.Delete_Details.TableName);
                         }
                     }
@@ -466,7 +467,7 @@ namespace GateWay.Controllers
                     var insertTasks = new List<Task<int>>();
                     var insertTableNames = new List<string>();
 
-                    void AddInsertTask(DetailWrapper? detail)
+                    async Task AddInsertTask(DetailWrapper? detail)
                     {
                         if (detail?.BulkInsertRequest?.DataList?.Any() == true)
                         {
@@ -482,17 +483,18 @@ namespace GateWay.Controllers
                                 item[foreignKeyColumn] = masterId;
                             });
 
-                            insertTasks.Add(_service.BulkInsertUltraFast(con, tran,
-                                detail.BulkInsertRequest.TableName, detailList));
+                            // تنفيذ تسلسلي: نفس الـ connection/transaction مابيدعمش MARS (أكتر من تفصيلة كانت بتفشل)
+                            insertTasks.Add(Task.FromResult(await _service.BulkInsertUltraFast(con, tran,
+                                detail.BulkInsertRequest.TableName, detailList)));
                             insertTableNames.Add(detail.BulkInsertRequest.TableName);
                         }
                     }
 
-                    AddInsertTask(request.Detail_1);
-                    AddInsertTask(request.Detail_2);
-                    AddInsertTask(request.Detail_3);
-                    AddInsertTask(request.Detail_4);
-                    AddInsertTask(request.Detail_5);
+                    await AddInsertTask(request.Detail_1);
+                    await AddInsertTask(request.Detail_2);
+                    await AddInsertTask(request.Detail_3);
+                    await AddInsertTask(request.Detail_4);
+                    await AddInsertTask(request.Detail_5);
 
                     var insertResults = insertTasks.Any() ? await Task.WhenAll(insertTasks) : Array.Empty<int>();
 
@@ -606,26 +608,27 @@ namespace GateWay.Controllers
                     var deletedDetails = new Dictionary<string, int>();
                     var deleteTasks = new List<Task<(string TableName, int RowsAffected)>>();
 
-                    void AddDeleteTask(DetailWrapper? detail)
+                    async Task AddDeleteTask(DetailWrapper? detail)
                     {
                         if (detail?.Delete_Details != null && detail.Delete_Details.DeleteAllRelated && request.Master.Id > 0)
                         {
                             // ✅ استخدام DetailForeignKeyColumn إذا موجود، وإلا استخدم MasterKeyColumn
                             string foreignKeyColumn = detail.DetailForeignKeyColumn ?? request.MasterKeyColumn;
 
-                            deleteTasks.Add(_service.DeleteAllRelatedByMasterId(
+                            // تسلسلي (نفس الـ connection/transaction مابيدعمش MARS)
+                            deleteTasks.Add(Task.FromResult(await _service.DeleteAllRelatedByMasterId(
                                 con, tran,
                                 detail.Delete_Details.TableName,
                                 foreignKeyColumn,
-                                request.Master.Id));
+                                request.Master.Id)));
                         }
                     }
 
-                    AddDeleteTask(request.Detail_1);
-                    AddDeleteTask(request.Detail_2);
-                    AddDeleteTask(request.Detail_3);
-                    AddDeleteTask(request.Detail_4);
-                    AddDeleteTask(request.Detail_5);
+                    await AddDeleteTask(request.Detail_1);
+                    await AddDeleteTask(request.Detail_2);
+                    await AddDeleteTask(request.Detail_3);
+                    await AddDeleteTask(request.Detail_4);
+                    await AddDeleteTask(request.Detail_5);
 
                     if (deleteTasks.Any())
                     {
