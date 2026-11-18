@@ -52,6 +52,8 @@ export interface MasterDetailConfig {
   orderBy?: string;
   orderType?: SortDirection;
   pageSize?: number;
+  /** طريقة تحميل القائمة: "pages" أرقام صفحات · "infinite" تحميل مع السكرول (مش متحدد = اختيار المستخدم المحفوظ) */
+  pagingMode?: "infinite" | "pages";
   filterFields?: FilterFieldConfig[];
   defaultFilters?: ActiveFilter[];
   /** بيتنادى لما فلاتر القايمة تتغير (عشان طباعة القائمة تبعت القيم الحالية للتقرير) */
@@ -74,6 +76,8 @@ export interface MasterDetailConfig {
 
   // ===== Phase 7 (اختياري): تقارير الطباعة. list = "طباعة القائمة" · transaction = إجراء الطباعة في الصف وزر الطباعة في الفورم (لو onPrint مش متحددة) =====
   report?: import("../../Reports/ReportTypes").ScreenReportConfig;
+  /** قيم فلاتر من بره (زي CascadingFilterBar) بتتبعت لتقرير "طباعة القائمة" — اختياري */
+  reportFilters?: Record<string, any>;
 
   // ===== الصلاحيات (اختياري — مش متحدد = مفيش تغيير) =====
   moduleCode?: string;          // = MODULE_CODE: بيقرا صلاحيات الشاشة من Session.CurrentPrivileges

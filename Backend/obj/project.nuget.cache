@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "EF73TVl8ZMA=",
+  "dgSpecHash": "3/y0L4JjpUw=",
   "success": true,
   "projectFilePath": "C:\\PC\\Work\\React_Fram\\Backend\\ERP.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\ServerStitch\\.nuget\\packages\\cronos\\0.8.4\\cronos.0.8.4.nupkg.sha512",
     "C:\\Users\\ServerStitch\\.nuget\\packages\\firebaseadmin\\3.5.0\\firebaseadmin.3.5.0.nupkg.sha512",
     "C:\\Users\\ServerStitch\\.nuget\\packages\\google.api.gax\\4.13.1\\google.api.gax.4.13.1.nupkg.sha512",
     "C:\\Users\\ServerStitch\\.nuget\\packages\\google.api.gax.rest\\4.13.1\\google.api.gax.rest.4.13.1.nupkg.sha512",

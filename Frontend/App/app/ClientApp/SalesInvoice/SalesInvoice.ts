@@ -34,6 +34,39 @@ const RunProcessTrans = false;       // true = شغّل G_ProcessTrans بعد ك
 // #endregion
 
 // =======================
+// #region الطباعة — قالب الفاتورة A4 (تصميم JSON: Shared/Reports/templates/SalesInvoice_A4.layout.json)
+// =======================
+//  بيجيب رأس الفاتورة من IQ_TR_Sales وسطورها من IQ_TR_SaleDetails ويفتح العارض الجديد.
+async function PrintInvoice(row: Record<string, any>) {
+  const id = Number(row?.[KeyColumn]);
+  if (!id) return;
+  try {
+    const [{ SQL }, { openLayoutReport }, { SalesInvoiceA4 }, { loadCompanyRow }] = await Promise.all([
+      import("../Shared/CallDataBase"),
+      import("../Shared/Reports/openReport"),
+      import("../Shared/Reports/templates"),
+      import("../Shared/Reports/ReportService"),
+    ]);
+    const [head, lines, company] = await Promise.all([
+      SQL.Select(ViewName, `${KeyColumn} = ${id}`),
+      SQL.Select("IQ_TR_SaleDetails", `${KeyColumn} = ${id}`, null, null, null, 0, "SaleDetailID", "ASC"),
+      loadCompanyRow(),
+    ]);
+    const header = Array.isArray(head?.data) && head.data.length ? head.data : [row];
+    openLayoutReport({
+      layout: SalesInvoiceA4,
+      data: { tables: { header, lines: Array.isArray(lines?.data) ? lines.data : [] }, company },
+      title: `${useSys.getState().IsLangEN ? "Sales invoice" : "فاتورة مبيعات"} ${row?.TrNo || id}`,
+      fileName: `SalesInvoice_${row?.TrNo || id}`,
+    });
+  } catch (e: any) {
+    const { Sys } = await import("../Shared/SystemTools");
+    Sys.ShowMessage("Could not print the invoice: " + (e?.message || e), "تعذّر طباعة الفاتورة: " + (e?.message || e), "error");
+  }
+}
+// #endregion
+
+// =======================
 // SalesInvoice
 // =======================
 export function SalesInvoice() {
@@ -1347,6 +1380,7 @@ export function SalesInvoice() {
       enableInsert: true,
       enableUpdate: true,
       enableDelete: true,
+      onPrint: (row) => { void PrintInvoice(row); },   // الطباعة بالعارض الجديد (قالب A4)
       newTitle: t("New Sales Invoices", "إضافة فواتير المبيعات"),
       editTitle: t("Sales Invoices", "فواتير المبيعات رقم"),
     }),

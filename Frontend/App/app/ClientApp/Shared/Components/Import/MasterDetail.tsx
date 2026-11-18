@@ -102,7 +102,8 @@ function toDbValue(c: MasterDetailColumn, v: any): any {
   if (t === "checkbox") return v === true || v === 1 || v === "1" || v === "true";
   if (t === "number") return isEmpty(v) ? null : Number(v);
   if (isEmpty(v)) return null;
-  if (t === "date") return String(v).substring(0, 10);
+  // dateMode "datetime": keep the time (cutting it to yyyy-MM-dd turned 16:58 into 00:00 on every update)
+  if (t === "date") return String(v).substring(0, c.dateMode === "datetime" ? 19 : 10);
   return v;
 }
 
@@ -111,6 +112,9 @@ export function buildSaveRow(row: Row, columns: MasterDetailColumn[], skip: stri
   const out: Row = {};
   for (const c of columns) {
     if (c.IsSave === false || skip.includes(c.field)) continue;
+    // a column the user cannot type in and that has no value at all (e.g. CreatedAt on a new record) is left out,
+    // so the database DEFAULT applies instead of an explicit NULL (and an update never blanks it)
+    if ((row[c.field] === undefined || row[c.field] === null) && (c.insertable === false || c.editable === false)) continue;
     out[c.NameDataBase || c.field] = toDbValue(c, row[c.field]);
   }
   return out;
@@ -598,6 +602,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
           orderBy={config.orderBy || config.keyColumn}
           orderType={config.orderType || "DESC"}
           pageSize={config.pageSize || 10}
+          pagingMode={config.pagingMode}
           enableInsert={false}
           enableUpdate={false}
           enableDelete={false}
@@ -611,7 +616,7 @@ export default function MasterDetail({ config, height = "calc(100vh - 140px)" }:
           extraActions={extraActions}
           onRowDoubleClick={enableUpdate ? (row: Row) => openEdit(row) : enableView ? (row: Row) => openEdit(row, true) : undefined}
           height={height}
-          {...(config.report?.list ? { report: { list: config.report.list }, moduleCode: config.moduleCode, permissions: { print: enablePrint } } : {})}
+          {...(config.report?.list ? { report: { list: config.report.list }, reportFilters: config.reportFilters, moduleCode: config.moduleCode, permissions: { print: enablePrint } } : {})}
         />
       </div>
     );

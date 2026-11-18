@@ -128,53 +128,43 @@ export function Login() {
   // =======================
   async function CallAPI_Login(username?: string, password?: string) {
     setIsLoading(true);
-    
-    await Sys.CallApi<BaseResponse<{ Model: any }>>({
-      method: "GET",
-      controller: "auth",
-      action: "login",
-      data: { Username: username, Password: password },
 
-      onSuccess: (res) => {
-        if (res.IsSuccess) {
-          const Reslt = res.Response
-          
-          Sys.setAuthToken(Reslt.Token);
-          setToken(Reslt.Token);
-          SetDataCompany(Reslt.Sys_Company);
-          SetDataBranch(Reslt.Sys_Branch);
-          SetDataYearControl(Reslt.Sys_ControlYear);
+    // W0-1: login via POST (body). If the backend is old (404/405), retry once with GET.
+    const handleSuccess = (res: BaseResponse<any>) => {
+      const Reslt = res.Response;
+      Sys.setAuthToken(Reslt.Token);
+      setToken(Reslt.Token);
+      SetDataCompany(Reslt.Sys_Company);
+      SetDataBranch(Reslt.Sys_Branch);
+      SetDataYearControl(Reslt.Sys_ControlYear);
+      Sys.ShowMessage("Login successful!", "تم تسجيل الدخول بنجاح!", "success");
+      OpenPage("LoginCompany", Router);
+    };
 
-          Sys.ShowMessage(
-            "Login successful!",
-            "تم تسجيل الدخول بنجاح!",
-            "success"
-          );
-          OpenPage("LoginCompany", Router);
-        } else {
-          const errorMsg = res.ErrorMessage || "Login failed";
-          Sys.ShowMessage(
-            errorMsg,
-            "فشل تسجيل الدخول",
-            "error"
-          );
-        }
-        setIsLoading(false);
-      },
+    const attempt = (method: "GET" | "POST") =>
+      Sys.CallApi<BaseResponse<{ Model: any }>>({
+        method,
+        controller: "auth",
+        action: "login",
+        data: { Username: username, Password: password },
+      }, { show: ShowLoader, hide: CloseLoader });
 
-      onError: (err) => {
-        console.error("Login error:", err);
-        Sys.ShowMessage(
-          "Connection error. Please try again.",
-          "خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
-          "error"
-        );
-        setIsLoading(false);
+    try {
+      let res = await attempt("POST");
+      if (res && !res.IsSuccess && (res.StatusCode === 404 || res.StatusCode === 405)) {
+        res = await attempt("GET");
       }
-    }, {
-      show: ShowLoader,
-      hide: CloseLoader
-    });
+      if (res && res.IsSuccess) {
+        handleSuccess(res);
+      } else {
+        Sys.ShowMessage(res?.ErrorMessage || "Login failed", "فشل تسجيل الدخول", "error");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      Sys.ShowMessage("Connection error. Please try again.", "خطأ في الاتصال. يرجى المحاولة مرة أخرى.", "error");
+    } finally {
+      setIsLoading(false);
+    }
   }
   // #endregion
 

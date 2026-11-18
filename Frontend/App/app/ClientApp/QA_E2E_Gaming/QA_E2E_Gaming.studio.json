@@ -1,0 +1,190 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_Gaming",
+  "pattern": "P10",
+  "titleAr": "أجهزة البلايستيشن (QA)",
+  "titleEn": "QA Gaming devices",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-gamepad",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "statuses": [
+      {
+        "label": {
+          "ar": "فاضي",
+          "en": "Free"
+        },
+        "color": "#10B981",
+        "value": "free"
+      },
+      {
+        "label": {
+          "ar": "شغال",
+          "en": "Playing"
+        },
+        "color": "#F97316",
+        "value": "running"
+      },
+      {
+        "label": {
+          "ar": "موقوف مؤقت",
+          "en": "Paused"
+        },
+        "color": "#3B82F6",
+        "value": "paused"
+      }
+    ],
+    "alertBeforeEndMinutes": 5,
+    "pricing": {
+      "currency": {
+        "ar": "ج.م",
+        "en": "EGP"
+      },
+      "graceMinutes": 3,
+      "minimumCharge": 10,
+      "rounding": "up",
+      "rates": [
+        {
+          "mode": "single",
+          "perHour": 40,
+          "type": "PS5",
+          "bands": [
+            {
+              "from": "00:00",
+              "to": "06:00",
+              "perHour": 30
+            }
+          ]
+        },
+        {
+          "mode": "multi",
+          "perHour": 60,
+          "type": "PS5"
+        },
+        {
+          "perHour": 30,
+          "type": "PS4"
+        },
+        {
+          "perHour": 50,
+          "type": "Billiard"
+        }
+      ],
+      "unit": "block",
+      "blockMinutes": 15
+    },
+    "tileSize": "md",
+    "actions": [
+      {
+        "label": {
+          "ar": "بدء",
+          "en": "Start"
+        },
+        "variant": "primary",
+        "showForStatus": [
+          "free"
+        ],
+        "id": "start"
+      },
+      {
+        "label": {
+          "ar": "إيقاف مؤقت",
+          "en": "Pause"
+        },
+        "showForStatus": [
+          "running"
+        ],
+        "id": "pause"
+      },
+      {
+        "label": {
+          "ar": "إنهاء ومحاسبة",
+          "en": "End & checkout"
+        },
+        "variant": "success",
+        "showForStatus": [
+          "running",
+          "paused"
+        ],
+        "id": "end",
+        "confirm": {
+          "ar": "إنهاء الجلسة؟",
+          "en": "End session?"
+        }
+      }
+    ],
+    "modeLabels": {
+      "multi": {
+        "ar": "مالتي",
+        "en": "Multi"
+      },
+      "single": {
+        "ar": "فردي",
+        "en": "Single"
+      }
+    },
+    "groupField": "Room",
+    "source": {
+      "tableName": "QA_E2E_GameDevice"
+    },
+    "labelField": "Name",
+    "statusField": "Status",
+    "typeField": "Type",
+    "refreshSeconds": 10,
+    "session": {
+      "itemsAmountField": "ItemsAmount",
+      "pausedMsField": "PausedMs",
+      "modeField": "Mode",
+      "startField": "StartedAt",
+      "pausedAtField": "PausedAt",
+      "customerField": "Customer",
+      "prepaidMinutesField": "PrepaidMinutes"
+    },
+    "pausedStatuses": [
+      "paused"
+    ],
+    "runningStatuses": [
+      "running"
+    ],
+    "idField": "DeviceID"
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

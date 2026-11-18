@@ -1,0 +1,139 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_Tasks",
+  "pattern": "P06",
+  "titleAr": "لوحة المهام (QA)",
+  "titleEn": "QA Task board",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-table-columns",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "titleField": "Title",
+    "wipRule": "warn",
+    "transitions": {
+      "new": [
+        "progress"
+      ],
+      "done": [],
+      "progress": [
+        "review",
+        "new"
+      ],
+      "review": [
+        "progress",
+        "done"
+      ]
+    },
+    "pageSize": 20,
+    "assigneeField": "Owner",
+    "subtitleField": "Customer",
+    "source": {
+      "orderBy": "TaskID",
+      "tableName": "QA_E2E_Task",
+      "orderType": "DESC",
+      "keyField": "TaskID"
+    },
+    "amountField": "Amount",
+    "statusField": "Stage",
+    "badges": [
+      {
+        "field": "Priority",
+        "statuses": [
+          {
+            "label": {
+              "ar": "عالية",
+              "en": "High"
+            },
+            "color": "#F43F5E",
+            "value": "high"
+          },
+          {
+            "label": {
+              "ar": "منخفضة",
+              "en": "Low"
+            },
+            "color": "#64748B",
+            "value": "low"
+          }
+        ]
+      }
+    ],
+    "columns": [
+      {
+        "label": {
+          "ar": "جديد",
+          "en": "New"
+        },
+        "color": "#06B6D4",
+        "value": "new"
+      },
+      {
+        "label": {
+          "ar": "جاري",
+          "en": "In progress"
+        },
+        "color": "#8B5CF6",
+        "wipLimit": 40,
+        "value": "progress"
+      },
+      {
+        "label": {
+          "ar": "مراجعة",
+          "en": "Review"
+        },
+        "color": "#F59E0B",
+        "wipLimit": 10,
+        "value": "review"
+      },
+      {
+        "label": {
+          "ar": "تم",
+          "en": "Done"
+        },
+        "color": "#10B981",
+        "value": "done"
+      }
+    ],
+    "dateField": "DueDate",
+    "idField": "TaskID"
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

@@ -171,7 +171,8 @@ export default function SearchableSelect({
     const cached = labelCache.current.get(key);
     if (cached !== undefined) { setSelLabel(cached); return; }
     const seq = ++labelSeqRef.current;
-    SQL.Select(config.tableName, `${config.valueField} = ${keyLiteral(value)}`, [config.valueField, config.displayField], null, null, 0, "", "ASC", 1)
+    // OrderByID لازم يبقى عمود: "" مع Top بيطلع "ORDER BY  ASC" من الباك ويرجع خطأ (فكان بيظهر الرقم بدل الاسم)
+    SQL.Select(config.tableName, `${config.valueField} = ${keyLiteral(value)}`, [config.valueField, config.displayField], null, null, 0, config.valueField, "ASC", 1)
       .then((res) => {
         if (seq !== labelSeqRef.current) return;
         const lbl = String(res.data?.[0]?.[config.displayField] ?? key);

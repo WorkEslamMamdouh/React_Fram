@@ -69,14 +69,35 @@ public class JwtService
             SecurityAlgorithms.HmacSha256
         );
 
+        // W0-3: expiry from Auth:TokenHours (default 5), UtcNow-based.
+        var hours = 5;
+        if (int.TryParse(_config["Auth:TokenHours"], out var h) && h > 0) hours = h;
+
         var token = new JwtSecurityToken(
             issuer: "ERP_API",
             audience: "ERP_CLIENT",
             claims: claims,
-            expires: DateTime.Now.AddHours(5),
+            expires: DateTime.UtcNow.AddHours(hours),
             signingCredentials: creds
         );
 
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    // W0-3: refresh - reissue for an already-authenticated principal.
+    public string GenerateTokenForClaims(string userId, string userCode)
+    {
+        var secretKey = _config["Jwt:Key"];
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, userCode ?? ""),
+            new Claim(ClaimTypes.NameIdentifier, userId ?? ""),
+            new Claim(ClaimTypes.Role, "User")
+        };
+        var creds = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)), SecurityAlgorithms.HmacSha256);
+        var hours = 5;
+        if (int.TryParse(_config["Auth:TokenHours"], out var h) && h > 0) hours = h;
+        var token = new JwtSecurityToken("ERP_API", "ERP_CLIENT", claims, expires: DateTime.UtcNow.AddHours(hours), signingCredentials: creds);
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 

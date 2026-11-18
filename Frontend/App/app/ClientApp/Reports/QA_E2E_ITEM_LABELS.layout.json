@@ -1,0 +1,102 @@
+{
+  "schema": "rf-report/1",
+  "code": "QA_E2E_ITEM_LABELS",
+  "nameAr": "ملصقات أصناف QA (A4 3×8)",
+  "nameEn": "QA item labels (A4 3x8)",
+  "kind": "labels",
+  "page": {
+    "size": "LabelA4_3x8",
+    "dir": "auto"
+  },
+  "data": {
+    "source": {
+      "type": "proc",
+      "name": "dbo.QA_E2E_Rpt_ItemLabels"
+    },
+    "params": [
+      {
+        "name": "CategoryID",
+        "from": "filter",
+        "value": "CategoryID"
+      },
+      {
+        "name": "TypeID",
+        "from": "filter",
+        "value": "TypeID"
+      }
+    ],
+    "tables": {
+      "Data": "lines"
+    }
+  },
+  "styles": {
+    "base": {
+      "size": 8,
+      "color": "#000000"
+    }
+  },
+  "bands": [
+    {
+      "type": "detail",
+      "table": "lines",
+      "layout": "labels",
+      "labels": {
+        "columns": 3,
+        "rows": 8,
+        "width": 70,
+        "height": 37,
+        "gapX": 0,
+        "gapY": 0,
+        "copies": "Copies",
+        "outline": true
+      },
+      "style": {
+        "align": "center",
+        "padding": 2
+      },
+      "elements": [
+        {
+          "type": "text",
+          "text": "{{Company.CompNameA}}",
+          "style": {
+            "size": 6.5,
+            "color": "#475569",
+            "align": "center",
+            "nowrap": true
+          }
+        },
+        {
+          "type": "expression",
+          "expr": "coalesce(ItemName, NameItem)",
+          "style": {
+            "size": 8.5,
+            "bold": true,
+            "align": "center",
+            "nowrap": true
+          }
+        },
+        {
+          "type": "barcode",
+          "value": "coalesce(Barcode, ItemCode)",
+          "format": "EAN13",
+          "barHeight": 11,
+          "showText": true
+        },
+        {
+          "type": "expression",
+          "expr": "coalesce(Price, UnitPrice)",
+          "format": "n2",
+          "label": {
+            "ar": "السعر",
+            "en": "Price"
+          },
+          "style": {
+            "size": 9,
+            "bold": true,
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}

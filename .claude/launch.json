@@ -12,6 +12,19 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": ["/c", "cd /d C:\\PC\\Work\\React_Fram\\Backend && dotnet run --launch-profile ERP"],
       "port": 49475
+    },
+    {
+      "name": "studio-api-e2e",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set Cors__Origins__2=http://studio.localhost:3000&& cd /d C:\\PC\\Work\\ERP_Studio\\Backend\\src\\Studio.Api && dotnet run --launch-profile http"],
+      "port": 5080
+    },
+    {
+      "name": "studio-web-e2e",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set NEXT_PUBLIC_API_BASE=http://studio.localhost:5080&& cd /d C:\\PC\\Work\\ERP_Studio\\Frontend && npm run dev"],
+      "port": 3000,
+      "url": "http://studio.localhost:3000"
     }
   ]
 }

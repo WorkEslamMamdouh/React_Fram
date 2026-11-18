@@ -4,7 +4,7 @@
 //  ExternalApi.ts  -  Phase 9: typed helpers for the free public APIs (via the backend)
 //  كل الدوال بتنادي api/ExternalApis/Use بالـ JWT، ومبترميش خطأ أبداً:
 //  لو الخدمة مش مفعّلة (أو فيها مشكلة) بترجّع { ok:false, data:null, message } بدل ما تبوّظ الشاشة.
-//  التفعيل بيتم من شاشة الأدمن: /ClientApp/Sys_ExternalApisAdmin
+//  التفعيل وحفظ المفاتيح بيتم من ERP Studio (Integrations) في جدول Sys_ExternalApis
 //
 //  مثال:
 //    const r = await getExchangeRate("USD", "EUR");

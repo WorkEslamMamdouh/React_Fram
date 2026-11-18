@@ -84,7 +84,11 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod());
 });
 
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+// W0-3: JWT key from config (env var Jwt__Key overrides). Warn (don't fail) if < 32 bytes.
+var jwtKeyStr = builder.Configuration["Jwt:Key"] ?? "";
+var key = Encoding.UTF8.GetBytes(jwtKeyStr);
+if (key.Length < 32)
+    Console.WriteLine($"⚠️ WARNING: Jwt:Key is only {key.Length} bytes; set a 32+ char key via the Jwt__Key environment variable.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -108,10 +112,92 @@ builder.Services.AddAuthentication(options =>
 
         ClockSkew = TimeSpan.Zero
     };
-});
+
+    // W0-3 / W1-1: let SignalR hubs (/hubs/app) pass the JWT via ?access_token=
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            var accessToken = ctx.Request.Query["access_token"];
+            var path = ctx.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/app"))
+                ctx.Token = accessToken;
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+    };
+})
+// W1-3: device token scheme for /hubs/devices and api/devices/*
+.AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, ERP.Devices.DeviceAuthenticationHandler>(
+    ERP.Devices.DeviceAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<SQLServer>();
+
+// ==========================================
+// 🔥 Wave 0 / Wave 1 services
+// ==========================================
+builder.Services.AddMemoryCache(); // always (DataApiAuthFilter + caches)
+builder.Services.AddSingleton<ERP.Audit.AuditWriter>();
+builder.Services.AddSingleton<GateWay.Security.SensitiveDataGuard>();
+builder.Services.AddScoped<ERP.Auth.PasswordService>();
+builder.Services.AddScoped<GateWay.Security.DataApiAuthFilter>();
+
+// W0-1: rate limit login (10/min/IP)
+builder.Services.AddRateLimiter(o =>
+{
+    o.AddPolicy("login", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
+            _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    o.AddPolicy("pair", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
+            _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
+// ==========================================
+// 🔥 Wave 1 runtime: realtime, devices, printing, attendance, numbering, custom fields, jobs
+// ==========================================
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<ERP.Realtime.DeviceConnectionRegistry>();
+builder.Services.AddSingleton<ERP.Realtime.RealtimeNotifier>();
+builder.Services.AddSingleton<ERP.Devices.RuntimeKeyStore>();
+builder.Services.AddSingleton<ERP.Realtime.IDeviceConfigService, ERP.Devices.DeviceConfigService>();
+builder.Services.AddSingleton<ERP.Devices.PairingService>();
+builder.Services.AddSingleton<ERP.Attendance.PunchIngestService>();
+builder.Services.AddSingleton<ERP.Attendance.PunchMapper>();
+builder.Services.AddSingleton<ERP.Attendance.RosterResolver>();
+builder.Services.AddSingleton<ERP.Attendance.AttProcessService>();
+builder.Services.AddSingleton<ERP.Common.PermissionChecker>();
+builder.Services.AddSingleton<ERP.Printing.PrintService>();
+builder.Services.AddSingleton<ERP.Numbering.NumberingService>();
+builder.Services.AddSingleton<ERP.CustomFields.CustomFieldService>();
+builder.Services.AddSingleton<ERP.Audit.AuditService>();
+
+// job handlers (resolved per run inside a scope)
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.AttMapHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.AttProcessHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.PrintExpireHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.PrintPurgeHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.DeviceOfflineSweepHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.DeviceTimeSyncHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.AuditPurgeHandler>();
+builder.Services.AddTransient<ERP.Jobs.IJobHandler, ERP.Jobs.PasswordMigrateHandler>();
+
+// background services
+builder.Services.AddHostedService<ERP.Jobs.JobScheduler>();
+builder.Services.AddHostedService<ERP.Jobs.DeviceCommandDispatcher>();
+builder.Services.AddHostedService<ERP.Jobs.PrintJobDispatcher>();
 
 
 
@@ -205,9 +291,41 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors("AllowAll");
+app.UseRateLimiter();            // W0-1
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// W1-1: SignalR hubs
+app.MapHub<ERP.Realtime.AppHub>("/hubs/app");
+app.MapHub<ERP.Realtime.DeviceHub>("/hubs/devices", o => { o.ApplicationMaxBufferSize = 65536; o.TransportMaxBufferSize = 65536; });
+
+// W1-3: ensure the runtime RSA key exists (for sealed device secrets)
+try { await app.Services.GetRequiredService<ERP.Devices.RuntimeKeyStore>().EnsureActiveKeyAsync(); }
+catch (Exception ex) { Console.WriteLine($"⚠️ Runtime key init skipped: {ex.Message}"); }
+
+// W0-5: upsert runtime settings (contract version + public URL) on startup.
+try
+{
+    var publicUrl = builder.Configuration["Runtime:PublicUrl"] ?? "";
+    using var con = new Microsoft.Data.SqlClient.SqlConnection(ConnectionString.connectionString);
+    con.Open();
+    using var cmd = new Microsoft.Data.SqlClient.SqlCommand(@"
+IF OBJECT_ID(N'dbo.Sys_RuntimeSettings', N'U') IS NOT NULL
+BEGIN
+    MERGE dbo.Sys_RuntimeSettings AS t USING (SELECT 'Contract.Version' AS K, N'wave1-v1' AS V) s ON t.SettingKey=s.K
+      WHEN MATCHED THEN UPDATE SET SettingValue=s.V, UpdatedAt=SYSUTCDATETIME(), UpdatedBy=N'runtime'
+      WHEN NOT MATCHED THEN INSERT (SettingKey,SettingValue,UpdatedBy) VALUES (s.K,s.V,N'runtime');
+    IF @url <> N''
+      MERGE dbo.Sys_RuntimeSettings AS t USING (SELECT 'Runtime.PublicUrl' AS K, @url AS V) s ON t.SettingKey=s.K
+        WHEN MATCHED THEN UPDATE SET SettingValue=s.V, UpdatedAt=SYSUTCDATETIME(), UpdatedBy=N'runtime'
+        WHEN NOT MATCHED THEN INSERT (SettingKey,SettingValue,UpdatedBy) VALUES (s.K,s.V,N'runtime');
+END", con);
+    cmd.Parameters.AddWithValue("@url", publicUrl);
+    cmd.ExecuteNonQuery();
+    Console.WriteLine("✅ Runtime settings upserted (Contract.Version=wave1-v1)");
+}
+catch (Exception ex) { Console.WriteLine($"⚠️ Runtime settings upsert skipped: {ex.Message}"); }
 
 // ==========================================
 // 🔥 تشغيل التطبيق

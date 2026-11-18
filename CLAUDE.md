@@ -30,8 +30,15 @@
 - `DynamicGrid`: شاشات الجريد العادية. الأعمدة لازم تبقى جوه `useMemo`. خصائص مهمة: `extraActions`, `onRowDoubleClick`, `beforeSave`.
 - `MasterDetail.tsx` + أنواعه في `ModelMasterDetail.ts`:
   - قايمة الإجراءات: عرض (قراءة بس) / تعديل / طباعة / حذف.
-  - `enableView` و `enablePrint` (الافتراضي true)، و `onPrint(row)` — لو مش متحددة بتظهر رسالة "الطباعة هتبقى متاحة قريب".
+  - `enableView` و `enablePrint` (الافتراضي true)، و `onPrint(row)` — لو مش متحددة بيستخدم `report.transaction` (تقرير متعرّف)، ولو مفيش بتظهر رسالة "الطباعة هتبقى متاحة قريب".
 - `Validation.ts`: `RunValidations` و `ValidateRow`، وبيدعم شرط على جدول خارجي.
+
+### التقارير والطباعة (`Shared/Reports/`)
+- نظام تقارير بتاعنا بتصميم JSON (`rf-report/1`) بدل Stimulsoft. المواصفات: `Docs/Studio/05_Report_Layout_Format.md`، والأنواع في `ReportLayoutTypes.ts`.
+- `openReport({ reportCode, filters | row })` (نفس التوقيع) = تقرير متعرّف في `Sys_Reports` بيتشغّل من `api/Reports/run`. `openLayoutReport({ layout, data })` = تصميم وبيانات جاهزين.
+- العارض: طباعة / PDF (من نافذة الطباعة) / Excel / تكبير / تنقل صفحات. التقرير اللي ملوش تصميم JSON (أو عليه تصميم Stimulsoft قديم) بيتعرض بتصميم تلقائي.
+- قوالب جاهزة في `Shared/Reports/templates/`: فاتورة A4، إيصال 80 مم، ملصقات باركود A4.
+- تعريف التقارير وتصميمها، والمستخدمين والأدوار والصلاحيات والخدمات الخارجية بقوا في تطبيق ERP Studio المنفصل (مفيش أدمن جوه الفريم ورك).
 
 ## الصلاحيات
 - `IQ_Sys_RoleModule` = صفوف `Sys_RoleModule` (UserID 0) UNION صفوف `Sys_UserModule` (RoleId 0) لكل مستخدم/شركة/فرع، JOIN `Sys_Modules` و `Sys_RoleUsers` الفعالة، LEFT JOIN `Sys_ControlYear`.
@@ -52,10 +59,10 @@
 
 ## شاشات معمولة
 - TestPage، CashTypes، FinancialType (جريد).
-- SalesInvoice (ماستر ديتيل): الماستر بيتحفظ في `I_TR_Sales` والقايمة من `IQ_TR_Sales`، والتفاصيل بتتحفظ في `I_TR_SaleDetails` وبتتحمل من `IQ_TR_SaleDetails`. عمود `NetAmount` محسوب فـ `IsSave: false`.
+- SalesInvoice (ماستر ديتيل): الماستر بيتحفظ في `I_TR_Sales` والقايمة من `IQ_TR_Sales`، والتفاصيل بتتحفظ في `I_TR_SaleDetails` وبتتحمل من `IQ_TR_SaleDetails`. عمود `NetAmount` محسوب فـ `IsSave: false`. الطباعة (`onPrint`) بتفتح قالب الفاتورة A4 بالعارض الجديد.
 
 ## مستني
-- الطباعة الفعلية لشاشات الماستر ديتيل (عن طريق `onPrint`).
+- تصميم تقارير JSON لباقي الشاشات (من مصمم ERP Studio).
 - إصلاح `BuildWhereUltraFast`.
 
 

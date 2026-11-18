@@ -997,3 +997,15 @@ C:\Users\ServerStitch\AppData\Local\Temp\erpbuild_lead_final\ERP.deps.json
 C:\Users\ServerStitch\AppData\Local\Temp\erpbuild_lead_final\ERP.runtimeconfig.json
 C:\Users\ServerStitch\AppData\Local\Temp\erpbuild_lead_final\ERP.dll
 C:\Users\ServerStitch\AppData\Local\Temp\erpbuild_lead_final\ERP.pdb
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\appsettings.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\App_Data\external-apis.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\App_Data\Reports\definitions.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\App_Data\Reports\layouts.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\eslam-197ff-firebase-adminsdk-s5d5j-61b161c435.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\ERP.staticwebassets.endpoints.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\ERP.exe
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\ERP.deps.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\ERP.runtimeconfig.json
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\ERP.dll
+C:\Users\ServerStitch\AppData\Local\Temp\claude\17cac5b45d257da0\ca21d170-9b87-4b29-af25-d9b6a4fe9e7e\scratchpad\bkbuild\ERP.pdb
+C:\PC\Work\React_Fram\Backend\bin\Debug\net9.0\Cronos.dll

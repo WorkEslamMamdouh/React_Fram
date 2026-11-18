@@ -1,0 +1,129 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_Kitchen",
+  "pattern": "P18",
+  "titleAr": "شاشة المطبخ (QA)",
+  "titleEn": "QA Kitchen display",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-fire-burner",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "source": {
+      "tableName": "QA_E2E_IQ_KitchenTickets"
+    },
+    "thresholds": [
+      {
+        "color": "#10B981",
+        "fromMinutes": 0
+      },
+      {
+        "color": "#F59E0B",
+        "fromMinutes": 8
+      },
+      {
+        "color": "#F43F5E",
+        "fromMinutes": 15
+      }
+    ],
+    "layout": "rail",
+    "recallCount": 8,
+    "stations": [
+      {
+        "id": "expo",
+        "label": {
+          "ar": "التجميع",
+          "en": "Expo"
+        }
+      },
+      {
+        "label": {
+          "ar": "الشواية",
+          "en": "Grill"
+        },
+        "accepts": [
+          "grill"
+        ],
+        "id": "grill"
+      },
+      {
+        "label": {
+          "ar": "البيتزا",
+          "en": "Pizza"
+        },
+        "accepts": [
+          "pizza"
+        ],
+        "id": "pizza"
+      },
+      {
+        "label": {
+          "ar": "البارد",
+          "en": "Cold"
+        },
+        "accepts": [
+          "cold",
+          "bar"
+        ],
+        "id": "cold"
+      }
+    ],
+    "refreshSeconds": 10,
+    "showAllDay": true,
+    "fields": {
+      "idField": "TicketID",
+      "typeField": "OrderType",
+      "notesField": "Notes",
+      "statusField": "Status",
+      "createdAtField": "CreatedAt",
+      "numberField": "OrderNo",
+      "bumpedAtField": "BumpedAt",
+      "itemsField": "ItemsJson",
+      "tableField": "TableNo"
+    },
+    "soundOnNew": true,
+    "statusValues": {
+      "new": "new",
+      "started": "started",
+      "done": "done"
+    }
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

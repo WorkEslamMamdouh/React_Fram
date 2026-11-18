@@ -1,0 +1,210 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_MemberWizard",
+  "pattern": "P15",
+  "titleAr": "اشتراك عضو جديد (QA)",
+  "titleEn": "QA Member sign-up",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-person-running",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "id": "QA_E2E_Signup",
+    "allowDraft": true,
+    "allowJumpBack": true,
+    "finishLabel": {
+      "ar": "إنشاء الاشتراك",
+      "en": "Create membership"
+    },
+    "keyColumn": "MemberID",
+    "steps": [
+      {
+        "title": {
+          "ar": "بيانات العضو",
+          "en": "Member"
+        },
+        "validations": [
+          {
+            "field": "Phone",
+            "table": "QA_E2E_Member",
+            "messageEn": "Phone already registered",
+            "type": "unique",
+            "messageAr": "الموبايل متسجل قبل كده"
+          }
+        ],
+        "id": "personal",
+        "fields": [
+          {
+            "field": "FullName",
+            "label": {
+              "ar": "الاسم",
+              "en": "Full name"
+            },
+            "span": 2,
+            "required": true
+          },
+          {
+            "field": "Phone",
+            "label": {
+              "ar": "الموبايل",
+              "en": "Mobile"
+            },
+            "pattern": "^01[0125][0-9]{8}$",
+            "type": "phone",
+            "required": true
+          },
+          {
+            "field": "Email",
+            "label": {
+              "ar": "الإيميل",
+              "en": "Email"
+            },
+            "type": "email"
+          }
+        ]
+      },
+      {
+        "title": {
+          "ar": "الباقة",
+          "en": "Plan"
+        },
+        "id": "plan",
+        "fields": [
+          {
+            "field": "PlanCode",
+            "label": {
+              "ar": "الباقة",
+              "en": "Plan"
+            },
+            "options": [
+              {
+                "value": "day",
+                "label": {
+                  "ar": "يوم",
+                  "en": "Day pass"
+                }
+              },
+              {
+                "value": "m1",
+                "label": {
+                  "ar": "شهر",
+                  "en": "1 month"
+                }
+              },
+              {
+                "value": "m3",
+                "label": {
+                  "ar": "3 شهور",
+                  "en": "3 months"
+                }
+              }
+            ],
+            "type": "select",
+            "required": true
+          },
+          {
+            "field": "HasTrainer",
+            "label": {
+              "ar": "مدرب",
+              "en": "Trainer"
+            },
+            "type": "checkbox"
+          },
+          {
+            "label": {
+              "ar": "المدرب",
+              "en": "Trainer"
+            },
+            "options": [
+              {
+                "value": 1,
+                "label": "Hany"
+              },
+              {
+                "value": 2,
+                "label": "Laila"
+              }
+            ],
+            "type": "select",
+            "required": true,
+            "visibleWhen": {
+              "equals": true,
+              "field": "HasTrainer"
+            },
+            "field": "TrainerID"
+          }
+        ]
+      },
+      {
+        "skipWhen": {
+          "equals": "day",
+          "field": "PlanCode"
+        },
+        "title": {
+          "ar": "الصحة",
+          "en": "Health"
+        },
+        "id": "health",
+        "fields": [
+          {
+            "field": "Weight",
+            "label": {
+              "ar": "الوزن",
+              "en": "Weight"
+            },
+            "min": 30,
+            "type": "number",
+            "max": 250
+          }
+        ]
+      },
+      {
+        "title": {
+          "ar": "مراجعة",
+          "en": "Review"
+        },
+        "id": "summary",
+        "kind": "summary"
+      }
+    ],
+    "tableName": "QA_E2E_Member"
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

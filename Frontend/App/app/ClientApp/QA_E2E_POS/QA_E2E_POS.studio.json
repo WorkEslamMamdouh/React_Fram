@@ -1,0 +1,172 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_POS",
+  "pattern": "P11",
+  "titleAr": "نقطة بيع المطعم (QA)",
+  "titleEn": "QA Touch POS",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-cash-register",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "mode": "restaurant",
+    "quickCash": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "modifierGroups": [
+      {
+        "label": {
+          "ar": "الحجم",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "id": "s",
+            "label": {
+              "ar": "صغير",
+              "en": "Small"
+            }
+          },
+          {
+            "label": {
+              "ar": "كبير",
+              "en": "Large"
+            },
+            "id": "l",
+            "priceDelta": 20
+          }
+        ],
+        "min": 1,
+        "id": 1,
+        "max": 1
+      }
+    ],
+    "serviceChargePercent": 12,
+    "items": {
+      "source": {
+        "orderBy": "SortOrder",
+        "tableName": "QA_E2E_MenuItem",
+        "keyField": "MenuItemID"
+      },
+      "loadMode": "infinite",
+      "idField": "MenuItemID",
+      "priceField": "Price",
+      "nameField": "NameAr",
+      "availableField": "Available",
+      "pageSize": 40,
+      "nameFieldEn": "NameEn",
+      "searchFields": [
+        "NameAr",
+        "NameEn",
+        "Barcode"
+      ],
+      "barcodeField": "Barcode",
+      "categoryField": "CategoryID"
+    },
+    "tax": {
+      "label": {
+        "ar": "ض.ق.م",
+        "en": "VAT"
+      },
+      "inclusive": true,
+      "rate": 14
+    },
+    "categoriesSource": {
+      "idField": "CategoryID",
+      "tableName": "QA_E2E_MenuCategory",
+      "colorField": "Color",
+      "labelField": "NameAr",
+      "labelFieldEn": "NameEn"
+    },
+    "currency": {
+      "ar": "ج.م",
+      "en": "EGP"
+    },
+    "discounts": {
+      "allowLine": true,
+      "presets": [
+        5,
+        10,
+        15,
+        25
+      ],
+      "maxPercent": 15,
+      "allowOrder": true
+    },
+    "paymentMethods": [
+      {
+        "label": {
+          "ar": "كاش",
+          "en": "Cash"
+        },
+        "id": "cash",
+        "isCash": true
+      },
+      {
+        "id": "card",
+        "label": {
+          "ar": "فيزا",
+          "en": "Card"
+        }
+      }
+    ],
+    "scanner": true,
+    "orderTypes": [
+      {
+        "id": "dine",
+        "label": {
+          "ar": "صالة",
+          "en": "Dine-in"
+        }
+      },
+      {
+        "id": "take",
+        "label": {
+          "ar": "تيك أواي",
+          "en": "Takeaway"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

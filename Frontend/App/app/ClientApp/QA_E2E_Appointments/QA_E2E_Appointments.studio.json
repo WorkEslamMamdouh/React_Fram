@@ -1,0 +1,122 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_Appointments",
+  "pattern": "P07",
+  "titleAr": "مواعيد العيادة (QA)",
+  "titleEn": "QA Appointments",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-calendar-days",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "statuses": [
+      {
+        "label": {
+          "ar": "محجوز",
+          "en": "Booked"
+        },
+        "color": "#3B82F6",
+        "value": "booked"
+      },
+      {
+        "label": {
+          "ar": "وصل",
+          "en": "Arrived"
+        },
+        "color": "#10B981",
+        "value": "arrived"
+      },
+      {
+        "label": {
+          "ar": "تم",
+          "en": "Done"
+        },
+        "color": "#64748B",
+        "value": "done"
+      },
+      {
+        "label": {
+          "ar": "لم يحضر",
+          "en": "No-show"
+        },
+        "color": "#F43F5E",
+        "value": "noshow"
+      }
+    ],
+    "capacity": 1,
+    "allowDrag": true,
+    "resourcesSource": {
+      "idField": "DoctorID",
+      "tableName": "QA_E2E_Doctor",
+      "colorField": "Color",
+      "labelField": "NameAr",
+      "labelFieldEn": "NameEn"
+    },
+    "defaultView": "resource",
+    "dayStart": "08:00",
+    "overlap": "warn",
+    "weekStartsOn": 6,
+    "defaultDuration": 30,
+    "slotMinutes": 30,
+    "events": {
+      "startField": "StartAt",
+      "subtitleField": "AppType",
+      "source": {
+        "tableName": "QA_E2E_Appointment",
+        "keyField": "AppID"
+      },
+      "statusField": "Status",
+      "durationField": "Duration",
+      "titleField": "PatientName",
+      "resourceField": "DoctorID",
+      "idField": "AppID"
+    },
+    "dayEnd": "21:00",
+    "views": [
+      "resource",
+      "day",
+      "week",
+      "month",
+      "agenda"
+    ],
+    "mobileView": "agenda"
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

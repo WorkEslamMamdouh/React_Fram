@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import LoginLayout from "./Layouts/LoginLayout";
 import HomeLayout from "./Layouts/HomeLayout/HomeLayout";
-import AdminLayout from "./Layouts/AdminLayout";
 import NotLayout from "./Layouts/NotLayout";
 import { useSys } from "./Shared/SystemUsing";
 import { useEffect } from "react";
@@ -52,17 +51,9 @@ useEffect(() => {
     Login: LoginLayout,
     Register: LoginLayout,
     LoginCompany:LoginLayout,
-    AdminLogin: NotLayout,
     // **************
 
-    // **************AdminLayout
-    Admin: AdminLayout,
-    ScreenBuilder: AdminLayout,
-    AdminReports: AdminLayout,
-    AdminUsers: AdminLayout,
-    AdminRoles: AdminLayout,
-    AdminUserPerms: AdminLayout,
-    AdminExternalApis: AdminLayout,
+    // **************HomeLayout
     Home: HomeLayout,
     SalesApproval: HomeLayout,
     Cost_Center: HomeLayout,
@@ -82,7 +73,7 @@ useEffect(() => {
   };
 
   // أي شاشة مش مكتوبة فوق (شاشات جديدة) بتتفتح جوه HomeLayout تلقائي.
-  // الصفحات اللي ليها Layout مختلف (NotLayout / LoginLayout / AdminLayout) لازم تفضل مكتوبة فوق.
+  // الصفحات اللي ليها Layout مختلف (NotLayout / LoginLayout) لازم تفضل مكتوبة فوق.
   const Layout = Object.prototype.hasOwnProperty.call(routes, page) ? routes[page] : HomeLayout;
 
   return (

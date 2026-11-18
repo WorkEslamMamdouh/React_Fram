@@ -27,10 +27,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!hydrated) return;
 
-    // منطقة الأدمن (توكن الأدمن) مش محتاجة دخول ERP: AdminLayout بيتحقق من توكن الأدمن بنفسه
-    const p = window.location.pathname;
-    if (p.includes("/ClientApp/Admin") || p.includes("/ClientApp/ScreenBuilder")) return;
-
     if (!token || token.trim() === "") {
       OpenPage("Login", router);
     }

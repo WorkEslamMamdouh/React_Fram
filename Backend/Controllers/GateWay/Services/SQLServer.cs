@@ -1990,70 +1990,16 @@ namespace GateWay.App
             if (string.IsNullOrWhiteSpace(condition))
                 return ("", new List<SqlParameter>());
 
-            var parameters = new List<SqlParameter>();
-            int index = 0;
+            // التحويل لباراميترز بقى في WhereParameterizer (مسح حرف حرف):
+            // - كل قيمة بتتبدل في مكانها بالظبط (مفيش string.Replace) فـ "= 15" مابتتبوظش بسبب "= 1"
+            // - الأرقام العشرية والسالبة، و'O''Brien'، وأي "=" جوه نص بين علامتين بتتساب زي ما هي
+            var (sql, values) = WhereParameterizer.Parameterize(condition);
+            var parameters = new List<SqlParameter>(values.Count);
+            foreach (var kv in values)
+                parameters.Add(new SqlParameter(kv.Key, kv.Value));
 
-            // ✅ استخدام Span للاستبدال (أسرع)
-            var matches = s_regex.Matches(condition);
-
-            // لو مفيش matches ارجع فوراً
-            if (matches.Count == 0)
-                return ("WHERE " + condition, parameters);
-
-            // نبني StringBuilder ونستبدل من الآخر للأول عشان المواقع ماتتغيرش
-            var sb = new System.Text.StringBuilder(condition);
-            for (int i = matches.Count - 1; i >= 0; i--)
-            {
-                var match = matches[i];
-                string originalValue = match.Groups[1].ValueSpan.ToString();
-                string paramName = $"@p{index++}";
-
-                object val;
-                int len = originalValue.Length;
-
-                if (len >= 2 && originalValue[0] == 'N' && originalValue[1] == '\'')
-                {
-                    val = originalValue.Substring(2, len - 3);
-                }
-                else if (len >= 1 && originalValue[0] == '\'')
-                {
-                    val = originalValue.Substring(1, len - 2);
-                }
-                else if (len == 4 && (originalValue[0] == 'N' || originalValue[0] == 'n') &&
-                         (originalValue[1] == 'U' || originalValue[1] == 'u') &&
-                         (originalValue[2] == 'L' || originalValue[2] == 'l') &&
-                         (originalValue[3] == 'L' || originalValue[3] == 'l'))
-                {
-                    val = DBNull.Value;
-                }
-                else
-                {
-                    if (int.TryParse(originalValue, out int intVal))
-                        val = intVal;
-                    else if (decimal.TryParse(originalValue, out decimal decVal))
-                        val = decVal;
-                    else if (long.TryParse(originalValue, out long longVal))
-                        val = longVal;
-                    else
-                        val = originalValue;
-                }
-
-                parameters.Add(new SqlParameter(paramName, val));
-
-                // استبدال بالموقع الدقيق — مش string.Replace اللي بيبوظ القيم المشابهة
-                sb.Remove(match.Index, match.Length);
-                sb.Insert(match.Index, $"= {paramName}");
-            }
-            condition = sb.ToString();
-
-            return ("WHERE " + condition, parameters);
+            return ("WHERE " + sql, parameters);
         }
-
-        // 🚀 إضافة RegexOptions.NonBacktracking لو target .NET 7+
-        private static readonly Regex s_regex = new Regex(
-            @"=\s*(N?'[^']*'|'[^']*'|\d+|NULL)",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking
-        );
 
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, List<ColumnInfo>> _columnsCache = new();
 

@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v9.0": {
       "ERP/1.0.0": {
         "dependencies": {
+          "Cronos": "0.8.4",
           "FirebaseAdmin": "3.5.0",
           "Google.Apis.Auth": "1.74.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "6.0.0",
@@ -19,6 +20,14 @@
         },
         "runtime": {
           "ERP.dll": {}
+        }
+      },
+      "Cronos/0.8.4": {
+        "runtime": {
+          "lib/netstandard2.0/Cronos.dll": {
+            "assemblyVersion": "0.8.4.0",
+            "fileVersion": "0.8.4.0"
+          }
         }
       },
       "FirebaseAdmin/3.5.0": {
@@ -602,6 +611,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Cronos/0.8.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sTyvTH8hh5YWivinRGzL5QrfKKt59I/Hh+4m8j6vmtJdSOWA4I3B+AS9iJk3RdQqZ+i4E+0PlhYuY9iaxDLTcQ==",
+      "path": "cronos/0.8.4",
+      "hashPath": "cronos.0.8.4.nupkg.sha512"
     },
     "FirebaseAdmin/3.5.0": {
       "type": "package",

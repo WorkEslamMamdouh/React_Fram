@@ -21,14 +21,50 @@ namespace GateWay.Controllers
     [Route("api/[controller]")]
     //[Authorize]
     [ServiceFilter(typeof(AutoDecryptFilter))]
+    [ServiceFilter(typeof(GateWay.Security.DataApiAuthFilter))]
     public class ManageDataSQLController : ControllerBase
     {
         private readonly SQLServer _service = new SQLServer();
+        private readonly GateWay.Security.SensitiveDataGuard _guard;
+        private readonly ERP.Numbering.NumberingService _numbering;
+        private readonly ERP.CustomFields.CustomFieldService _customFields;
+        private readonly ERP.Audit.AuditService _audit;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _cfg;
+
+        public ManageDataSQLController(GateWay.Security.SensitiveDataGuard guard,
+            ERP.Numbering.NumberingService numbering, ERP.CustomFields.CustomFieldService customFields,
+            ERP.Audit.AuditService audit, Microsoft.Extensions.Configuration.IConfiguration cfg)
+        {
+            _guard = guard;
+            _numbering = numbering;
+            _customFields = customFields;
+            _audit = audit;
+            _cfg = cfg;
+        }
+
+        private bool FeatNumbering => _cfg.GetValue<bool?>("Features:Numbering") ?? true;
+        private bool FeatCustomFields => _cfg.GetValue<bool?>("Features:CustomFields") ?? true;
+        private int? CurrentUserId => int.TryParse(User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id) ? id : (int?)null;
+
+        // §6.12: does any save-pipeline step apply to this table? (cheap cached checks; plain screens skip the hook)
+        private async Task<bool> PipelineAppliesAsync(string table, bool hasExtra)
+        {
+            if (hasExtra && FeatCustomFields) return true;
+            if (FeatNumbering && await _numbering.HasBindingAsync(table)) return true;
+            if (FeatCustomFields && await _customFields.HasEntityAsync(table)) return true;
+            if (await _audit.GetPolicyAsync(table) != null) return true;
+            return false;
+        }
 
         [HttpPost("GetDataFromSql")]
         public async Task<IActionResult> GetDataFromSql([FromBody] List<TableModel> Entity)
         {
             var Res = await _service.Get_DataFromSql(Entity);
+            // W0-2: redact sensitive columns (procs trusted)
+            if (Res != null && Entity != null)
+                for (int i = 0; i < Entity.Count && i < Res.Count; i++)
+                    if (!Entity[i].IsProc)
+                        _guard.Redact(Entity[i].NameTable, Res[i]);
             return Ok(JsonConvert.SerializeObject(Res));
         }
 
@@ -74,6 +110,11 @@ namespace GateWay.Controllers
                         }
                     });
 
+                // W0-2: strip sensitive columns from table reads (procs are trusted).
+                for (int i = 0; i < tables.Count; i++)
+                    if (!tables[i].IsProc)
+                        _guard.Redact(tables[i].NameTable, results[i]);
+
                 sw.Stop();
                 return Ok(JsonConvert.SerializeObject(new BaseResponse(results, sw.ElapsedMilliseconds)));
             }
@@ -90,11 +131,31 @@ namespace GateWay.Controllers
             { 
 
                 var sw = Stopwatch.StartNew();
-                var result = await _service.ExecuteTransaction(async (con, tran) =>
+                var dict = _service.JsonToDictionary(request.Data);
+                var extra = _customFields.SplitExtra(dict);   // §6.12: remove __extra before the insert
+                _guard.CheckWrite(request.TableName, dict.Keys); // W0-2
+                object result;
+                if (!await PipelineAppliesAsync(request.TableName, extra != null))
                 {
-                    var dict = _service.JsonToDictionary(request.Data);
-                    return await _service.Insert( request.TableName, dict);
-                });
+                    // plain screen: original path, byte-for-byte unchanged
+                    result = await _service.Insert(request.TableName, dict);
+                }
+                else
+                {
+                    var uid = CurrentUserId;
+                    result = await _service.ExecuteTransaction(async (con, tran) =>
+                    {
+                        if (FeatNumbering) await _numbering.FillAsync(con, tran, request.TableName, dict);     // gapless number inside the tran
+                        var ins = await _service.InsertAutoWithResult(con, tran, request.TableName, dict);
+                        var recordKey = ins.InsertedId?.ToString();
+                        if (extra != null && FeatCustomFields && recordKey != null)
+                            await _customFields.SaveExtraAsync(con, tran, request.TableName, recordKey, extra, uid);
+                        var pol = await _audit.GetPolicyAsync(request.TableName);
+                        if (pol != null && pol.AuditInsert)
+                            await _audit.CaptureAsync(con, tran, "I", pol, request.TableName, recordKey, null, ins.InsertedRow ?? dict, uid, null, null);
+                        return (object)ins;
+                    });
+                }
                 sw.Stop();
                 return Ok(JsonConvert.SerializeObject(new BaseResponse(result, sw.ElapsedMilliseconds)));
             }
@@ -112,6 +173,7 @@ namespace GateWay.Controllers
             {
                 var sw = Stopwatch.StartNew();
                 var dataList = request.DataList.Select(d => _service.JsonToDictionary(d)).ToList();
+                _guard.CheckWrite(request.TableName); // W0-2
                 var result = await _service.ExecuteTransaction(async (con, tran) =>
                 {
                     return await _service.InsertAuto(con, tran, request.TableName, dataList);
@@ -132,11 +194,35 @@ namespace GateWay.Controllers
             try
             {
                 var sw = Stopwatch.StartNew();
-                var result = await _service.ExecuteTransaction(async (con, tran) =>
+                var dict = _service.JsonToDictionary(request.Data);
+                var extra = _customFields.SplitExtra(dict);   // §6.12
+                _guard.CheckWrite(request.TableName, dict.Keys); // W0-2
+                int result;
+                if (!await PipelineAppliesAsync(request.TableName, extra != null))
                 {
-                    var dict = _service.JsonToDictionary(request.Data);
-                    return await _service.UpdateAuto(con, tran, request.TableName, dict, request.KeyColumn);
-                });
+                    result = await _service.ExecuteTransaction(async (con, tran) =>
+                        await _service.UpdateAuto(con, tran, request.TableName, dict, request.KeyColumn));
+                }
+                else
+                {
+                    var uid = CurrentUserId;
+                    var keyCol = string.IsNullOrEmpty(request.KeyColumn) ? "Id" : request.KeyColumn;
+                    object? keyVal = dict.TryGetValue(keyCol, out var kv) ? kv : null;
+                    result = await _service.ExecuteTransaction(async (con, tran) =>
+                    {
+                        var pol = await _audit.GetPolicyAsync(request.TableName);
+                        System.Collections.Generic.Dictionary<string, object?>? oldRow = null;
+                        if (pol != null && pol.AuditUpdate && keyVal != null)
+                            oldRow = await _audit.LoadOldAsync(con, tran, request.TableName, keyCol, keyVal);
+                        var rows = await _service.UpdateAuto(con, tran, request.TableName, dict, keyCol);
+                        var recordKey = keyVal?.ToString();
+                        if (extra != null && FeatCustomFields && recordKey != null)
+                            await _customFields.SaveExtraAsync(con, tran, request.TableName, recordKey, extra, uid);
+                        if (pol != null && pol.AuditUpdate)
+                            await _audit.CaptureAsync(con, tran, "U", pol, request.TableName, recordKey, oldRow, dict, uid, null, null);
+                        return rows;
+                    });
+                }
                 sw.Stop();
                 return Ok(JsonConvert.SerializeObject(new BaseResponse(result, sw.ElapsedMilliseconds)));
             }
@@ -154,6 +240,7 @@ namespace GateWay.Controllers
             {
                 var sw = Stopwatch.StartNew();
                 var dataList = request.DataList.Select(d => _service.JsonToDictionary(d)).ToList();
+                _guard.CheckWrite(request.TableName); // W0-2
                 var result = await _service.ExecuteTransaction(async (con, tran) =>
                 {
                     return await _service.UpdateAuto(con, tran, request.TableName, dataList, request.KeyColumn);
@@ -174,6 +261,7 @@ namespace GateWay.Controllers
             try
             {
                 var sw = Stopwatch.StartNew();
+                _guard.CheckWrite(request.TableName); // W0-2
                 var result = await _service.ExecuteTransaction(async (con, tran) =>
                 {
                     return await _service.DeleteList(con, tran, request.TableName, request.Ids.Cast<object>().ToList(), request.KeyColumn);
@@ -195,6 +283,7 @@ namespace GateWay.Controllers
             {
                 var sw = Stopwatch.StartNew();
                 var dataList = request.DataList.Select(d => _service.JsonToDictionary(d)).ToList();
+                _guard.CheckWrite(request.TableName); // W0-2
                 var result = await _service.ExecuteTransaction(async (con, tran) =>
                 {
                     return await _service.BulkInsertUltraFast(con, tran, request.TableName, dataList);
@@ -216,6 +305,7 @@ namespace GateWay.Controllers
             {
                 var sw = Stopwatch.StartNew();
                 var dataList = request.DataList.Select(d => _service.JsonToDictionary(d)).ToList();
+                _guard.CheckWrite(request.TableName); // W0-2
                 var result = await _service.ExecuteTransaction(async (con, tran) =>
                 {
                     return await _service.BulkUpdateUltraFast(con, tran, request.TableName, dataList, request.KeyColumn);

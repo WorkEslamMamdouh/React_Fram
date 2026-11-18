@@ -1,0 +1,15 @@
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\bin\Debug\net9.0\BuildWhereCheck.exe
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\bin\Debug\net9.0\BuildWhereCheck.deps.json
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\bin\Debug\net9.0\BuildWhereCheck.runtimeconfig.json
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\bin\Debug\net9.0\BuildWhereCheck.dll
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\bin\Debug\net9.0\BuildWhereCheck.pdb
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.GeneratedMSBuildEditorConfig.editorconfig
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.AssemblyInfoInputs.cache
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.AssemblyInfo.cs
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.csproj.CoreCompileInputs.cache
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.sourcelink.json
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.dll
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\refint\BuildWhereCheck.dll
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.pdb
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\BuildWhereCheck.genruntimeconfig.cache
+C:\PC\Work\React_Fram\Tools\Checks\BuildWhereCheck\obj\Debug\net9.0\ref\BuildWhereCheck.dll

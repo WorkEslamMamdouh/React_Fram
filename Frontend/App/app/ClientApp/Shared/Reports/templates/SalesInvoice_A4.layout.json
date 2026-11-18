@@ -1,0 +1,147 @@
+{
+  "schema": "rf-report/1",
+  "code": "TPL_SalesInvoice_A4",
+  "nameAr": "فاتورة مبيعات ضريبية",
+  "nameEn": "Tax sales invoice",
+  "kind": "document",
+  "page": { "size": "A4", "orientation": "portrait", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 }, "dir": "auto" },
+  "data": {
+    "source": { "type": "view", "name": "IQ_TR_Sales + IQ_TR_SaleDetails" },
+    "params": [ { "name": "SaleID", "from": "row", "value": "SaleID" } ],
+    "tables": { "Data": "header", "Data2": "lines" }
+  },
+  "styles": {
+    "base": { "size": 9.5, "color": "#0b1c30" },
+    "th": { "size": 9, "bold": true, "background": "#1f3a5f", "color": "#ffffff" },
+    "td": { "size": 9 },
+    "total": { "size": 9.5, "bold": true, "background": "#eef2f7" }
+  },
+  "bands": [
+    {
+      "type": "reportHeader",
+      "elements": [
+        {
+          "type": "row", "gap": 4,
+          "items": [
+            { "type": "image", "src": "Company.LogoBase64", "width": 24, "height": 20 },
+            {
+              "type": "text", "width": "52%",
+              "text": { "ar": "{{Company.CompNameA}}", "en": "{{coalesce(Company.CompNameE, Company.CompNameA)}}" },
+              "style": { "size": 15, "bold": true, "color": "#1f3a5f" }
+            },
+            {
+              "type": "text", "width": "30%",
+              "text": { "ar": "فاتورة ضريبية", "en": "TAX INVOICE" },
+              "style": { "size": 15, "bold": true, "align": "end", "color": "#1f3a5f" }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": { "ar": "{{Company.BranchNameA}} · {{Company.BranchAddress}} · هاتف: {{coalesce(Company.BranchTel, Company.CompTel)}}", "en": "{{coalesce(Company.BranchNameE, Company.BranchNameA)}} · {{Company.BranchAddress}} · Tel: {{coalesce(Company.BranchTel, Company.CompTel)}}" },
+          "style": { "size": 8.5, "color": "#475569" }
+        },
+        { "type": "text", "visibleIf": "Company.VatNo <> ''", "text": { "ar": "الرقم الضريبي: {{Company.VatNo}}", "en": "VAT No: {{Company.VatNo}}" }, "style": { "size": 8.5, "color": "#475569" } },
+        { "type": "line", "thickness": 0.6, "color": "#1f3a5f" },
+        { "type": "spacer", "height": 2 },
+        {
+          "type": "row", "gap": 4,
+          "items": [
+            {
+              "type": "rect", "width": "49%",
+              "style": { "border": true, "radius": 1.5, "padding": 2.5, "borderColor": "#cbd5e1" },
+              "text": { "ar": "العميل: {{coalesce(header.CustomerName, 'نقدي')}}\nالجوال: {{header.Mobile}}", "en": "Customer: {{coalesce(header.CustomerName, 'Cash')}}\nMobile: {{header.Mobile}}" }
+            },
+            {
+              "type": "rect", "width": "49%",
+              "style": { "border": true, "radius": 1.5, "padding": 2.5, "borderColor": "#cbd5e1" },
+              "text": { "ar": "رقم الفاتورة: {{coalesce(header.TrNo, header.SaleID)}}\nالتاريخ: {{header.SaleDate | date}}   {{header.TrTime}}\nطريقة الدفع: {{if(header.IsCash = 1 || header.IsCash = true, 'نقدي', 'آجل')}}", "en": "Invoice No: {{coalesce(header.TrNo, header.SaleID)}}\nDate: {{header.SaleDate | date}}   {{header.TrTime}}\nPayment: {{if(header.IsCash = 1 || header.IsCash = true, 'Cash', 'Credit')}}" }
+            }
+          ]
+        },
+        { "type": "spacer", "height": 3 }
+      ]
+    },
+    {
+      "type": "pageHeader",
+      "skipFirstPage": true,
+      "elements": [
+        { "type": "text", "text": { "ar": "{{Company.CompNameA}} — فاتورة رقم {{coalesce(header.TrNo, header.SaleID)}} (تابع)", "en": "{{coalesce(Company.CompNameE, Company.CompNameA)}} — Invoice {{coalesce(header.TrNo, header.SaleID)}} (continued)" }, "style": { "size": 8.5, "color": "#475569" } },
+        { "type": "spacer", "height": 2 }
+      ]
+    },
+    {
+      "type": "detail",
+      "table": "lines",
+      "layout": "table",
+      "zebra": true,
+      "showTotals": true,
+      "columns": [
+        { "expr": "rowNumber", "title": { "ar": "#", "en": "#" }, "width": "6%", "align": "center" },
+        { "field": "ItemCode", "title": { "ar": "الكود", "en": "Code" }, "width": "12%" },
+        { "expr": "coalesce(ItemName, NameItem)", "title": { "ar": "الصنف", "en": "Item" }, "width": "30%" },
+        { "field": "Quantity", "title": { "ar": "الكمية", "en": "Qty" }, "width": "9%", "format": "n2", "align": "end", "aggregate": "sum" },
+        { "field": "UnitPrice", "title": { "ar": "السعر", "en": "Price" }, "width": "11%", "format": "n2", "align": "end" },
+        { "field": "DiscountPrc", "title": { "ar": "خصم %", "en": "Disc %" }, "width": "8%", "format": "n2", "align": "end" },
+        { "field": "VatAmount", "title": { "ar": "الضريبة", "en": "VAT" }, "width": "10%", "format": "n2", "align": "end", "aggregate": "sum" },
+        { "expr": "coalesce(NetAfterVat, ItemTotal)", "title": { "ar": "الإجمالي", "en": "Total" }, "width": "14%", "format": "n2", "align": "end", "aggregate": "sum" }
+      ]
+    },
+    {
+      "type": "reportFooter",
+      "elements": [
+        { "type": "spacer", "height": 3 },
+        {
+          "type": "row", "gap": 4,
+          "items": [
+            { "type": "qr", "width": 32, "size": 30, "value": "zatcaQr(Company.CompNameA, Company.VatNo, header.SaleDate, header.NetAmount, header.VatAmount)" },
+            {
+              "type": "rect", "width": "40%",
+              "style": { "border": false, "padding": 0, "size": 9 },
+              "text": { "ar": "ملاحظات: {{header.Remarks}}", "en": "Notes: {{header.Remarks}}" }
+            },
+            {
+              "type": "row", "direction": "column", "width": "38%", "gap": 0,
+              "style": { "border": true, "borderColor": "#cbd5e1", "radius": 1.5, "padding": 1.5 },
+              "items": [
+                { "type": "row", "items": [ { "type": "text", "width": "58%", "text": { "ar": "الإجمالي قبل الخصم", "en": "Subtotal" } }, { "type": "expression", "width": "42%", "expr": "coalesce(header.ItemsTotal, header.TotalAmount)", "format": "n2", "style": { "align": "end" } } ] },
+                { "type": "row", "items": [ { "type": "text", "width": "58%", "text": { "ar": "الخصم", "en": "Discount" } }, { "type": "expression", "width": "42%", "expr": "header.Discount", "format": "n2", "style": { "align": "end" } } ] },
+                { "type": "row", "items": [ { "type": "text", "width": "58%", "text": { "ar": "ضريبة القيمة المضافة", "en": "VAT" } }, { "type": "expression", "width": "42%", "expr": "header.VatAmount", "format": "n2", "style": { "align": "end" } } ] },
+                { "type": "line", "thickness": 0.2, "color": "#cbd5e1" },
+                { "type": "row", "style": { "bold": true, "size": 11, "color": "#1f3a5f" }, "items": [ { "type": "text", "width": "58%", "text": { "ar": "الصافي", "en": "Net total" } }, { "type": "expression", "width": "42%", "expr": "header.NetAmount", "format": "n2", "style": { "align": "end" } } ] }
+              ]
+            }
+          ]
+        },
+        { "type": "spacer", "height": 2 },
+        {
+          "type": "amountWords", "value": "header.NetAmount", "currency": "EGP",
+          "prefix": { "ar": "فقط", "en": "Only" }, "suffix": { "ar": "لا غير", "en": "" },
+          "style": { "bold": true, "background": "#f1f5f9", "padding": 2, "radius": 1 }
+        },
+        { "type": "spacer", "height": 10 },
+        {
+          "type": "row", "gap": 10,
+          "items": [
+            { "type": "signature", "width": "30%", "label": { "ar": "المستلم", "en": "Received by" } },
+            { "type": "signature", "width": "30%", "label": { "ar": "المحاسب", "en": "Accountant" } },
+            { "type": "signature", "width": "30%", "label": { "ar": "المدير", "en": "Manager" } }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "pageFooter",
+      "elements": [
+        { "type": "line", "thickness": 0.2, "color": "#cbd5e1" },
+        {
+          "type": "row",
+          "items": [
+            { "type": "text", "width": "50%", "text": { "ar": "طُبع: {{Company.PrintedAt}} بواسطة {{Company.PrintedBy}}", "en": "Printed: {{Company.PrintedAt}} by {{Company.PrintedBy}}" }, "style": { "size": 7.5, "color": "#64748b" } },
+            { "type": "pageNumber", "width": "50%", "style": { "size": 7.5, "color": "#64748b", "align": "end" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

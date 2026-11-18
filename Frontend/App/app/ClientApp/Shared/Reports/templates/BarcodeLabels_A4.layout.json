@@ -1,0 +1,29 @@
+{
+  "schema": "rf-report/1",
+  "code": "TPL_BarcodeLabels_A4",
+  "nameAr": "ملصقات باركود (A4 ‏3×8)",
+  "nameEn": "Barcode labels (A4 3×8)",
+  "kind": "labels",
+  "page": { "size": "LabelA4_3x8", "dir": "auto" },
+  "data": {
+    "source": { "type": "proc", "name": "dbo.Rpt_ItemsBarcode" },
+    "params": [ { "name": "CompCode", "from": "session", "value": "CompCode" } ],
+    "tables": { "Data": "lines" }
+  },
+  "styles": { "base": { "size": 8, "color": "#000000" } },
+  "bands": [
+    {
+      "type": "detail",
+      "table": "lines",
+      "layout": "labels",
+      "labels": { "columns": 3, "rows": 8, "width": 70, "height": 37, "gapX": 0, "gapY": 0, "copies": "Copies", "outline": true },
+      "style": { "align": "center", "padding": 2 },
+      "elements": [
+        { "type": "text", "text": "{{Company.CompNameA}}", "style": { "size": 6.5, "color": "#475569", "align": "center", "nowrap": true } },
+        { "type": "expression", "expr": "coalesce(ItemName, NameItem)", "style": { "size": 8.5, "bold": true, "align": "center", "nowrap": true } },
+        { "type": "barcode", "value": "coalesce(Barcode, ItemCode)", "format": "CODE128", "barHeight": 11, "showText": true },
+        { "type": "expression", "expr": "coalesce(Price, UnitPrice)", "format": "n2", "label": { "ar": "السعر", "en": "Price" }, "style": { "size": 9, "bold": true, "align": "center" } }
+      ]
+    }
+  ]
+}

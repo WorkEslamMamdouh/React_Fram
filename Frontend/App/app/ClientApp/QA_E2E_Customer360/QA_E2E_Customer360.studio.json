@@ -1,0 +1,285 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_Customer360",
+  "pattern": "P05",
+  "titleAr": "ملف العميل (QA)",
+  "titleEn": "QA Customer 360",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-id-card",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "quickActions": [
+      {
+        "label": {
+          "ar": "فاتورة جديدة",
+          "en": "New invoice"
+        },
+        "icon": "\uD83E\uDDFE",
+        "variant": "primary",
+        "id": "newInvoice"
+      }
+    ],
+    "header": {
+      "titleFieldEn": "NameEn",
+      "badges": [
+        {
+          "field": "Status",
+          "statuses": [
+            {
+              "label": {
+                "ar": "فعال",
+                "en": "Active"
+              },
+              "color": "#10B981",
+              "value": "active"
+            },
+            {
+              "label": {
+                "ar": "مميز",
+                "en": "VIP"
+              },
+              "color": "#8B5CF6",
+              "value": "vip"
+            },
+            {
+              "label": {
+                "ar": "موقوف",
+                "en": "Blocked"
+              },
+              "color": "#F43F5E",
+              "value": "blocked"
+            }
+          ]
+        }
+      ],
+      "titleField": "NameAr",
+      "subtitleField": "CustCode",
+      "infoFields": [
+        {
+          "field": "Phone",
+          "label": {
+            "ar": "تليفون",
+            "en": "Phone"
+          }
+        },
+        {
+          "field": "City",
+          "label": {
+            "ar": "المدينة",
+            "en": "City"
+          }
+        },
+        {
+          "field": "Email",
+          "label": {
+            "ar": "الإيميل",
+            "en": "Email"
+          }
+        }
+      ],
+      "stats": [
+        {
+          "field": "SalesTotal",
+          "label": {
+            "ar": "المبيعات",
+            "en": "Sales"
+          },
+          "format": "money"
+        },
+        {
+          "field": "Balance",
+          "label": {
+            "ar": "الآجل",
+            "en": "Credit"
+          },
+          "format": "money"
+        },
+        {
+          "field": "InvoicesCount",
+          "label": {
+            "ar": "الفواتير",
+            "en": "Invoices"
+          },
+          "format": "number"
+        }
+      ]
+    },
+    "entity": {
+      "tableName": "QA_E2E_IQ_Customer360",
+      "keyField": "CustomerID"
+    },
+    "tabs": [
+      {
+        "label": {
+          "ar": "البيانات",
+          "en": "Info"
+        },
+        "id": "info",
+        "fields": [
+          {
+            "field": "CreditLimit",
+            "label": {
+              "ar": "حد الائتمان",
+              "en": "Credit limit"
+            },
+            "format": "money"
+          },
+          {
+            "field": "LastSaleDate",
+            "label": {
+              "ar": "آخر بيع",
+              "en": "Last sale"
+            },
+            "format": "date"
+          },
+          {
+            "field": "CreatedAt",
+            "label": {
+              "ar": "من تاريخ",
+              "en": "Since"
+            },
+            "format": "date"
+          },
+          {
+            "field": "Notes",
+            "label": {
+              "ar": "ملاحظات",
+              "en": "Notes"
+            },
+            "span": 2
+          }
+        ],
+        "kind": "fields"
+      },
+      {
+        "source": {
+          "orderBy": "SaleDate",
+          "tableName": "QA_E2E_IQ_Sales",
+          "orderType": "DESC",
+          "keyField": "SaleID"
+        },
+        "id": "invoices",
+        "kind": "list",
+        "loadMode": "pages",
+        "columns": [
+          {
+            "field": "InvoiceNo",
+            "label": {
+              "ar": "رقم",
+              "en": "No"
+            },
+            "mobile": true
+          },
+          {
+            "field": "SaleDate",
+            "label": {
+              "ar": "التاريخ",
+              "en": "Date"
+            },
+            "format": "date",
+            "mobile": true
+          },
+          {
+            "field": "NetAmount",
+            "label": {
+              "ar": "الصافي",
+              "en": "Net"
+            },
+            "format": "money",
+            "mobile": true
+          },
+          {
+            "field": "PaymentNameEn",
+            "label": {
+              "ar": "الدفع",
+              "en": "Payment"
+            }
+          }
+        ],
+        "label": {
+          "ar": "الفواتير",
+          "en": "Invoices"
+        },
+        "pageSize": 10,
+        "searchFields": [
+          "Remarks"
+        ],
+        "countField": "InvoicesCount",
+        "foreignKey": "CustomerID"
+      },
+      {
+        "source": {
+          "tableName": "QA_E2E_CustomerEvent",
+          "keyField": "EventID"
+        },
+        "id": "timeline",
+        "kind": "timeline",
+        "timeField": "EventTime",
+        "label": {
+          "ar": "الخط الزمني",
+          "en": "Timeline"
+        },
+        "titleField": "Title",
+        "userField": "UserName",
+        "foreignKey": "CustomerID",
+        "noteField": "Note"
+      },
+      {
+        "source": {
+          "tableName": "QA_E2E_CustomerNote",
+          "keyField": "NoteID"
+        },
+        "timeField": "CreatedAt",
+        "id": "notes",
+        "kind": "notes",
+        "textField": "NoteText",
+        "label": {
+          "ar": "ملاحظات",
+          "en": "Notes"
+        },
+        "allowAdd": true,
+        "foreignKey": "CustomerID",
+        "userField": "UserName"
+      }
+    ]
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

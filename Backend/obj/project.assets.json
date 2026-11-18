@@ -2,6 +2,19 @@
   "version": 4,
   "targets": {
     "net9.0": {
+      "Cronos/0.8.4": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Cronos.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Cronos.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "FirebaseAdmin/3.5.0": {
         "type": "package",
         "dependencies": {
@@ -1110,6 +1123,28 @@
     }
   },
   "libraries": {
+    "Cronos/0.8.4": {
+      "sha512": "sTyvTH8hh5YWivinRGzL5QrfKKt59I/Hh+4m8j6vmtJdSOWA4I3B+AS9iJk3RdQqZ+i4E+0PlhYuY9iaxDLTcQ==",
+      "type": "package",
+      "path": "cronos/0.8.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "cronos.0.8.4.nupkg.sha512",
+        "cronos.nuspec",
+        "icon.png",
+        "lib/net40/Cronos.dll",
+        "lib/net40/Cronos.xml",
+        "lib/net45/Cronos.dll",
+        "lib/net45/Cronos.xml",
+        "lib/netstandard1.0/Cronos.dll",
+        "lib/netstandard1.0/Cronos.xml",
+        "lib/netstandard2.0/Cronos.dll",
+        "lib/netstandard2.0/Cronos.xml"
+      ]
+    },
     "FirebaseAdmin/3.5.0": {
       "sha512": "NL9dWvrGCbgu3VxumjpHXgHsagQswntJNLtgVIgTF/y2ro6e6UpvFuZrlfjsMTzRXJEXqnse3U5rN/6HC5TlFA==",
       "type": "package",
@@ -3082,6 +3117,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
+      "Cronos >= 0.8.4",
       "FirebaseAdmin >= 3.5.0",
       "Google.Apis.Auth >= 1.74.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 6.0.0",
@@ -3144,6 +3180,10 @@
         "framework": "net9.0",
         "targetAlias": "net9.0",
         "dependencies": {
+          "Cronos": {
+            "target": "Package",
+            "version": "[0.8.4, )"
+          },
           "FirebaseAdmin": {
             "target": "Package",
             "version": "[3.5.0, )"

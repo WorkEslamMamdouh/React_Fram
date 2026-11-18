@@ -1,0 +1,90 @@
+[
+  {
+    "Code": "barcodeapi",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:24.3309189Z",
+    "LastTestOk": true,
+    "LastTestMs": 890,
+    "LastTestMsg": "OK",
+    "UpdatedAt": null,
+    "UpdatedBy": null
+  },
+  {
+    "Code": "disify",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:23.4096453Z",
+    "LastTestOk": false,
+    "LastTestMs": 327,
+    "LastTestMsg": "The service returned an unexpected response / رد غير متوقع من الخدمة",
+    "UpdatedAt": null,
+    "UpdatedBy": null
+  },
+  {
+    "Code": "frankfurter",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:22.282386Z",
+    "LastTestOk": true,
+    "LastTestMs": 461,
+    "LastTestMsg": "OK",
+    "UpdatedAt": "2026-11-05T02:03:16.6433875Z",
+    "UpdatedBy": 2
+  },
+  {
+    "Code": "ipwhois",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": null,
+    "LastTestOk": null,
+    "LastTestMs": null,
+    "LastTestMsg": null,
+    "UpdatedAt": "2026-11-05T02:02:10.2670245Z",
+    "UpdatedBy": 2
+  },
+  {
+    "Code": "nager_date",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:22.6648693Z",
+    "LastTestOk": true,
+    "LastTestMs": 299,
+    "LastTestMsg": "OK",
+    "UpdatedAt": null,
+    "UpdatedBy": null
+  },
+  {
+    "Code": "openiban",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:23.0567289Z",
+    "LastTestOk": true,
+    "LastTestMs": 363,
+    "LastTestMsg": "OK",
+    "UpdatedAt": null,
+    "UpdatedBy": null
+  },
+  {
+    "Code": "openmeteo",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:25.3170437Z",
+    "LastTestOk": true,
+    "LastTestMs": 500,
+    "LastTestMsg": "OK",
+    "UpdatedAt": null,
+    "UpdatedBy": null
+  },
+  {
+    "Code": "qrserver",
+    "Enabled": false,
+    "KeyEnc": null,
+    "LastTestAt": "2026-11-05T02:01:24.7915446Z",
+    "LastTestOk": true,
+    "LastTestMs": 436,
+    "LastTestMsg": "OK",
+    "UpdatedAt": null,
+    "UpdatedBy": null
+  }
+]

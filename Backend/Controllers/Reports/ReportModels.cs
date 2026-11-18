@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 // =====================================================================================
-//  Phase 7 - Reports: data shapes shared by ReportsController and the two stores
-//  (files under App_Data/Reports  OR  tables Sys_Reports / Sys_ReportParams / Sys_ReportLayouts).
+//  Reports (runtime): data shapes shared by ReportsController and the two read-only stores
+//  (tables Sys_Reports / Sys_ReportParams / Sys_ReportLayouts  OR  files under App_Data/Reports).
+//  Definitions and layouts are written by ERP Studio.
 // =====================================================================================
 namespace ERP.Reports
 {
@@ -36,10 +37,11 @@ namespace ERP.Reports
         public string Scope { get; set; } = "all";     // all | company | branch
         public int? CompCode { get; set; }
         public int? BranchCode { get; set; }
-        public string PaperSize { get; set; } = "A4";  // A4 | A5 | Letter | Thermal80 | Thermal58 | Custom
+        public string PaperSize { get; set; } = "A4";  // A4 | A5 | Letter | Thermal80 | Thermal58 | ...
         public string Orientation { get; set; } = "portrait";
-        public string MarginsJson { get; set; }        // {"left":1,"right":1,"top":1,"bottom":1,"customWidth":..,"customHeight":..} (cm)
-        public string LayoutMrt { get; set; }          // Stimulsoft .mrt (JSON text) - null in list responses
+        public string MarginsJson { get; set; }
+        public string LayoutFormat { get; set; } = "mrt";  // json (rf-report/1) | mrt (old Stimulsoft, not rendered any more)
+        public string LayoutJson { get; set; }         // rf-report/1 layout (Docs/Studio/05_Report_Layout_Format.md)
         public bool IsDefault { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string UpdatedBy { get; set; }
@@ -48,14 +50,7 @@ namespace ERP.Reports
     public interface IReportStore
     {
         string Mode { get; }
-        System.Threading.Tasks.Task<List<ReportDef>> ListReports();
         System.Threading.Tasks.Task<ReportDef> GetReport(string code);
-        System.Threading.Tasks.Task SaveReport(ReportDef def);
-        System.Threading.Tasks.Task DeleteReport(string code);
-        System.Threading.Tasks.Task<List<LayoutMeta>> ListLayouts(string code, bool withMrt);
-        System.Threading.Tasks.Task<LayoutMeta> GetLayout(int layoutId);
-        System.Threading.Tasks.Task<int> SaveLayout(LayoutMeta layout);
-        System.Threading.Tasks.Task DeleteLayout(int layoutId);
-        System.Threading.Tasks.Task SetDefault(int layoutId);
+        System.Threading.Tasks.Task<List<LayoutMeta>> ListLayouts(string code);
     }
 }

@@ -1,0 +1,73 @@
+{
+  "schema": "rf-report/1",
+  "code": "TPL_Receipt_80mm",
+  "nameAr": "إيصال كاشير 80 مم",
+  "nameEn": "Cashier receipt 80mm",
+  "kind": "document",
+  "page": { "size": "Thermal80", "margins": { "top": 3, "right": 4, "bottom": 4, "left": 4 }, "dir": "auto" },
+  "data": {
+    "source": { "type": "view", "name": "IQ_TR_Sales + IQ_TR_SaleDetails" },
+    "params": [ { "name": "SaleID", "from": "row", "value": "SaleID" } ],
+    "tables": { "Data": "header", "Data2": "lines" }
+  },
+  "styles": {
+    "base": { "size": 8.5, "color": "#000000" },
+    "th": { "size": 8, "bold": true, "background": "#ffffff", "border": { "bottom": true }, "borderColor": "#000000" },
+    "td": { "size": 8 },
+    "total": { "size": 8.5, "bold": true, "background": "#ffffff" }
+  },
+  "bands": [
+    {
+      "type": "reportHeader",
+      "style": { "align": "center" },
+      "elements": [
+        { "type": "image", "src": "Company.LogoBase64", "height": 14, "visibleIf": "Company.LogoBase64 <> ''" },
+        { "type": "text", "text": { "ar": "{{Company.CompNameA}}", "en": "{{coalesce(Company.CompNameE, Company.CompNameA)}}" }, "style": { "size": 11, "bold": true, "align": "center" } },
+        { "type": "text", "text": "{{Company.BranchNameA}} {{Company.BranchAddress}}", "style": { "size": 7.5, "align": "center" } },
+        { "type": "text", "visibleIf": "Company.VatNo <> ''", "text": { "ar": "الرقم الضريبي {{Company.VatNo}}", "en": "VAT {{Company.VatNo}}" }, "style": { "size": 7.5, "align": "center" } },
+        { "type": "line", "dashed": true, "thickness": 0.2, "color": "#000000" },
+        { "type": "text", "text": { "ar": "فاتورة ضريبية مبسطة", "en": "Simplified tax invoice" }, "style": { "bold": true, "align": "center" } },
+        {
+          "type": "row", "gap": 1,
+          "items": [
+            { "type": "text", "width": "50%", "text": { "ar": "رقم: {{coalesce(header.TrNo, header.SaleID)}}", "en": "No: {{coalesce(header.TrNo, header.SaleID)}}" } },
+            { "type": "text", "width": "50%", "text": "{{header.SaleDate | date}} {{header.TrTime}}", "style": { "align": "end" } }
+          ]
+        },
+        { "type": "text", "visibleIf": "header.CustomerName <> ''", "text": { "ar": "العميل: {{header.CustomerName}}", "en": "Customer: {{header.CustomerName}}" } },
+        { "type": "line", "dashed": true, "thickness": 0.2, "color": "#000000" }
+      ]
+    },
+    {
+      "type": "detail",
+      "table": "lines",
+      "layout": "table",
+      "columns": [
+        { "expr": "coalesce(ItemName, NameItem)", "title": { "ar": "الصنف", "en": "Item" }, "width": "46%" },
+        { "field": "Quantity", "title": { "ar": "كمية", "en": "Qty" }, "width": "14%", "format": "n0", "align": "center" },
+        { "field": "UnitPrice", "title": { "ar": "سعر", "en": "Price" }, "width": "18%", "format": "n2", "align": "end" },
+        { "expr": "coalesce(NetAfterVat, ItemTotal)", "title": { "ar": "قيمة", "en": "Amount" }, "width": "22%", "format": "n2", "align": "end" }
+      ]
+    },
+    {
+      "type": "reportFooter",
+      "elements": [
+        { "type": "line", "dashed": true, "thickness": 0.2, "color": "#000000" },
+        { "type": "row", "items": [ { "type": "text", "width": "60%", "text": { "ar": "عدد الأصناف", "en": "Items" } }, { "type": "expression", "width": "40%", "expr": "count()", "style": { "align": "end" } } ] },
+        { "type": "row", "items": [ { "type": "text", "width": "60%", "text": { "ar": "الإجمالي", "en": "Subtotal" } }, { "type": "expression", "width": "40%", "expr": "coalesce(header.ItemsTotal, sum(ItemTotal))", "format": "n2", "style": { "align": "end" } } ] },
+        { "type": "row", "visibleIf": "header.Discount > 0", "items": [ { "type": "text", "width": "60%", "text": { "ar": "الخصم", "en": "Discount" } }, { "type": "expression", "width": "40%", "expr": "header.Discount", "format": "n2", "style": { "align": "end" } } ] },
+        { "type": "row", "items": [ { "type": "text", "width": "60%", "text": { "ar": "الضريبة", "en": "VAT" } }, { "type": "expression", "width": "40%", "expr": "header.VatAmount", "format": "n2", "style": { "align": "end" } } ] },
+        {
+          "type": "row", "style": { "bold": true, "size": 11 },
+          "items": [ { "type": "text", "width": "60%", "text": { "ar": "الصافي", "en": "TOTAL" } }, { "type": "expression", "width": "40%", "expr": "header.NetAmount", "format": "n2", "style": { "align": "end" } } ]
+        },
+        { "type": "amountWords", "value": "header.NetAmount", "currency": "EGP", "prefix": { "ar": "فقط", "en": "" }, "suffix": { "ar": "لا غير", "en": "" }, "style": { "size": 7.5, "align": "center" } },
+        { "type": "line", "dashed": true, "thickness": 0.2, "color": "#000000" },
+        { "type": "qr", "size": 32, "value": "zatcaQr()", "style": { "align": "center" } },
+        { "type": "barcode", "value": "coalesce(header.TrNo, header.SaleID)", "format": "CODE128", "barHeight": 9, "showText": true },
+        { "type": "text", "text": { "ar": "شكرًا لزيارتكم", "en": "Thank you for your visit" }, "style": { "align": "center", "bold": true } },
+        { "type": "text", "text": "{{Company.PrintedAt}}", "style": { "align": "center", "size": 7 } }
+      ]
+    }
+  ]
+}

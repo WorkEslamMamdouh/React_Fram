@@ -22,7 +22,7 @@ import { useEffectiveModulePermissions, ModulePermissions } from "../../Permissi
 import ExcelGridBar from "../Excel/ExcelGridBar";
 import type { ExcelGridConfig } from "../Excel/ExcelTypes";
 import { FormLayout, FORM_LAYOUT_GRID_CLASS, arrangeByLayout, formLayoutCellClass, formLayoutCellStyle, FormLayoutStatic } from "./FormLayout";
-// Phase 7: طباعة التقارير (اختياري) — العارض بيتحمل لما اليوزر يدوس بس (Stimulsoft نفسه dynamic import جوه العارض)
+// Phase 7: طباعة التقارير (اختياري) — العارض (تصميم JSON) بيتحمل بـ import() لما اليوزر يدوس بس
 import { openReport } from "../../Reports/openReport";
 import { ScreenReportConfig, filtersToMap } from "../../Reports/ReportTypes";
 
@@ -80,6 +80,8 @@ export interface DynamicGridExtendedProps extends DynamicGridProps {
   excel?: ExcelGridConfig;
   // ✅ Phase 7 (اختياري): تقارير الطباعة — list = زر "طباعة القائمة" · transaction = إجراء "طباعة" في الصف. بيحتاج صلاحية PRINT. مش متحدد = مفيش تغيير.
   report?: ScreenReportConfig;
+  // ✅ (اختياري) قيم فلاتر من بره الجريد (زي CascadingFilterBar) بتتبعت لتقرير "طباعة القائمة" مع فلاتر الجريد
+  reportFilters?: Record<string, any>;
   // ✅ تحقق إضافي قبل الحفظ (Validation.ts → ValidateRow) — يرجّع رسالة الخطأ أو null
   beforeSave?: (row: Record<string, any>, isInsert: boolean) => Promise<string | null> | string | null;
   gridFilter?: GridFilterConfig;
@@ -637,8 +639,14 @@ const MobileCard: React.FC<{
               displayValue = new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value));
             } else if (value === null || value === undefined) {
               displayValue = "-";
+            } else if (col.type === "date" || col.inputType === "date") {
+              // نفس عرض الجدول (كان بيطلع 2026-10-03T00:00:00 على الموبايل)
+              displayValue = displayDate(value, col.dateDisplayFormat);
+            } else if (col.type === "select" || col.inputType === "select") {
+              const hit = (col.selectOptions || col.options || []).find((o) => String(o.value) === String(value));
+              if (hit) displayValue = hit.label;
             }
-            
+
             return (
               <div key={idx} className="flex justify-between items-start gap-2">
                 <span className={`text-xs uppercase tracking-wide font-semibold ${'text-erp-text-subtle'} min-w-[90px]`}>
@@ -1143,6 +1151,7 @@ export default function DynamicGrid({
   permissions,
   excel,
   report,
+  reportFilters,
 }: DynamicGridExtendedProps & { compCode?: number; branchCode?: number; keyTrType?: string; runProcessTrans?: boolean }) {
 
   // ✅ صلاحيات (اختيارية): لو moduleCode / permissions مش متحددين = null = السلوك القديم بالظبط
@@ -1367,6 +1376,12 @@ export default function DynamicGrid({
     if ((col.type === "date" || col.inputType === "date")) {
       return displayDate(value, col.dateDisplayFormat);
     }
+    // اختيارات ثابتة (select): نعرض الاسم بدل الكود المخزّن ("take" ← "Takeaway")
+    const opts = (col.type === "select" || col.inputType === "select") ? (col.selectOptions || col.options || []) : [];
+    if (opts.length) {
+      const hit = opts.find((o) => String(o.value) === String(value));
+      if (hit) return String(hit.label);
+    }
     return String(value);
   };
 
@@ -1436,6 +1451,7 @@ export default function DynamicGrid({
     columns.map((c) => `${c.field}${c.IsSearchColumn === false ? "!" : ""}${c.IsVisibleDisplayInGrid === false ? "-" : ""}`).join("|") +
     "#" + (externalSearchColumns || []).join(",");
 
+  const fetchPageRef = useRef<((page: number, append: boolean) => Promise<void>) | null>(null);
   // Load data — صفحة واحدة بس من السيرفر (+ العدد الإجمالي). append=true = الصفحة اللي بعدها (تمرير لانهائي)
   const fetchPage = useCallback(async (page: number, append: boolean) => {
     if (!gridFilterReady) return;
@@ -1488,6 +1504,12 @@ export default function DynamicGrid({
       );
       if (seq !== reqSeqRef.current) return;     // رد قديم — اتجاهله
       const rows = result.data || [];
+      // صفحة بعد آخر صفحة (فلتر جديد وانت على صفحة 4000، أو حذف) → ارجع للصفحة 1 بدل "0 سجل"
+      if (!append && page > 1 && rows.length === 0) {
+        pageNumberRef.current = 1;
+        fetchPageRef.current?.(1, false);
+        return;
+      }
       setExhausted(append && rows.length === 0);   // صفحة فاضية رغم إن العدد أكبر (حذف في نفس الوقت) → وقّف التحميل
       if (append) {
         setData((prev) => {
@@ -1527,6 +1549,7 @@ export default function DynamicGrid({
       }
     }
   }, [tableName, condition, search, pageSizeState, sortField, sortDirection, enableSearch, columnsSig, isModalMode, activeFilters, showAdvanced, lang, gridFilterValues, gridFilterReady, keyColumn]);
+  fetchPageRef.current = fetchPage;
 
   // إعادة تحميل من الأول (بعد حفظ/حذف/تحديث): تمرير لانهائي = الصفحة 1، صفحات = الصفحة الحالية
   const loadData = useCallback(() => fetchPage(isInfinite ? 1 : pageNumberRef.current, false), [fetchPage, isInfinite]);
@@ -1989,7 +2012,7 @@ export default function DynamicGrid({
                 )}
                 {report?.list && canPrintReport && (isModalMode === false) && (
                   <button
-                    onClick={() => openReport({ reportCode: report.list!.reportCode, title: report.list!.title, moduleCode, filters: { ...filtersToMap(activeFilters), ...filtersToMap(gridFilterValues) } })}
+                    onClick={() => openReport({ reportCode: report.list!.reportCode, title: report.list!.title, moduleCode, filters: { ...(reportFilters || {}), ...filtersToMap(activeFilters), ...filtersToMap(gridFilterValues) } })}
                     className={getButtonClass('primary', isDark)}
                   >
                     <Icons.Print />

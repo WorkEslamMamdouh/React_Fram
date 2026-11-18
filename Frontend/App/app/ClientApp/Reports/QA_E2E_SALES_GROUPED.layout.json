@@ -1,0 +1,315 @@
+{
+  "schema": "rf-report/1",
+  "code": "QA_E2E_SALES_GROUPED",
+  "nameAr": "المبيعات حسب العميل (QA)",
+  "nameEn": "QA sales by customer",
+  "kind": "list",
+  "page": {
+    "size": "A4",
+    "orientation": "landscape",
+    "dir": "auto"
+  },
+  "data": {
+    "source": {
+      "type": "proc",
+      "name": "dbo.QA_E2E_Rpt_SalesByCustomer"
+    },
+    "params": [
+      {
+        "name": "FromDate",
+        "from": "filter",
+        "value": "SaleDate.from"
+      },
+      {
+        "name": "ToDate",
+        "from": "filter",
+        "value": "SaleDate.to"
+      }
+    ],
+    "tables": {
+      "Data": "lines"
+    }
+  },
+  "styles": {
+    "base": {
+      "size": 9.5,
+      "color": "#0b1c30"
+    },
+    "th": {
+      "size": 9,
+      "bold": true,
+      "background": "#1f3a5f",
+      "color": "#ffffff"
+    },
+    "td": {
+      "size": 9
+    },
+    "total": {
+      "size": 9.5,
+      "bold": true,
+      "background": "#eef2f7"
+    }
+  },
+  "bands": [
+    {
+      "type": "reportHeader",
+      "elements": [
+        {
+          "type": "row",
+          "gap": 4,
+          "items": [
+            {
+              "type": "image",
+              "src": "Company.LogoBase64",
+              "width": 20,
+              "height": 16,
+              "visibleIf": "Company.LogoBase64 <> ''"
+            },
+            {
+              "type": "text",
+              "width": "50%",
+              "text": {
+                "ar": "{{Company.CompNameA}}",
+                "en": "{{coalesce(Company.CompNameE, Company.CompNameA)}}"
+              },
+              "style": {
+                "size": 13,
+                "bold": true,
+                "color": "#1f3a5f"
+              }
+            },
+            {
+              "type": "text",
+              "width": "34%",
+              "text": {
+                "ar": "المبيعات حسب المدينة والعميل",
+                "en": "Sales by city and customer"
+              },
+              "style": {
+                "size": 13,
+                "bold": true,
+                "align": "end",
+                "color": "#1f3a5f"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": {
+            "ar": "من {{Params.FromDate | date}} إلى {{Params.ToDate | date}} · طُبع: {{Company.PrintedAt}} بواسطة {{Company.PrintedBy}}",
+            "en": "From {{Params.FromDate | date}} to {{Params.ToDate | date}} · Printed: {{Company.PrintedAt}} by {{Company.PrintedBy}}"
+          },
+          "style": {
+            "size": 8,
+            "color": "#64748b"
+          }
+        },
+        {
+          "type": "line",
+          "thickness": 0.5,
+          "color": "#1f3a5f"
+        },
+        {
+          "type": "spacer",
+          "height": 2
+        }
+      ]
+    },
+    {
+      "type": "groupHeader",
+      "groupBy": "City",
+      "elements": [
+        {
+          "type": "text",
+          "text": {
+            "ar": "المدينة: {{City}}",
+            "en": "City: {{City}}"
+          },
+          "style": {
+            "bold": true,
+            "size": 11,
+            "background": "#dbe4f0",
+            "padding": 1.2
+          }
+        }
+      ]
+    },
+    {
+      "type": "groupHeader",
+      "groupBy": "CustomerNameAr",
+      "elements": [
+        {
+          "type": "text",
+          "text": {
+            "ar": "{{CustomerNameAr}}",
+            "en": "{{CustomerNameEn}}"
+          },
+          "style": {
+            "bold": true,
+            "size": 10,
+            "background": "#eef2f7",
+            "padding": 1
+          }
+        }
+      ]
+    },
+    {
+      "type": "detail",
+      "table": "lines",
+      "layout": "table",
+      "zebra": true,
+      "showTotals": true,
+      "sortBy": [
+        "City",
+        "CustomerNameAr",
+        "SaleDate"
+      ],
+      "columns": [
+        {
+          "field": "InvoiceNo",
+          "title": {
+            "ar": "رقم الفاتورة",
+            "en": "Invoice"
+          },
+          "width": "14%"
+        },
+        {
+          "field": "SaleDate",
+          "title": {
+            "ar": "التاريخ",
+            "en": "Date"
+          },
+          "width": "14%",
+          "format": "date"
+        },
+        {
+          "expr": "if(lang = 'en', PaymentNameEn, PaymentNameAr)",
+          "title": {
+            "ar": "الدفع",
+            "en": "Payment"
+          },
+          "width": "12%"
+        },
+        {
+          "field": "TotalAmount",
+          "title": {
+            "ar": "الإجمالي",
+            "en": "Total"
+          },
+          "width": "15%",
+          "format": "n2",
+          "align": "end",
+          "aggregate": "sum"
+        },
+        {
+          "field": "Discount",
+          "title": {
+            "ar": "الخصم",
+            "en": "Discount"
+          },
+          "width": "15%",
+          "format": "n2",
+          "align": "end",
+          "aggregate": "sum"
+        },
+        {
+          "field": "VatAmount",
+          "title": {
+            "ar": "الضريبة",
+            "en": "VAT"
+          },
+          "width": "15%",
+          "format": "n2",
+          "align": "end",
+          "aggregate": "sum"
+        },
+        {
+          "field": "NetAmount",
+          "title": {
+            "ar": "الصافي",
+            "en": "Net"
+          },
+          "width": "15%",
+          "format": "n2",
+          "align": "end",
+          "aggregate": "sum"
+        }
+      ]
+    },
+    {
+      "type": "groupFooter",
+      "groupBy": "CustomerNameAr",
+      "elements": [
+        {
+          "type": "text",
+          "text": {
+            "ar": "إجمالي {{CustomerNameAr}}: {{count()}} فاتورة · الصافي {{sum(NetAmount) | n2}}",
+            "en": "Total {{CustomerNameEn}}: {{count()}} invoices · net {{sum(NetAmount) | n2}}"
+          },
+          "style": {
+            "bold": true,
+            "align": "end",
+            "border": {
+              "top": true
+            },
+            "padding": 1
+          }
+        }
+      ]
+    },
+    {
+      "type": "groupFooter",
+      "groupBy": "City",
+      "elements": [
+        {
+          "type": "text",
+          "text": {
+            "ar": "إجمالي {{City}}: {{sum(NetAmount) | n2}}",
+            "en": "Total {{City}}: {{sum(NetAmount) | n2}}"
+          },
+          "style": {
+            "bold": true,
+            "align": "end",
+            "background": "#dbe4f0",
+            "padding": 1
+          }
+        }
+      ]
+    },
+    {
+      "type": "reportFooter",
+      "elements": [
+        {
+          "type": "text",
+          "text": {
+            "ar": "عدد الفواتير: {{count()}} · إجمالي الصافي: {{sum(NetAmount) | n2}}",
+            "en": "Invoices: {{count()}} · Net total: {{sum(NetAmount) | n2}}"
+          },
+          "style": {
+            "bold": true,
+            "size": 11
+          }
+        }
+      ]
+    },
+    {
+      "type": "pageFooter",
+      "elements": [
+        {
+          "type": "line",
+          "thickness": 0.2,
+          "color": "#cbd5e1"
+        },
+        {
+          "type": "pageNumber",
+          "style": {
+            "size": 7.5,
+            "color": "#64748b",
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}

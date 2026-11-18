@@ -1,0 +1,86 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_ScanGRN",
+  "pattern": "P21",
+  "titleAr": "استلام بالباركود (QA)",
+  "titleEn": "QA Receive by barcode",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-barcode",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "mode": "expected",
+    "steps": [
+      "location",
+      "item"
+    ],
+    "id": "QA_E2E_GRN_1045",
+    "gs1": true,
+    "blockExpired": true,
+    "tolerance": {
+      "rule": "warn",
+      "overPercent": 0
+    },
+    "feedback": {
+      "sound": true,
+      "vibrate": true
+    },
+    "qtyMode": "perScan",
+    "lines": {
+      "locationField": "Bin",
+      "itemField": "ItemID",
+      "source": {
+        "tableName": "QA_E2E_IQ_ScanLines",
+        "condition": "TaskID = 1"
+      },
+      "expiryField": "ExpiryDate",
+      "keyField": "LineID",
+      "nameField": "ItemNameAr",
+      "barcodeField": "Barcodes",
+      "expectedQtyField": "ExpectedQty"
+    },
+    "title": {
+      "ar": "استلام GRN-1045",
+      "en": "Receive GRN-1045"
+    },
+    "allowCamera": true
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}

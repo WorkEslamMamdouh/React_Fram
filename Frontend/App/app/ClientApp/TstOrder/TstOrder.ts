@@ -121,7 +121,7 @@ export function TstOrder() {
     RefreshGrid();
   }
 
-  // ===== الطباعة (Phase 7) — تقارير Stimulsoft: عرض داخل النظام / PDF / Excel. الباراميترات متربطة في تعريف التقرير =====
+  // ===== الطباعة (Phase 7) — عارض التقارير (تصميم JSON): عرض داخل النظام / طباعة / PDF / Excel. الباراميترات متربطة في تعريف التقرير =====
 
   const PrintPerm = usePermissions(ModuleCode);   // زر "طباعة القائمة" بيظهر بصلاحية PRINT بس
 

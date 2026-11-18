@@ -52,6 +52,10 @@
           "framework": "net9.0",
           "targetAlias": "net9.0",
           "dependencies": {
+            "Cronos": {
+              "target": "Package",
+              "version": "[0.8.4, )"
+            },
             "FirebaseAdmin": {
               "target": "Package",
               "version": "[3.5.0, )"

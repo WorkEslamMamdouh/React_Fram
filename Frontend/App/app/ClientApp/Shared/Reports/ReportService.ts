@@ -1,19 +1,18 @@
 "use client";
 
 // =====================================================================================
-//  ReportService.ts  -  تشغيل تقرير + اختيار التصميم + بناء تقرير Stimulsoft
-//   resolveParamValues : يطلّع قيم باراميترات الإجراء من (فلاتر الشاشة | الجلسة | الصف/TrID)
-//   prepareReport      : run (الباك) + resolve-layout (الأخص يكسب: فرع > شركة > الكل) + بناء التقرير
-//  الاستخدام من الشاشات: openReport({ reportCode, filters | row }) في openReport.tsx
+//  ReportService.ts  -  تشغيل تقرير + اختيار التصميم (JSON) + تجهيز البيانات للعارض
+//   resolveParamValues : قيم باراميترات الإجراء من (فلاتر الشاشة | الجلسة | الصف/TrID)
+//   runAndResolve      : run (الباك) + resolve-layout (الأخص يكسب: فرع > شركة > الكل)
+//   prepareReport      : تصميم JSON المحفوظ، أو تصميم تلقائي (تقرير جديد / تصميم Stimulsoft قديم)
 // =====================================================================================
 
 import { useSys } from "../SystemUsing";
 import { ReportsApi } from "./ReportApi";
-import { buildDefaultReport } from "./defaultLayout";
-import { applyPaper, registerData } from "./stimulsoft";
-import {
-  LayoutMeta, Margins, OpenReportOptions, OrientationKey, PaperSizeKey, ReportDef, RunResult, parseMargins,
-} from "./ReportTypes";
+import { buildAutoLayout } from "./autoLayout";
+import type { PagePreset, ReportData, ReportLayout } from "./ReportLayoutTypes";
+import { PAGE_PRESETS } from "./renderer/paper";
+import { LayoutMeta, OpenReportOptions, ReportDef, RunResult } from "./ReportTypes";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 export function toParamText(v: any): string | null {
@@ -51,7 +50,7 @@ export function resolveParamValues(def: ReportDef, ctx: Pick<OpenReportOptions, 
     let v: any;
     if (p.Source === "session") v = sessionValue(p.SourceValue);
     else if (p.Source === "const") v = p.SourceValue;
-    else if (p.Source === "trid") v = lookupCI(ctx.row, p.SourceValue) ?? ctx.trId;
+    else if (p.Source === "trid") v = (p.SourceValue ? lookupCI(ctx.row, p.SourceValue) : undefined) ?? ctx.trId;
     else {
       const m = /^(.*)\.(from|to)$/i.exec(p.SourceValue || "");
       const base = lookupCI(ctx.filters, p.SourceValue);
@@ -75,57 +74,6 @@ export function paramsSummary(def: ReportDef, vals: Record<string, any>): string
     .join(" | ");
 }
 
-export interface PreparedReport {
-  report: any;
-  def: ReportDef;
-  run: RunResult;
-  layout: LayoutMeta | null;
-  paper: PaperSizeKey;
-  orientation: OrientationKey;
-  margins: Margins;
-}
-
-export function tablesForRegister(run: RunResult) {
-  const t = run.Tables.map((x) => ({ name: x.Name, rows: x.Rows, columns: x.Columns.map((c) => c.Name) }));
-  t.push({ name: "Company", rows: [run.Company], columns: Object.keys(run.Company) });
-  const pr: Record<string, any> = { ReportCode: run.ReportCode, ...run.Params };
-  t.push({ name: "Params", rows: [pr], columns: Object.keys(pr) });
-  return t;
-}
-
-/** بيبني StiReport من نتيجة run + تصميم محفوظ (لو فيه) أو التصميم التلقائي. */
-export function buildReportObject(S: any, def: ReportDef, run: RunResult, layout: LayoutMeta | null, isEN: boolean, paramsText: string,
-  override?: { paper: PaperSizeKey; orientation: OrientationKey; margins: Margins }): PreparedReport {
-  const register = (rep: any) => registerData(S, rep, tablesForRegister(run));
-  const cols = run.Tables[0]?.Columns || [];
-  let paper: PaperSizeKey = layout?.PaperSize || "A4";
-  let orientation: OrientationKey = layout?.Orientation || (cols.length > 8 ? "landscape" : "portrait");
-  let margins = parseMargins(layout?.MarginsJson);
-  if (override) { paper = override.paper; orientation = override.orientation; margins = override.margins; }
-
-  let report: any;
-  let loaded = false;
-  if (layout?.LayoutMrt) {
-    try {
-      report = new S.Report.StiReport();
-      report.load(layout.LayoutMrt);
-      register(report);
-      if (override) applyPaper(S, report, paper, orientation, margins);   // المقاس المحفوظ في التصميم بيفضل إلا لو اليوزر غيّره
-      loaded = true;
-    } catch (e) {
-      console.warn("[Reports] saved layout is corrupt, falling back to the auto layout", e);   // تصميم تالف: نطبع بالتلقائي بدل ما التقرير يفشل
-      layout = null;
-    }
-  }
-  if (!loaded) {
-    report = buildDefaultReport(S, {
-      title: (isEN ? run.NameE : run.NameA) || def.ReportCode,
-      columns: cols, isEN, paper, orientation, margins, paramsText, register,
-    });
-  }
-  return { report, def, run, layout, paper, orientation, margins };
-}
-
 export async function runAndResolve(reportCode: string, params: Record<string, any>) {
   const env: any = useSys.getState().Session?.CurrentEnvironment;
   const comp = env?.CompCode ?? 0, branch = env?.BranchCode ?? 0;
@@ -133,5 +81,74 @@ export async function runAndResolve(reportCode: string, params: Record<string, a
     ReportsApi.run(reportCode, comp, branch, params),
     ReportsApi.resolveLayout(reportCode, comp, branch),
   ]);
-  return { run, layout: lay.Layout || null, comp, branch };
+  return { run, layout: lay.Layout || null };
+}
+
+/** بيانات العارض من نتيجة run: Data, Data2... + Company + Params */
+export function runToData(run: RunResult): ReportData {
+  const tables: Record<string, any[]> = {};
+  for (const t of run.Tables || []) tables[t.Name] = t.Rows || [];
+  return { tables, company: run.Company || {}, params: { ReportCode: run.ReportCode, ...(run.Params || {}) } };
+}
+
+/**
+ * صف "Company" (نفس مفاتيح ReportsController.run) من Sys_Company / Sys_Branch —
+ * للطباعة المباشرة بـ openLayoutReport من غير تعريف تقرير.
+ */
+export async function loadCompanyRow(): Promise<Record<string, any>> {
+  const env: any = useSys.getState().Session?.CurrentEnvironment;
+  const comp = Number(env?.CompCode) || 0, branch = Number(env?.BranchCode) || 0;
+  const rows = (r: any) => (Array.isArray(r?.data) ? r.data : []);
+  const { SQL } = await import("../CallDataBase");
+  const [c, b] = await Promise.all([
+    SQL.Select("Sys_Company", `CompCode = ${comp}`).then(rows).catch(() => []),
+    SQL.Select("Sys_Branch", `CompCode = ${comp} AND BranchCode = ${branch}`).then(rows).catch(() => []),
+  ]);
+  const cr: any = c[0] ?? {}, br: any = b[0] ?? {};
+  const s = (v: any) => (v == null ? "" : String(v));
+  const now = new Date();
+  return {
+    CompCode: comp, BranchCode: branch,
+    CompNameA: s(cr.NameA), CompNameE: s(cr.NameE), CompAddress: s(cr.Address), CompTel: s(cr.Tel), CompEmail: s(cr.Email), CompWebSite: s(cr.WebSite),
+    BranchNameA: s(br.BranchDescA), BranchNameE: s(br.BranchDescE), BranchTel: s(br.Tel), BranchEmail: s(br.Email),
+    BranchAddress: [s(br.Address_Street), s(br.Address_City)].filter(Boolean).join(", "),
+    VatNo: s(br.GroupVatNo),
+    PrintedBy: s(env?.Sys_CompanyAndUser?.USER_CODE ?? env?.Sys_CompanyAndUser?.USER_NAME ?? ""),
+    PrintedAt: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    LogoBase64: "",
+  };
+}
+
+export interface PreparedReport {
+  layout: ReportLayout;
+  data: ReportData;
+  /** true = التصميم التلقائي */
+  isAuto: boolean;
+  /** سبب التصميم التلقائي (لو فيه) */
+  notice: { en: string; ar: string } | null;
+}
+
+/** التصميم المحفوظ (JSON) لو صالح، وإلا التصميم التلقائي من أعمدة النتيجة */
+export function prepareReport(def: ReportDef | null, run: RunResult, meta: LayoutMeta | null, isEN: boolean, paramsText: string, title?: string): PreparedReport {
+  const data = runToData(run);
+  let notice: PreparedReport["notice"] = null;
+  if (meta && (meta.LayoutFormat || "").toLowerCase() === "json" && meta.LayoutJson) {
+    try {
+      const layout = JSON.parse(meta.LayoutJson) as ReportLayout;
+      if (!layout || !Array.isArray(layout.bands) || !layout.page) throw new Error("bad layout");
+      return { layout, data, isAuto: false, notice: null };
+    } catch (e) {
+      console.warn("[Reports] saved JSON layout is invalid, using the auto layout", e);
+      notice = { en: "The saved layout is invalid — showing the automatic layout.", ar: "التصميم المحفوظ تالف — بيتعرض التصميم التلقائي." };
+    }
+  } else if (meta) {
+    notice = { en: "This report still has an old Stimulsoft layout — showing the automatic layout until a new one is designed in ERP Studio.", ar: "التقرير ده لسه عليه تصميم Stimulsoft قديم — بيتعرض التصميم التلقائي لحد ما يتعمل تصميم جديد من ERP Studio." };
+  }
+  const paper = meta?.PaperSize && (meta.PaperSize in PAGE_PRESETS) ? (meta.PaperSize as PagePreset) : "A4";
+  const layout = buildAutoLayout({
+    title: title || (isEN ? run.NameE : run.NameA) || def?.ReportCode || run.ReportCode,
+    columns: run.Tables[0]?.Columns || [],
+    isEN, paper, orientation: meta?.Orientation, paramsText, table: run.Tables[0]?.Name || "Data",
+  });
+  return { layout, data, isAuto: true, notice };
 }

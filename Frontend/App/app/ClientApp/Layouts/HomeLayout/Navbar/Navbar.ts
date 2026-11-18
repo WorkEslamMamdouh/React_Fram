@@ -140,6 +140,8 @@ export function Navbar() {
 
   function ChangeModDark(_IsDark: boolean) {
     toggleModDark(_IsDark)
+    // مستخدم من غير صف في Sys_SettingsUserProfile: الوضع بيتغير بس مابيتحفظش (بدل ما الصفحة تقع)
+    if (!Session?.CurrentEnvironment?.Sys_SettingsUserProfile) return;
 
 
     var Data = {
@@ -167,6 +169,8 @@ export function Navbar() {
 
 
     useEffect(() => {
+      // مفيش فروع (محدش عامل تسجيل دخول) → مانلمسش الجلسة
+      if (!selectedBranch || !Session?.CurrentEnvironment) return;
           Session.CurrentEnvironment.BranchCode = selectedBranch.BranchCode;
       Session.CurrentEnvironment.Sys_Branch = selectedBranch;
       SetSession(Session)
@@ -175,6 +179,8 @@ export function Navbar() {
 
 
     useEffect(() => {
+      // مفيش سنين (محدش عامل تسجيل دخول) → مانلمسش الجلسة
+      if (!selectedYear || !Session?.CurrentEnvironment) return;
 
           Session.CurrentEnvironment.FinYear = selectedYear.FinYear;
       Session.CurrentEnvironment.Sys_Control = selectedYear;
@@ -185,7 +191,7 @@ export function Navbar() {
 
   // **تحديث selectedBranch عندما تتغير branchesData**
   useEffect(() => {
-    if (branchesData.length > 0 && selectedBranch.BranchCode) {
+    if (branchesData.length > 0 && selectedBranch?.BranchCode) {
       const updatedBranch = branchesData.find(b => b.BranchCode === selectedBranch.BranchCode);
       if (updatedBranch) {
         setSelectedBranch(updatedBranch);
@@ -345,7 +351,9 @@ export function Navbar() {
 
     setTimeout(() => {
       language.LangSwitcher();
- 
+        // مستخدم من غير صف في Sys_SettingsUserProfile: اللغة بتتغير بس مابتتحفظش (بدل ما الصفحة تقع)
+        if (!Session?.CurrentEnvironment?.Sys_SettingsUserProfile) return;
+
         var Data = {
           IDSettingsUser: Session.CurrentEnvironment.Sys_SettingsUserProfile.IDSettingsUser,
           Language: IsLangEN == true ? 'ar' : 'en'

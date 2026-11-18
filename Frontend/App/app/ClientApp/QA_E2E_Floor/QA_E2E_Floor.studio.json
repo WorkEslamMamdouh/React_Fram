@@ -1,0 +1,173 @@
+{
+  "schema": "erp-studio/screen@1",
+  "version": 1,
+  "module": "QA_E2E_Floor",
+  "pattern": "P09",
+  "titleAr": "صالة المطعم (QA)",
+  "titleEn": "QA Restaurant floor",
+  "subAr": "",
+  "subEn": "",
+  "table": "",
+  "view": "",
+  "keyColumn": "",
+  "orderBy": "",
+  "orderType": "DESC",
+  "pageSize": 25,
+  "loadMode": "infinite",
+  "condition": "",
+  "processTrans": false,
+  "trType": "",
+  "fields": [],
+  "details": [],
+  "filters": [],
+  "filterColumns": 4,
+  "filterApplyOnChange": true,
+  "validations": [],
+  "permissions": {
+    "insert": true,
+    "edit": true,
+    "delete": true,
+    "export": true,
+    "print": true,
+    "usePermissions": true,
+    "roles": [
+      1,
+      2
+    ]
+  },
+  "menu": {
+    "parent": "",
+    "sort": 0,
+    "icon": "fa-chair",
+    "iconColor": "teal"
+  },
+  "patternConfig": {
+    "canvas": {
+      "width": 960,
+      "grid": 10,
+      "height": 600
+    },
+    "clickAction": {
+      "free": "openOrder"
+    },
+    "areas": [
+      {
+        "id": 1,
+        "label": {
+          "ar": "الصالة الرئيسية",
+          "en": "Main hall"
+        }
+      },
+      {
+        "id": 2,
+        "label": {
+          "ar": "الجنينة",
+          "en": "Garden"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "label": {
+          "ar": "فتح طلب",
+          "en": "Open order"
+        },
+        "variant": "primary",
+        "showForStatus": [
+          "free"
+        ],
+        "id": "openOrder"
+      },
+      {
+        "label": {
+          "ar": "طباعة الحساب",
+          "en": "Print bill"
+        },
+        "showForStatus": [
+          "occupied"
+        ],
+        "id": "bill"
+      },
+      {
+        "label": {
+          "ar": "دفع وإغلاق",
+          "en": "Pay & close"
+        },
+        "variant": "success",
+        "showForStatus": [
+          "bill"
+        ],
+        "id": "pay"
+      }
+    ],
+    "refreshSeconds": 15,
+    "objects": {
+      "waiterField": "Waiter",
+      "guestsField": "Guests",
+      "hField": "H",
+      "wField": "W",
+      "areaField": "AreaID",
+      "statusField": "Status",
+      "amountField": "Amount",
+      "source": {
+        "tableName": "QA_E2E_IQ_TableStatus"
+      },
+      "labelField": "TableNo",
+      "xField": "X",
+      "openedAtField": "OpenedAt",
+      "seatsField": "Seats",
+      "shapeField": "Shape",
+      "yField": "Y",
+      "idField": "TableID"
+    },
+    "statuses": [
+      {
+        "label": {
+          "ar": "فاضية",
+          "en": "Free"
+        },
+        "color": "#10B981",
+        "value": "free"
+      },
+      {
+        "label": {
+          "ar": "محجوزة",
+          "en": "Reserved"
+        },
+        "color": "#3B82F6",
+        "value": "reserved"
+      },
+      {
+        "label": {
+          "ar": "مشغولة",
+          "en": "Occupied"
+        },
+        "color": "#F97316",
+        "value": "occupied"
+      },
+      {
+        "label": {
+          "ar": "طلب الحساب",
+          "en": "Bill requested"
+        },
+        "color": "#8B5CF6",
+        "blink": true,
+        "value": "bill"
+      },
+      {
+        "label": {
+          "ar": "تحتاج تنظيف",
+          "en": "Cleaning"
+        },
+        "color": "#64748B",
+        "value": "cleaning"
+      }
+    ],
+    "phoneLayout": "tiles"
+  },
+  "meta": {
+    "modifiedBy": "",
+    "modifiedAt": "",
+    "studioVersion": "2.0"
+  }
+}
